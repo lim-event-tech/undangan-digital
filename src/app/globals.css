@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@theme {
+  --color-kertas: #faf7f0;
+  --color-tinta: #2a2622;
+  --color-tinta-2: #3d3731;
+  --color-redup: #6a6157;
+  --color-redup-2: #625a50;
+  --color-garis: #e4dac7;
+  --color-garis-halus: #eee7da;
+  --color-garis-input: #d9cdb6;
+  --color-emas: #7d5f28;
+  --color-emas-tua: #6b5122;
+  --color-emas-muda: #a8853f;
+  --color-krem: #f3eddd;
+  --color-krem-2: #f3ece0;
+  --color-hijau: #3f5236;
+  --color-hijau-bg: #e3e8da;
+  --color-jingga: #8f4a22;
+  --color-jingga-bg: #fdebdd;
+  --color-galat: #a3392f;
+  --color-galat-bg: #fff6f0;
+  --color-biru-bg: #f5f8ff;
+  --color-teal: #0f766e;
+  --font-sans: "Jost", system-ui, sans-serif;
+  --font-judul: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+}
+
+html {
+  background: var(--color-kertas);
+}
+
+body {
+  background: var(--color-kertas);
+  color: var(--color-tinta);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: #efe4cc;
+  color: var(--color-tinta);
+}
+
+a {
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
