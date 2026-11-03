@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { asc, eq } from "drizzle-orm";
 import { event, invitation } from "@/db/schema";
 import { createTestDb, seedInvitation, type TestDb } from "@/test/db";
-import { createInvitation, getInvitationForOwner } from "./service";
+import { createInvitation, getInvitationForOwner, setInvitationTemplate } from "./service";
 
 let db: TestDb;
 
@@ -68,5 +68,25 @@ describe("getInvitationForOwner", () => {
     const found = await getInvitationForOwner(db, ownerId);
     expect(found?.id).toBe(created.id);
     expect(await getInvitationForOwner(db, "tidak-ada")).toBeNull();
+  });
+});
+
+describe("template undangan", () => {
+  it("membuat undangan dengan template pilihan lalu menggantinya tanpa mengubah isi", async () => {
+    const { ownerId } = await seedInvitation(db);
+    const other = await createInvitation(db, ownerId, {
+      groomName: "Bima",
+      brideName: "Sekar",
+      templateKey: "keraton",
+    });
+    expect(other.templateKey).toBe("keraton");
+
+    expect(await setInvitationTemplate(db, other.id, "pasundan")).toBe(true);
+    const [row] = await db.select().from(invitation).where(eq(invitation.id, other.id));
+    expect(row.templateKey).toBe("pasundan");
+    expect(row.groomName).toBe("Bima");
+    expect(row.content).toEqual(other.content);
+
+    expect(await setInvitationTemplate(db, "00000000-0000-4000-8000-000000000000", "melati")).toBe(false);
   });
 });

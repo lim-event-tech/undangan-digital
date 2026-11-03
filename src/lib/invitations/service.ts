@@ -28,7 +28,7 @@ export async function getInvitationForOwner(
   return row ?? null;
 }
 
-export type CreateInvitationInput = { groomName: string; brideName: string };
+export type CreateInvitationInput = { groomName: string; brideName: string; templateKey?: string };
 
 export async function createInvitation(
   db: AppDb,
@@ -51,6 +51,7 @@ export async function createInvitation(
             slug,
             groomName: input.groomName,
             brideName: input.brideName,
+            ...(input.templateKey ? { templateKey: input.templateKey } : {}),
           })
           .returning();
         await tx.insert(event).values(
@@ -69,4 +70,17 @@ export async function createInvitation(
     }
   }
   throw new Error("Tidak bisa membuat slug unik untuk undangan ini.");
+}
+
+export async function setInvitationTemplate(
+  db: AppDb,
+  invitationId: string,
+  templateKey: string,
+): Promise<boolean> {
+  const rows = await db
+    .update(invitation)
+    .set({ templateKey, updatedAt: new Date() })
+    .where(eq(invitation.id, invitationId))
+    .returning({ id: invitation.id });
+  return rows.length > 0;
 }

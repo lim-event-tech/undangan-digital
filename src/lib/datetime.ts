@@ -21,6 +21,64 @@ export function shortTime(dbTime: string | null): string | null {
   return dbTime ? dbTime.slice(0, 5) : null;
 }
 
+const DAYS = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"] as const;
+const MONTHS = [
+  "Januari",
+  "Februari",
+  "Maret",
+  "April",
+  "Mei",
+  "Juni",
+  "Juli",
+  "Agustus",
+  "September",
+  "Oktober",
+  "November",
+  "Desember",
+] as const;
+
+function splitDate(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  return { year, month, day };
+}
+
+export function formatDate(value: string): string {
+  const { year, month, day } = splitDate(value);
+  return `${day} ${MONTHS[month - 1]} ${year}`;
+}
+
+export function formatShortDay(value: string): string {
+  const { month, day } = splitDate(value);
+  return `${day} ${MONTHS[month - 1].slice(0, 3)}`;
+}
+
+export function formatDots(value: string): string {
+  const { year, month, day } = splitDate(value);
+  return `${String(day).padStart(2, "0")} . ${String(month).padStart(2, "0")} . ${year}`;
+}
+
+export function formatLongDate(value: string): string {
+  const { year, month, day } = splitDate(value);
+  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  return `${DAYS[weekday]}, ${formatDate(value)}`;
+}
+
+export function formatTime(time: string, zone: Zone): string {
+  return `${time.slice(0, 5).replace(":", ".")} ${zone}`;
+}
+
+export function formatStamp(value: Date): string {
+  const local = new Date(value.getTime() + WIB_OFFSET_MS);
+  const month = MONTHS[local.getUTCMonth()].slice(0, 3);
+  const hour = String(local.getUTCHours()).padStart(2, "0");
+  const minute = String(local.getUTCMinutes()).padStart(2, "0");
+  return `${local.getUTCDate()} ${month} ${local.getUTCFullYear()}, ${hour}.${minute}`;
+}
+
+export function todayWib(now: Date = new Date()): string {
+  return new Date(now.getTime() + WIB_OFFSET_MS).toISOString().slice(0, 10);
+}
+
 export function deadlineFromDate(value: string): Date {
   return new Date(`${value}T23:59:59+07:00`);
 }

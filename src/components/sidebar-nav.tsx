@@ -8,6 +8,8 @@ export type ItemNav = {
   label: string;
   ikon: NamaIkon;
   href?: string;
+  lencana?: number;
+  tepat?: boolean;
 };
 
 const dasar =
@@ -36,8 +38,9 @@ export function SidebarNav({ items }: { items: ItemNav[] }) {
               </li>
             );
           }
-          const aktif =
-            pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const aktif = item.tepat
+            ? pathname === item.href
+            : pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <li key={item.label}>
               <Link
@@ -51,6 +54,11 @@ export function SidebarNav({ items }: { items: ItemNav[] }) {
               >
                 <Ikon nama={item.ikon} />
                 {item.label}
+                {item.lencana ? (
+                  <span className="ml-auto rounded-full bg-galat px-2 py-0.5 text-[11px] font-medium text-white">
+                    {item.lencana}
+                  </span>
+                ) : null}
               </Link>
             </li>
           );

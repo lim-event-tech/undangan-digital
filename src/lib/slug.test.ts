@@ -1,5 +1,7 @@
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { makeSlugBase, slugCandidate, slugify } from "./slug";
+import { RESERVED_SLUGS, makeSlugBase, slugCandidate, slugify } from "./slug";
 
 describe("slugify", () => {
   it("membuang aksen dan simbol", () => {
@@ -17,13 +19,32 @@ describe("makeSlugBase", () => {
   });
 
   it("memberi nilai bawaan bila nama kosong", () => {
-    expect(makeSlugBase("", "")).toBe("undangan");
-    expect(makeSlugBase("!!!", "???")).toBe("undangan");
+    expect(makeSlugBase("", "")).toBe("pernikahan");
+    expect(makeSlugBase("!!!", "???")).toBe("pernikahan");
   });
 
   it("menghindari kata yang dicadangkan sistem", () => {
     expect(makeSlugBase("admin", "")).toBe("admin-undangan");
     expect(makeSlugBase("", "api")).toBe("api-undangan");
+    expect(makeSlugBase("Foto", "")).toBe("foto-undangan");
+    expect(makeSlugBase("", "Contoh")).toBe("contoh-undangan");
+  });
+
+  it("mencadangkan setiap rute tingkat atas aplikasi agar tidak bentrok dengan link tamu", () => {
+    const rute = readdirSync(join(process.cwd(), "src/app"), { withFileTypes: true })
+      .filter((d) => d.isDirectory() && !/^[[(_]/.test(d.name))
+      .map((d) => d.name);
+    expect(rute.length).toBeGreaterThan(5);
+    for (const nama of rute) expect({ nama, dicadangkan: RESERVED_SLUGS.has(nama) }).toEqual({ nama, dicadangkan: true });
+    expect(RESERVED_SLUGS.has(makeSlugBase("", ""))).toBe(false);
+  });
+
+  it("mencadangkan setiap folder di public agar tidak bentrok dengan link tamu", () => {
+    const folder = readdirSync(join(process.cwd(), "public"), { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name);
+    expect(folder).toContain("template");
+    for (const nama of folder) expect({ nama, dicadangkan: RESERVED_SLUGS.has(nama) }).toEqual({ nama, dicadangkan: true });
   });
 
   it("memotong nama panjang tanpa meninggalkan tanda hubung di ujung", () => {

@@ -8,6 +8,8 @@ import { multiLine, singleLine } from "@/lib/form-text";
 import { isGoogleMapsUrl } from "@/lib/maps";
 import type { FieldErrors } from "@/lib/save-result";
 
+export const MAX_EVENTS = 8;
+
 export const EVENT_LIMITS = {
   name: 60,
   venue: 100,
@@ -32,13 +34,15 @@ export type ParsedEventForm =
 export const MAPS_ERROR =
   "Ini bukan link Google Maps. Buka lokasi di Google Maps, ketuk Bagikan, lalu tempel link-nya di sini.";
 
-export function parseEventName(formData: FormData, field = "nama") {
+export type ParsedEventName = { name: string } | { error: string };
+
+export function parseEventName(formData: FormData, field = "nama"): ParsedEventName {
   const name = singleLine(formData, field);
-  if (!name) return { error: "Nama acara wajib diisi" } as const;
+  if (!name) return { error: "Nama acara wajib diisi" };
   if (name.length > EVENT_LIMITS.name) {
-    return { error: `Nama acara maksimal ${EVENT_LIMITS.name} karakter` } as const;
+    return { error: `Nama acara maksimal ${EVENT_LIMITS.name} karakter` };
   }
-  return { name } as const;
+  return { name };
 }
 
 export function parseEventForm(formData: FormData): ParsedEventForm {

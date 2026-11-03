@@ -11,7 +11,7 @@ import { createInvitationAction, type BaruState } from "./actions";
 
 const awal: BaruState = {};
 
-export function FormBaru() {
+export function FormBaru({ template }: { template: string }) {
   const [state, action, memproses] = useActionState(
     createInvitationAction,
     awal,
@@ -19,6 +19,7 @@ export function FormBaru() {
 
   return (
     <form action={action} className="flex flex-col gap-4">
+      <input type="hidden" name="template" value={template} />
       <label className={labelKolom}>
         Nama panggilan mempelai pria
         <input

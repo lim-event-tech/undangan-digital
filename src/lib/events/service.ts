@@ -2,9 +2,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { event, invitation } from "@/db/schema";
 import type { AppDb } from "@/db/types";
 import { shortTime, type Zone } from "@/lib/datetime";
-import type { EventInput } from "./form";
-
-export const MAX_EVENTS = 8;
+import { MAX_EVENTS, type EventInput } from "./form";
 
 export type EventDetail = {
   id: string;
@@ -21,7 +19,7 @@ export type EventDetail = {
 
 type EventRow = typeof event.$inferSelect;
 
-function toDetail(row: EventRow): EventDetail {
+export function toEventDetail(row: EventRow): EventDetail {
   return {
     id: row.id,
     key: row.key,
@@ -65,7 +63,7 @@ export async function listEventDetails(
     .from(event)
     .where(eq(event.invitationId, invitationId))
     .orderBy(asc(event.sortOrder), asc(event.createdAt));
-  return rows.map(toDetail);
+  return rows.map(toEventDetail);
 }
 
 export type CreateEventResult =
@@ -95,7 +93,7 @@ export async function createEvent(
       .insert(event)
       .values({ invitationId, key, name, sortOrder })
       .returning();
-    return { ok: true, event: toDetail(created) } as const;
+    return { ok: true, event: toEventDetail(created) } as const;
   });
 }
 
@@ -118,7 +116,7 @@ export async function updateEvent(
     })
     .where(and(eq(event.id, eventId), eq(event.invitationId, invitationId)))
     .returning();
-  return updated ? toDetail(updated) : null;
+  return updated ? toEventDetail(updated) : null;
 }
 
 export type DeleteEventResult = "dihapus" | "tidak-ada" | "terakhir";

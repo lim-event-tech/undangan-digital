@@ -2,14 +2,47 @@ export const RESERVED_SLUGS = new Set([
   "admin",
   "api",
   "app",
+  "bantuan",
+  "contoh",
   "daftar",
+  "foto",
   "login",
   "masuk",
+  "musik",
+  "og",
+  "petugas",
+  "pratinjau",
   "static",
+  "template",
   "u",
   "undangan",
   "www",
 ]);
+
+const SLUG_CADANGAN = "pernikahan";
+
+export const CUSTOM_SLUG_MIN = 3;
+export const CUSTOM_SLUG_MAX = 60;
+
+export type CustomSlugCheck = { ok: true; slug: string } | { ok: false; error: string };
+
+export function checkCustomSlug(input: string): CustomSlugCheck {
+  const slug = input.trim().toLowerCase();
+  if (slug.length < CUSTOM_SLUG_MIN) {
+    return { ok: false, error: `Link minimal ${CUSTOM_SLUG_MIN} karakter` };
+  }
+  if (slug.length > CUSTOM_SLUG_MAX) {
+    return { ok: false, error: `Link maksimal ${CUSTOM_SLUG_MAX} karakter` };
+  }
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    return {
+      ok: false,
+      error: "Gunakan huruf kecil, angka, dan tanda hubung, tanpa spasi dan tanpa tanda hubung di ujung",
+    };
+  }
+  if (RESERVED_SLUGS.has(slug)) return { ok: false, error: "Link ini tidak bisa dipakai" };
+  return { ok: true, slug };
+}
 
 export function slugify(input: string): string {
   return input
@@ -26,7 +59,8 @@ export function makeSlugBase(groomName: string, brideName: string): string {
   const bride = slugify(brideName);
   let base = [groom, bride].filter(Boolean).join("-dan-");
   base = base.slice(0, 60).replace(/-+$/, "");
-  if (!base || RESERVED_SLUGS.has(base)) base = base ? `${base}-undangan` : "undangan";
+  if (!base) base = SLUG_CADANGAN;
+  else if (RESERVED_SLUGS.has(base)) base = `${base}-undangan`;
   return base;
 }
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Ikon } from "@/components/ikon";
 import { SidebarNav, type ItemNav } from "@/components/sidebar-nav";
 import { TombolKeluar } from "@/components/tombol-keluar";
+import { akhiriKelolaAction } from "@/app/undangan/kelola-actions";
 
 const STATUS_UNDANGAN = {
   draf: { label: "Draf", kelas: "bg-krem-2 text-redup-2" },
@@ -10,11 +11,13 @@ const STATUS_UNDANGAN = {
 } as const;
 
 const NAV_DENGAN_UNDANGAN: ItemNav[] = [
-  { label: "Ringkasan RSVP", ikon: "dasbor" },
-  { label: "Isi undangan", ikon: "pena" },
+  { label: "Ringkasan RSVP", ikon: "dasbor", href: "/undangan/ringkasan" },
+  { label: "Isi undangan", ikon: "pena", href: "/undangan/isi" },
   { label: "Daftar tamu", ikon: "tamu", href: "/undangan/tamu" },
-  { label: "Kirim undangan", ikon: "kirim" },
-  { label: "Ganti template", ikon: "templat" },
+  { label: "Kirim undangan", ikon: "kirim", href: "/undangan/kirim" },
+  { label: "Ucapan", ikon: "surat", href: "/undangan/ucapan" },
+  { label: "Check-in", ikon: "ceklis", href: "/undangan/checkin" },
+  { label: "Ganti template", ikon: "templat", href: "/undangan/template" },
 ];
 
 export type ShellUser = { name: string; email: string };
@@ -27,10 +30,14 @@ export type ShellInvitation = {
 export function AppShell({
   user,
   invitation,
+  pengumuman,
+  kelola,
   children,
 }: {
   user: ShellUser;
   invitation: ShellInvitation | null;
+  pengumuman?: { teks: string; jenis: string } | null;
+  kelola?: { admin: string } | null;
   children: React.ReactNode;
 }) {
   const status = invitation ? STATUS_UNDANGAN[invitation.status] : null;
@@ -78,7 +85,37 @@ export function AppShell({
         </div>
       </aside>
 
-      <main className="min-w-0 flex-1 px-5 pt-7 pb-16 sm:px-7">{children}</main>
+      <main className="min-w-0 flex-1 px-5 pt-7 pb-16 sm:px-7">
+        {kelola ? (
+          <div
+            role="status"
+            className="mx-auto mb-5 flex max-w-5xl flex-wrap items-center justify-between gap-3 rounded-[10px] border border-emas-muda bg-krem p-4 text-sm leading-relaxed text-emas-tua"
+          >
+            <span>
+              Anda ({kelola.admin}) sedang mengelola undangan ini sebagai admin. Semua perubahan atas nama pemilik
+              undangan.
+            </span>
+            <form action={akhiriKelolaAction}>
+              <button
+                type="submit"
+                className="inline-flex min-h-10 items-center rounded-md border border-garis-input bg-white px-3.5 text-sm font-medium text-tinta"
+              >
+                Selesai mengelola
+              </button>
+            </form>
+          </div>
+        ) : null}
+        {pengumuman ? (
+          <div
+            role="status"
+            className="mx-auto mb-5 flex max-w-5xl flex-col gap-0.5 rounded-[10px] bg-krem p-4 text-sm leading-relaxed text-emas-tua"
+          >
+            <span className="text-xs font-medium tracking-[0.12em] uppercase">{pengumuman.jenis}</span>
+            <span className="whitespace-pre-line">{pengumuman.teks}</span>
+          </div>
+        ) : null}
+        {children}
+      </main>
     </div>
   );
 }
