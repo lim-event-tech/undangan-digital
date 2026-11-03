@@ -22,8 +22,20 @@
   --color-galat-bg: #fff6f0;
   --color-biru-bg: #f5f8ff;
   --color-teal: #0f766e;
+  --color-melati-halaman: #e7e1d3;
+  --color-melati-kertas: #f7f3ea;
+  --color-melati-teks: #2e3b2a;
+  --color-melati-hijau: #6e8b6a;
+  --color-melati-hijau-muda: #86a27e;
+  --color-melati-hijau-tua: #3e5239;
+  --color-melati-emas: #b89a5e;
+  --color-melati-emas-tua: #7d5f28;
+  --color-melati-muda: #f1dfae;
+  --color-melati-mawar: #e8cfc6;
+  --color-melati-mawar-muda: #f1e1da;
   --font-sans: "Jost", system-ui, sans-serif;
   --font-judul: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-naskah: "Pinyon Script", "Cormorant Garamond", Georgia, cursive;
 }
 
 html {
@@ -46,8 +58,23 @@ a {
   text-decoration-thickness: 1px;
 }
 
+@keyframes pt-muncul {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.pt-muncul {
+  animation: pt-muncul 0.7s ease both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  * {
+  :not(.selalu-gerak, .selalu-gerak *) {
     animation: none !important;
     transition: none !important;
   }

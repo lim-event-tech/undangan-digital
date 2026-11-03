@@ -28,7 +28,7 @@ services:
       db:
         condition: service_healthy
     env_file:
-      - path: .env.local
+      - path: .env
         required: false
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-undangan}:${POSTGRES_PASSWORD:-undangan_dev}@db:5432/${POSTGRES_DB:-undangan_digital}

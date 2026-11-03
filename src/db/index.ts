@@ -9,7 +9,7 @@ function createPool() {
   const isBuild = process.env.NEXT_PHASE === "phase-production-build";
   if (!connectionString && !isBuild) {
     throw new Error(
-      "DATABASE_URL belum diatur. Salin .env.example menjadi .env.local, lalu jalankan `npm run db:up`.",
+      "DATABASE_URL belum diatur. Salin .env.example menjadi .env, lalu jalankan `npm run db:up`.",
     );
   }
   return new Pool({ connectionString, max: 10 });

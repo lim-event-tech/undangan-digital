@@ -2,7 +2,7 @@
 
 Aplikasi undangan pernikahan digital. Setiap tamu mendapat link pribadi, dan pasangan memantau semuanya dari satu dashboard.
 
-Status: Sprint 1 berjalan di localhost. Sudah ada login Google (R0) dan daftar tamu (R4: tambah manual, impor CSV, cari dan saring). Hosting belum disiapkan.
+Status: Sprint 1 berjalan di localhost dan Docker. Sudah ada daftar dan masuk dengan Google atau email dan kata sandi (R0, R19 tanpa verifikasi email dan tanpa lupa kata sandi karena belum ada layanan email), daftar tamu (R4: tambah manual, impor CSV, cari dan saring), editor undangan (R2 form konten dengan simpan otomatis dan unggah foto, R3 multi-acara dengan validasi link Maps, R10 privasi dasar), halaman tamu bertema Melati dengan RSVP per acara (R1, R5, R6), pratinjau link WhatsApp (R9), kirim undangan lewat WhatsApp per klik (R8), dan dashboard RSVP (R7). Hosting belum disiapkan.
 
 ## Kebutuhan
 
@@ -21,18 +21,18 @@ npm install
 2. Salin berkas env.
 
 ```
-copy .env.example .env.local
+copy .env.example .env
 ```
 
-Di macOS atau Linux pakai `cp .env.example .env.local`.
+Di macOS atau Linux pakai `cp .env.example .env`.
 
-3. Isi `BETTER_AUTH_SECRET` di `.env.local` dengan teks acak.
+3. Isi `BETTER_AUTH_SECRET` di `.env` dengan teks acak.
 
 ```
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
-4. Buat kredensial Google, lalu isi `GOOGLE_CLIENT_ID` dan `GOOGLE_CLIENT_SECRET` di `.env.local`.
+4. Buat kredensial Google, lalu isi `GOOGLE_CLIENT_ID` dan `GOOGLE_CLIENT_SECRET` di `.env`.
 
    - Buka Google Cloud Console, pilih atau buat project.
    - Menu APIs & Services, OAuth consent screen: pilih External, isi nama aplikasi, lalu tambahkan email Anda sebagai test user.
@@ -59,6 +59,20 @@ npm run db:templates
 npm run dev
 ```
 
+## Menjalankan aplikasi di Docker
+
+Selain `npm run dev`, aplikasi bisa berjalan sebagai container `undangan-app` di samping `undangan-db`. Isi `.env` dulu (langkah 2 sampai 4 di atas), terapkan migrasi dengan `npm run db:migrate`, lalu:
+
+```
+npm run app:up
+```
+
+Container membaca `.env` yang sama dan memakai database di container `undangan-db`. Setelah `.env` diubah, buat ulang containernya, bukan sekadar restart.
+
+```
+docker compose up -d --force-recreate app
+```
+
 ## Perintah
 
 | Perintah | Fungsi |
@@ -76,12 +90,14 @@ npm run dev
 | `npm run db:migrate` | Menerapkan migrasi |
 | `npm run db:studio` | Drizzle Studio untuk melihat isi tabel |
 | `npm run db:templates` | Mendaftarkan template dari `src/templates/registry.ts`, tambahkan `-- --tampilkan` untuk langsung menampilkannya |
+| `npm run app:up` | Membangun image lalu menyalakan container aplikasi di http://localhost:3000, butuh `.env` terisi |
+| `npm run app:logs` | Mengikuti log container aplikasi |
 
-Kata sandi dan port PostgreSQL bisa diganti lewat variabel `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, dan `DB_PORT`. Jika diganti, sesuaikan `DATABASE_URL` di `.env.local`.
+Kata sandi dan port PostgreSQL bisa diganti lewat variabel `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, dan `DB_PORT`. Jika diganti, sesuaikan `DATABASE_URL` di `.env`.
 
-## Format CSV untuk impor tamu
+## Format file Excel atau CSV untuk impor tamu
 
-Baris pertama berisi judul kolom. Kolom wajib: `nama` dan `whatsapp`. Kolom opsional: `grup`, `acara`, `maks_dewasa`, `maks_anak`. Contoh bisa diunduh dari halaman impor.
+File boleh .xlsx (lembar pertama) atau .csv. Baris pertama berisi judul kolom. Kolom wajib: `nama` dan `whatsapp`. Kolom opsional: `grup`, `acara`, `maks_dewasa`, `maks_anak`. Contoh Excel dan CSV bisa diunduh dari halaman impor. Semua unduhan data (RSVP, ucapan, daftar undangan, log audit) tersedia sebagai Excel dan CSV.
 
 - Nomor WhatsApp boleh `0812...`, `+62812...`, atau `62812...`, semuanya disimpan sebagai `+62812...`. Hanya nomor seluler Indonesia yang diterima.
 - `acara` diisi nama atau kunci acara, dipisah `;` `,` `/` atau `|`. Kosong berarti semua acara.
@@ -97,7 +113,7 @@ Baris pertama berisi judul kolom. Kolom wajib: `nama` dan `whatsapp`. Kolom opsi
 | `src/app` | Halaman dan server action |
 | `src/components` | Komponen bersama dan kerangka dashboard |
 | `src/db` | Skema Drizzle dan koneksi |
-| `src/lib` | Logika inti: nomor telepon, slug, impor CSV, layanan tamu dan undangan, autentikasi |
+| `src/lib` | Logika inti: nomor telepon, slug, impor CSV, layanan tamu, undangan, acara, dan foto, validasi link Maps, autentikasi |
 | `src/templates` | Daftar template undangan |
 | `drizzle` | Berkas migrasi SQL |
 
