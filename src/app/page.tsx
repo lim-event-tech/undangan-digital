@@ -35,10 +35,6 @@ const TANYA = [
     a: "Tidak. Tiap tamu mendapat link pribadi, jadi namanya langsung tampil dan ia cukup mengetuk tombol untuk konfirmasi.",
   },
   {
-    q: "Bisakah undangan dikirim massal sekaligus?",
-    a: "Saat ini pengiriman lewat WhatsApp Anda sendiri, satu ketukan per tamu dengan pesan yang sudah terisi.",
-  },
-  {
     q: "Bisakah jam atau lokasi diubah setelah dikirim?",
     a: "Bisa. Semua tamu langsung melihat versi terbaru tanpa perlu dikirimi ulang.",
   },
@@ -46,7 +42,6 @@ const TANYA = [
     q: "Bisakah susunan bagian undangan diubah?",
     a: "Bisa. Seret bagian ke posisi lain atau sembunyikan yang tidak perlu.",
   },
-  { q: "Berapa biayanya?", a: "Gratis untuk saat ini." },
 ];
 
 const BATANG = [
