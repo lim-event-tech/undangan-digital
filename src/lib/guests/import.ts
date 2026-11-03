@@ -129,7 +129,28 @@ export function parseGuestCsv(text: string): ParseResult {
     transformHeader: canonicalHeader,
   });
 
-  const fields = parsed.meta.fields ?? [];
+  return collectRows(parsed.meta.fields ?? [], parsed.data, 2);
+}
+
+export function parseGuestTable(table: string[][]): ParseResult {
+  const start = table.findIndex((line) => line.some((cell) => cell.trim() !== ""));
+  if (start < 0) return { ok: false, error: "File kosong." };
+  const fields = table[start].map((cell) => canonicalHeader(cell));
+  const records = table.slice(start + 1).map((line) => {
+    const record: Record<string, string> = {};
+    fields.forEach((field, index) => {
+      if (field) record[field] = line[index] ?? "";
+    });
+    return record;
+  });
+  return collectRows(fields, records, start + 2);
+}
+
+function collectRows(
+  fields: string[],
+  records: Record<string, string>[],
+  firstRow: number,
+): ParseResult {
   const missing = (["nama", "whatsapp"] as const).filter(
     (c) => !fields.includes(c),
   );
@@ -141,10 +162,10 @@ export function parseGuestCsv(text: string): ParseResult {
   }
 
   const rows: RawRow[] = [];
-  parsed.data.forEach((record, index) => {
+  records.forEach((record, index) => {
     const get = (c: Column) => (record[c] ?? "").toString().trim();
     const raw: RawRow = {
-      row: index + 2,
+      row: index + firstRow,
       nama: get("nama"),
       whatsapp: get("whatsapp"),
       grup: get("grup"),

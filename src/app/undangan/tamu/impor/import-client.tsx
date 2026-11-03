@@ -10,6 +10,7 @@ import {
   MAX_IMPORT_ROWS,
   decodeCsvBytes,
   parseGuestCsv,
+  parseGuestTable,
   phoneShownFrom,
   summarizeRows,
   validateImportRows,
@@ -18,7 +19,7 @@ import {
   type ValidatedRow,
 } from "@/lib/guests/import";
 import { formatPhone } from "@/lib/phone";
-import { commitImportAction } from "./actions";
+import { bacaXlsxAction, commitImportAction } from "./actions";
 
 const kolomTabel = "px-3.5 py-3";
 
@@ -75,7 +76,15 @@ export function ImportClient({ context }: { context: ImportContext }) {
       return;
     }
 
-    const hasil = parseGuestCsv(decodeCsvBytes(await file.arrayBuffer()));
+    let hasil: ReturnType<typeof parseGuestCsv>;
+    if (/.xlsx$/i.test(file.name)) {
+      const data = new FormData();
+      data.set("file", file);
+      const dibaca = await bacaXlsxAction(data);
+      hasil = dibaca.ok ? parseGuestTable(dibaca.table) : dibaca;
+    } else {
+      hasil = parseGuestCsv(decodeCsvBytes(await file.arrayBuffer()));
+    }
     if (!hasil.ok) {
       setGalatBerkas(hasil.error);
       setRows([]);
@@ -158,14 +167,14 @@ export function ImportClient({ context }: { context: ImportContext }) {
               <Ikon nama="unduh" ukuran={22} />
             </span>
             <span className="flex flex-col gap-0.5">
-              <span className="font-medium">Pilih file CSV</span>
+              <span className="font-medium">Pilih file Excel atau CSV</span>
               <span className="text-xs text-redup">
                 atau tarik file ke sini · maks. {MAX_IMPORT_ROWS} baris
               </span>
             </span>
             <input
               type="file"
-              accept=".csv,text/csv"
+              accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               className="sr-only"
               onChange={(e) => {
                 void pilihBerkas(e.target.files?.[0]);
@@ -185,8 +194,13 @@ export function ImportClient({ context }: { context: ImportContext }) {
             <code className="rounded bg-krem-2 px-1.5 py-px">akad;resepsi</code>
             . Acara kosong berarti semua acara. Kosongkan maks untuk memakai
             bawaan.{" "}
+            Unduh contoh:{" "}
+            <a href="/undangan/tamu/contoh.xlsx" className="text-emas">
+              Excel
+            </a>{" "}
+            atau{" "}
             <a href="/undangan/tamu/contoh.csv" className="text-emas">
-              Unduh contoh CSV
+              CSV
             </a>
           </span>
         </div>

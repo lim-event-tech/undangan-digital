@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/db";
-import { MAX_IMPORT_ROWS, type RawRow } from "@/lib/guests/import";
+import { MAX_IMPORT_BYTES, MAX_IMPORT_ROWS, type RawRow } from "@/lib/guests/import";
+import { readXlsx } from "@/lib/xlsx";
 import { commitImport, type CommitImportResult } from "@/lib/guests/service";
 import { requireInvitation } from "@/lib/session";
 
@@ -21,6 +22,24 @@ const payloadSchema = z.object({
   rows: z.array(rowSchema).min(1).max(MAX_IMPORT_ROWS),
   skipProblems: z.boolean(),
 });
+
+export type BacaXlsxResult = { ok: true; table: string[][] } | { ok: false; error: string };
+
+export async function bacaXlsxAction(formData: FormData): Promise<BacaXlsxResult> {
+  await requireInvitation();
+  const file = formData.get("file");
+  if (!(file instanceof File)) return { ok: false, error: "File tidak terbaca." };
+  if (file.size > MAX_IMPORT_BYTES) {
+    return {
+      ok: false,
+      error: `File terlalu besar (maks. ${Math.round(MAX_IMPORT_BYTES / 1_000_000)} MB). Bagi file menjadi beberapa bagian.`,
+    };
+  }
+  const hasil = readXlsx(new Uint8Array(await file.arrayBuffer()));
+  if (!hasil.ok) return hasil;
+  if (hasil.rows.length === 0) return { ok: false, error: "File kosong." };
+  return { ok: true, table: hasil.rows };
+}
 
 export async function commitImportAction(
   rows: RawRow[],
