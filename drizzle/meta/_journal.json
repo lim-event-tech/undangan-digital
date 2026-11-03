@@ -22,6 +22,62 @@
       "when": 1793490172804,
       "tag": "0002_jadwal_acara_dan_foto",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793507538038,
+      "tag": "0003_pengingat_rsvp",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793508260635,
+      "tag": "0004_musik_dan_ucapan",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793509232071,
+      "tag": "0005_panel_admin_dan_checkin",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793509240762,
+      "tag": "0006_audit_tak_berubah",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793543350736,
+      "tag": "0007_ukuran_foto",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793668683910,
+      "tag": "0008_hapus_moderasi_dan_catatan",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793668691205,
+      "tag": "0009_peran_admin",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793668707284,
+      "tag": "0010_hapus_template_bordeaux",
+      "breakpoints": true
     }
   ]
 }

@@ -37,6 +37,15 @@ const updatedAt = () =>
     .defaultNow()
     .$onUpdate(() => new Date());
 
+export const adminRole = pgTable("admin_role", {
+  key: text().primaryKey(),
+  label: text().notNull(),
+  permissions: jsonb().$type<string[]>().notNull().default([]),
+  sortOrder: integer().notNull().default(0),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+});
+
 export const user = pgTable("user", {
   id: text().primaryKey(),
   name: text().notNull(),
@@ -46,6 +55,7 @@ export const user = pgTable("user", {
   status: text({ enum: ["aktif", "diblokir"] })
     .notNull()
     .default("aktif"),
+  adminRole: text().references(() => adminRole.key, { onDelete: "restrict" }),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
@@ -120,6 +130,7 @@ export const invitation = pgTable(
     defaultMaxAdults: integer().notNull().default(2),
     defaultMaxChildren: integer().notNull().default(0),
     rsvpDeadline: timestamp({ withTimezone: true }),
+    checkinKey: text().unique(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -163,11 +174,13 @@ export const photo = pgTable(
     invitationId: uuid()
       .notNull()
       .references(() => invitation.id, { onDelete: "cascade" }),
-    kind: text({ enum: ["cover", "galeri"] }).notNull(),
+    kind: text({ enum: ["cover", "galeri", "qris", "pria", "wanita"] }).notNull(),
     sortOrder: integer().notNull().default(0),
     fileName: text().notNull(),
     contentType: text().notNull(),
     sizeBytes: integer().notNull(),
+    width: integer(),
+    height: integer(),
     data: bytea().notNull(),
     createdAt: createdAt(),
   },
@@ -178,6 +191,19 @@ export const photo = pgTable(
       .where(sql`${t.kind} = 'cover'`),
   ],
 );
+
+export const music = pgTable("music", {
+  id: uuid().defaultRandom().primaryKey(),
+  invitationId: uuid()
+    .notNull()
+    .unique()
+    .references(() => invitation.id, { onDelete: "cascade" }),
+  fileName: text().notNull(),
+  contentType: text().notNull(),
+  sizeBytes: integer().notNull(),
+  data: bytea().notNull(),
+  createdAt: createdAt(),
+});
 
 export const guestGroup = pgTable(
   "guest_group",
@@ -207,6 +233,8 @@ export const guest = pgTable(
     maxChildren: integer().notNull().default(0),
     sentAt: timestamp({ withTimezone: true }),
     firstOpenedAt: timestamp({ withTimezone: true }),
+    lastRemindedAt: timestamp({ withTimezone: true }),
+    checkedInAt: timestamp({ withTimezone: true }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -271,7 +299,10 @@ export const wish = pgTable(
       .default("tampil"),
     createdAt: createdAt(),
   },
-  (t) => [index("wish_invitation_idx").on(t.invitationId)],
+  (t) => [
+    index("wish_invitation_idx").on(t.invitationId),
+    index("wish_guest_idx").on(t.guestId),
+  ],
 );
 
 export const templateRegistry = pgTable("template_registry", {
@@ -279,5 +310,29 @@ export const templateRegistry = pgTable("template_registry", {
   label: text().notNull(),
   visible: boolean().notNull().default(false),
   sortOrder: integer().notNull().default(0),
+  ribbon: text({ enum: ["Baru", "Populer", "Unggulan"] }),
   registeredAt: createdAt(),
+});
+
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    actorId: text(),
+    actorName: text().notNull(),
+    category: text({
+      enum: ["akun", "undangan", "template", "pengaturan", "tim", "sistem"],
+    }).notNull(),
+    action: text().notNull(),
+    target: text().notNull().default(""),
+    detail: text().notNull().default(""),
+    createdAt: createdAt(),
+  },
+  (t) => [index("audit_log_created_idx").on(t.createdAt)],
+);
+
+export const platformSetting = pgTable("platform_setting", {
+  key: text().primaryKey(),
+  value: jsonb().$type<unknown>().notNull(),
+  updatedAt: updatedAt(),
 });
