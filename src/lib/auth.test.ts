@@ -17,7 +17,6 @@ function makeAuth() {
     plugins: [],
     secret: "rahasia-uji-rahasia-uji-rahasia-uji-123",
     baseURL: "http://localhost:3000",
-    emailAndPassword: { enabled: true },
   });
 }
 

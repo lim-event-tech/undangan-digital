@@ -27,7 +27,7 @@ function LogoGoogle() {
   );
 }
 
-export function TombolGoogle({ siap }: { siap: boolean }) {
+export function TombolGoogle({ siap, admin = false }: { siap: boolean; admin?: boolean }) {
   const [memproses, setMemproses] = useState(false);
   const [galat, setGalat] = useState<string | null>(null);
 
@@ -36,8 +36,9 @@ export function TombolGoogle({ siap }: { siap: boolean }) {
     setGalat(null);
     const { error } = await authClient.signIn.social({
       provider: "google",
-      callbackURL: "/undangan",
-      errorCallbackURL: "/masuk?galat=oauth",
+      ...(admin
+        ? { callbackURL: "/admin", errorCallbackURL: "/admin/masuk?galat=google" }
+        : { callbackURL: "/undangan", errorCallbackURL: "/masuk?galat=oauth", requestSignUp: true }),
     });
     if (error) {
       setGalat("Tidak bisa memulai login Google. Coba lagi sebentar.");
@@ -54,7 +55,7 @@ export function TombolGoogle({ siap }: { siap: boolean }) {
         className={`${tombolTerang} min-h-12 w-full`}
       >
         <LogoGoogle />
-        {memproses ? "Mengarahkan ke Google…" : "Lanjut dengan Google"}
+        {memproses ? "Mengarahkan ke Google…" : admin ? "Masuk admin dengan Google" : "Lanjut dengan Google"}
       </button>
       {!siap ? (
         <p
@@ -62,7 +63,7 @@ export function TombolGoogle({ siap }: { siap: boolean }) {
           className="m-0 rounded-md bg-jingga-bg p-3 text-[13px] leading-relaxed text-jingga"
         >
           Login Google belum dikonfigurasi. Isi GOOGLE_CLIENT_ID dan
-          GOOGLE_CLIENT_SECRET di .env.local, lalu mulai ulang server.
+          GOOGLE_CLIENT_SECRET di .env, lalu mulai ulang server.
         </p>
       ) : null}
       {galat ? (

@@ -1,8 +1,11 @@
 import type { BetterAuthOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import * as schema from "@/db/schema";
 import type { AppDb } from "@/db/types";
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@/lib/auth-options-constants";
+import { getSettings } from "@/lib/platform/service";
 
 export function googleConfigured(): boolean {
   return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
@@ -17,7 +20,13 @@ export function authOptions(database: AppDb) {
       google: {
         clientId: process.env.GOOGLE_CLIENT_ID ?? "",
         clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+        disableImplicitSignUp: true,
       },
+    },
+    emailAndPassword: {
+      enabled: true,
+      minPasswordLength: MIN_PASSWORD_LENGTH,
+      maxPasswordLength: MAX_PASSWORD_LENGTH,
     },
     user: {
       additionalFields: {
@@ -26,6 +35,26 @@ export function authOptions(database: AppDb) {
           required: false,
           defaultValue: "aktif",
           input: false,
+        },
+        adminRole: {
+          type: "string",
+          required: false,
+          input: false,
+        },
+      },
+    },
+    databaseHooks: {
+      user: {
+        create: {
+          before: async () => {
+            const settings = await getSettings(database);
+            if (!settings.daftarTerbuka) {
+              throw new APIError("FORBIDDEN", {
+                code: "PENDAFTARAN_DITUTUP",
+                message: "Pendaftaran akun baru sedang ditutup.",
+              });
+            }
+          },
         },
       },
     },

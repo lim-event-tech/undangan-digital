@@ -6,14 +6,14 @@ import { Ikon } from "@/components/ikon";
 import { authClient } from "@/lib/auth-client";
 import { tombolTerang } from "@/components/ui";
 
-export function TombolKeluar() {
+export function TombolKeluar({ tujuan = "/masuk" }: { tujuan?: string }) {
   const router = useRouter();
   const [memproses, setMemproses] = useState(false);
 
   async function keluar() {
     setMemproses(true);
     await authClient.signOut();
-    router.replace("/masuk");
+    router.replace(tujuan);
     router.refresh();
   }
 
