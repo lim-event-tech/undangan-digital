@@ -432,17 +432,6 @@ export default async function Beranda() {
           </div>
         </section>
       </main>
-
-      <footer style={{ borderTop: "1px solid #E4DAC7", background: "#F5EEDF" }}>
-        <div
-          style={{ ...lebar, padding: `22px ${gutter}`, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "12px" }}
-        >
-          <Merek />
-          <span style={{ fontSize: "14px", fontWeight: 500 }}>
-            <a href="#tanya">Bantuan</a>
-          </span>
-        </div>
-      </footer>
     </div>
   );
 }
