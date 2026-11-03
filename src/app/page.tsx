@@ -316,7 +316,7 @@ export default async function Beranda() {
         <section style={{ ...lebar, padding: `60px ${gutter}`, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "40px" }}>
           <div style={{ flex: "1 1 380px", display: "flex", flexDirection: "column", gap: "16px" }}>
             <JudulBagian>
-              Hitung katering tanpa <span className="stabilo">rekap manual</span>
+              Hitung tamu tanpa <span className="stabilo">rekap manual</span>
             </JudulBagian>
             <p style={{ margin: 0, fontSize: "17px", fontWeight: 400, lineHeight: 1.6 }}>
               Lihat siapa yang hadir, tidak hadir, dan belum menjawab, lengkap dengan jumlah dewasa dan anak per acara. Tahu juga
