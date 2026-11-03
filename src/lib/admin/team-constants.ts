@@ -1,1 +1,1 @@
-export const ADMIN_MIN_PASSWORD = 12;
+export const ADMIN_MIN_PASSWORD = 8;

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Halaman, JudulAdmin } from "@/components/admin-ui";
 import { kartu } from "@/components/ui";
 import { db } from "@/db";
@@ -39,6 +40,15 @@ export default async function PeranAdminPage() {
             </div>
             {item.key !== SUPER_ROLE && item.members === 0 ? (
               <TombolHapusPeran peran={item.key} nama={item.label} />
+            ) : null}
+            {item.key !== SUPER_ROLE && item.members > 0 ? (
+              <p className="m-0 max-w-64 text-sm text-redup">
+                Untuk menghapus peran ini, pindahkan {item.members} anggotanya ke peran lain di{" "}
+                <Link href="/admin/tim" className="font-medium text-emas">
+                  halaman Tim
+                </Link>
+                .
+              </p>
             ) : null}
           </div>
           {item.key === SUPER_ROLE ? (
