@@ -102,7 +102,7 @@ export default async function TamuPage({
         <div className="flex flex-wrap gap-2.5">
           <Link href="/undangan/tamu/impor" className={`${tombolTerang} no-underline`}>
             <Ikon nama="unduh" ukuran={16} />
-            Impor CSV
+            Impor Excel atau CSV
           </Link>
           <Link href="/undangan/tamu#tambah" className={`${tombolGelap} no-underline`}>
             + Tambah tamu
@@ -186,10 +186,10 @@ export default async function TamuPage({
               <h2 className="m-0 font-judul text-2xl font-medium">Belum ada tamu</h2>
               <p className="m-0 max-w-sm text-sm leading-relaxed text-redup-2">
                 Tambahkan tamu satu per satu lewat form di samping, atau impor
-                banyak sekaligus dari file CSV.
+                banyak sekaligus dari file Excel atau CSV.
               </p>
               <Link href="/undangan/tamu/impor" className={`${tombolTerang} no-underline`}>
-                Impor dari CSV
+                Impor dari Excel atau CSV
               </Link>
             </div>
           ) : rows.length === 0 ? (
@@ -256,7 +256,7 @@ export default async function TamuPage({
                       <td className="px-2.5 py-1.5 whitespace-nowrap">
                         <div className="flex gap-1.5">
                           <TombolSalin
-                            path={`/u/${invitation.slug}/${g.token}`}
+                            path={`/${invitation.slug}/${g.token}`}
                             nama={g.name}
                           />
                           <Link

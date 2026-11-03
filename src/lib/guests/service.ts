@@ -121,6 +121,19 @@ export async function listGuests(
   return rows.map((r) => ({ ...r, eventIds: eventsByGuest.get(r.id) ?? [] }));
 }
 
+export async function firstGuestToken(
+  db: AppDb,
+  invitationId: string,
+): Promise<string | null> {
+  const [row] = await db
+    .select({ token: guest.token })
+    .from(guest)
+    .where(eq(guest.invitationId, invitationId))
+    .orderBy(asc(guest.createdAt), asc(guest.name))
+    .limit(1);
+  return row?.token ?? null;
+}
+
 export async function countGuests(db: AppDb, invitationId: string) {
   const [row] = await db
     .select({ total: sql<number>`count(*)::int` })
