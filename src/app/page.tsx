@@ -65,27 +65,6 @@ function Panah() {
 function Merek() {
   return (
     <Link href="/" className="merek" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "#2A2622", minWidth: 0 }}>
-      <span
-        className="merek-ikon"
-        style={{
-          flexShrink: 0,
-          width: "38px",
-          height: "38px",
-          border: "1px solid #C6A867",
-          borderRadius: "50%",
-          background: "#FFFFFF",
-          color: "#7D5F28",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-        aria-hidden="true"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <rect x="3" y="5" width="18" height="14" rx="2" />
-          <path d="M3 7l9 6 9-6" />
-        </svg>
-      </span>
       <span className="jdl merek-teks" style={{ fontSize: "23px" }}>
         UndanganDigital
       </span>
@@ -155,9 +134,6 @@ export default async function Beranda() {
           style={{ ...lebar, padding: `30px ${gutter} 70px`, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "40px" }}
         >
           <div style={{ flex: "1 1 460px", minWidth: 0, display: "flex", flexDirection: "column", gap: "22px" }}>
-            <span className="stiker" style={{ alignSelf: "flex-start", background: "#E3E8DA" }}>
-              Gratis untuk pasangan
-            </span>
             <h1 className="jdl jdl-raksasa" style={{ fontSize: "74px" }}>
               Undangan pernikahan yang menyapa tiap tamu dengan <span className="stabilo">namanya.</span>
             </h1>
