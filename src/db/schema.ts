@@ -336,3 +336,38 @@ export const platformSetting = pgTable("platform_setting", {
   value: jsonb().$type<unknown>().notNull(),
   updatedAt: updatedAt(),
 });
+
+export const waAuth = pgTable("wa_auth", {
+  key: text().primaryKey(),
+  value: text().notNull(),
+  updatedAt: updatedAt(),
+});
+
+export const waJob = pgTable(
+  "wa_job",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    invitationId: uuid()
+      .notNull()
+      .references(() => invitation.id, { onDelete: "cascade" }),
+    guestId: uuid()
+      .notNull()
+      .references(() => guest.id, { onDelete: "cascade" }),
+    kind: text({ enum: ["undangan", "pengingat"] }).notNull(),
+    phone: text().notNull(),
+    message: text().notNull(),
+    status: text({ enum: ["menunggu", "mengirim", "terkirim", "gagal", "dibatalkan"] })
+      .notNull()
+      .default("menunggu"),
+    error: text(),
+    createdAt: createdAt(),
+    processedAt: timestamp({ withTimezone: true }),
+  },
+  (t) => [
+    index("wa_job_status_idx").on(t.status, t.createdAt),
+    index("wa_job_invitation_idx").on(t.invitationId),
+    uniqueIndex("wa_job_active_unique")
+      .on(t.guestId, t.kind)
+      .where(sql`${t.status} in ('menunggu', 'mengirim')`),
+  ],
+);

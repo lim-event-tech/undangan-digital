@@ -207,7 +207,7 @@ export default async function Beranda() {
               ["Pilih template", `${angkaKata(jumlah)} tema beranimasi. Lihat pratinjau di HP dan desktop sebelum menyimpan.`],
               ["Isi dan susun", "Nama mempelai, foto, dan tiap acara lengkap dengan peta. Susun ulang bagiannya dengan seret."],
               ["Impor tamu", "Unggah spreadsheet, atur batas dewasa dan anak serta acara yang diundang per tamu."],
-              ["Kirim dan pantau", "Satu ketukan per tamu membuka WhatsApp dengan pesan siap kirim. RSVP masuk ke dashboard."],
+              ["Kirim dan pantau", "Satu ketukan langsung kirim semua undangan. RSVP masuk ke dashboard."],
             ].map(([judul, teks], i) => (
               <li key={judul} className="k" style={{ padding: "22px 20px", display: "flex", flexDirection: "column", gap: "12px" }}>
                 <span

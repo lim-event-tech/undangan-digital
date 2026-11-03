@@ -37,6 +37,15 @@ export function renderMessage(template: string, vars: MessageVars): string {
   );
 }
 
+export function pickTemplate(
+  kind: "undangan" | "pengingat",
+  content: { pesanWa: string; pesanPengingat: string },
+  pesanBawaan: string,
+): string {
+  if (kind === "pengingat") return content.pesanPengingat.trim() || DEFAULT_REMINDER_MESSAGE;
+  return content.pesanWa.trim() || pesanBawaan || DEFAULT_MESSAGE;
+}
+
 export function deadlinePhrase(deadlineText: string | null): string {
   return deadlineText ? `sebelum ${deadlineText}` : "secepatnya";
 }

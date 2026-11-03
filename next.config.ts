@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   agentRules: false,
+  serverExternalPackages: ["baileys"],
   output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   images: {
     localPatterns: [{ pathname: "/foto/**" }],

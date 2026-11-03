@@ -33,6 +33,7 @@
     "@fontsource/mulish": "^5.3.0",
     "@fontsource/pinyon-script": "^5.3.0",
     "@fontsource/playfair-display": "^5.3.0",
+    "baileys": "7.0.0-rc14",
     "better-auth": "^1.7.14",
     "drizzle-orm": "^0.45.4",
     "jsqr": "^1.4.0",

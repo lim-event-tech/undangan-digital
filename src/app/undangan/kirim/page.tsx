@@ -11,16 +11,16 @@ import { readContent } from "@/lib/invitations/content";
 import { getSettings } from "@/lib/platform/service";
 import { getDashboard } from "@/lib/rsvp/dashboard";
 import { requireInvitation } from "@/lib/session";
-import {
-  DEFAULT_MESSAGE,
-  DEFAULT_REMINDER_MESSAGE,
-  deadlinePhrase,
-  renderMessage,
-  whatsappLink,
-} from "@/lib/whatsapp";
+import { DEFAULT_MESSAGE, deadlinePhrase, pickTemplate, renderMessage, whatsappLink } from "@/lib/whatsapp";
 import { formatPhone } from "@/lib/phone";
+import { countTargets } from "@/lib/wa/blast";
+import { estimateMinutes } from "@/lib/wa/config";
+import { getWaConfig } from "@/lib/wa/config-service";
+import { getWaManager } from "@/lib/wa/manager";
+import { invitationSummary, queuedGuestIds, recentFailures } from "@/lib/wa/queue";
 import { tandaiBelumTerkirimAction } from "./actions";
 import { FormPesan } from "./form-pesan";
+import { PanelOtomatis } from "./panel-otomatis";
 import { TombolKirim } from "./tombol-kirim";
 
 export const metadata: Metadata = { title: "Kirim undangan" };
@@ -46,20 +46,32 @@ export default async function KirimPage({ searchParams }: PageProps<"/undangan/k
   const content = readContent(invitation.content);
   const pengingat = tampil === "pengingat";
   const pesanBawaan = (await getSettings(db)).pesanWaBawaan || DEFAULT_MESSAGE;
-  const template = pengingat
-    ? content.pesanPengingat.trim() || DEFAULT_REMINDER_MESSAGE
-    : content.pesanWa.trim() || pesanBawaan;
+  const template = pickTemplate(tampil === "pengingat" ? "pengingat" : "undangan", content, pesanBawaan);
   const couple = `${invitation.groomName} & ${invitation.brideName}`;
   const deadlineText = invitation.rsvpDeadline
     ? formatDate(dateFromDeadline(invitation.rsvpDeadline))
     : null;
   const phrase = deadlinePhrase(deadlineText);
 
-  const [all, counts, dashboard] = await Promise.all([
+  const jenisAntrean = pengingat ? "pengingat" : "undangan";
+  const [all, counts, dashboard, waConfig, ringkasan, kegagalan, antre, targetOtomatis] = await Promise.all([
     listGuests(db, invitation.id, { q }),
     countSent(db, invitation.id),
     getDashboard(db, invitation.id),
+    getWaConfig(db),
+    invitationSummary(db, invitation.id),
+    recentFailures(db, { invitationId: invitation.id, limit: 5 }),
+    queuedGuestIds(db, invitation.id, jenisAntrean),
+    countTargets(db, invitation.id, jenisAntrean),
   ]);
+  const waSnapshot = getWaManager().snapshot();
+  const alasanOtomatis = !waConfig.aktif
+    ? "Kirim otomatis belum diaktifkan oleh admin. Untuk sementara kirim lewat tombol WhatsApp di daftar tamu."
+    : waSnapshot.status !== "terhubung"
+      ? "WhatsApp pengirim sedang tidak terhubung. Hubungi admin, atau kirim lewat tombol WhatsApp di daftar tamu."
+      : invitation.status !== "terbit"
+        ? "Terbitkan undangan dulu sebelum mengirim."
+        : null;
   const detail = new Map(dashboard.guests.map((g) => [g.id, g]));
   const belumMenjawab = (id: string) => detail.get(id)?.status === "belum";
   const rows = all.filter((g) => {
@@ -98,8 +110,8 @@ export default async function KirimPage({ searchParams }: PageProps<"/undangan/k
       <div>
         <h1 className={`m-0 ${judulHalaman}`}>Kirim undangan</h1>
         <p className="mt-1 mb-0 text-sm text-redup">
-          {counts.sent} dari {counts.total} tamu sudah dikirimi · pesan dibuka di WhatsApp dan
-          Anda menekan kirim sendiri
+          {counts.sent} dari {counts.total} tamu sudah dikirimi · kirim otomatis lewat antrean, atau
+          buka WhatsApp dan tekan kirim sendiri
         </p>
       </div>
 
@@ -126,6 +138,19 @@ export default async function KirimPage({ searchParams }: PageProps<"/undangan/k
       ) : (
         <FormPesan key="undangan" saved={content.pesanWa} sample={sample} bawaan={pesanBawaan} />
       )}
+
+      <PanelOtomatis
+        key={jenisAntrean}
+        jenis={jenisAntrean}
+        tersedia={alasanOtomatis === null}
+        alasan={alasanOtomatis}
+        target={targetOtomatis}
+        estimasiMenit={estimateMinutes(targetOtomatis, waConfig)}
+        jedaMin={Math.max(waConfig.jedaMin, 10)}
+        batasHarian={waConfig.batasHarian}
+        ringkasan={ringkasan}
+        kegagalan={kegagalan.map((k) => ({ id: k.id, nama: k.guestName, error: k.error }))}
+      />
 
       <section aria-labelledby="judul-daftar-kirim" className={`${kartu} flex flex-col gap-4 p-5 sm:p-6`}>
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -200,7 +225,9 @@ export default async function KirimPage({ searchParams }: PageProps<"/undangan/k
                       {formatPhone(g.phone)}
                       {g.groupName ? ` · ${g.groupName}` : ""}
                     </span>
-                    {pengingat ? (
+                    {antre.has(g.id) ? (
+                      <span className="text-xs font-medium text-emas-tua">Dalam antrean WhatsApp</span>
+                    ) : pengingat ? (
                       <span className="text-xs font-medium text-redup">
                         {detail.get(g.id)?.remindedAt
                           ? `Diingatkan ${formatStamp(detail.get(g.id)!.remindedAt!)}`
