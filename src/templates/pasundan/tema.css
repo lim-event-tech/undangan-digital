@@ -1,0 +1,52 @@
+html:has(.tpl-pasundan){scroll-behavior:smooth}
+html:has(.tpl-pasundan) body{margin:0;background:#E9E2CC}
+.tpl-pasundan a{color:#2F6B4F}
+.tpl-pasundan a:hover{color:#1F4D3A}
+.tpl-pasundan::selection,.tpl-pasundan ::selection{background:#DDEFE2;color:#1F3A2E}
+html:has(.tpl-pasundan)::-webkit-scrollbar,html:has(.tpl-pasundan) ::-webkit-scrollbar{width:10px;height:8px}
+html:has(.tpl-pasundan)::-webkit-scrollbar-track,html:has(.tpl-pasundan) ::-webkit-scrollbar-track{background:#F4EFE2}
+html:has(.tpl-pasundan)::-webkit-scrollbar-thumb,html:has(.tpl-pasundan) ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#E6C47A,#2F6B4F);border-radius:10px;border:2px solid #F4EFE2}
+html:has(.tpl-pasundan)::-webkit-scrollbar-thumb:hover,html:has(.tpl-pasundan) ::-webkit-scrollbar-thumb:hover{background:#1F4D3A}
+@supports (-moz-appearance:none){
+html:has(.tpl-pasundan),.tpl-pasundan,.tpl-pasundan *{scrollbar-color:#2F6B4F #F4EFE2;scrollbar-width:thin}
+}
+@keyframes pasundan-ayun{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+@keyframes pasundan-goyang{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+@keyframes pasundan-goyangPelan{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+@keyframes pasundan-hanyut{from{transform:translateX(-10px)}to{transform:translateX(10px)}}
+@keyframes pasundan-jatuh{0%{transform:translate3d(0,0,0) rotate(0);opacity:0}10%{opacity:.95}100%{transform:translate3d(-50px,780px,0) rotate(480deg);opacity:0}}
+@keyframes pasundan-kelip{0%,100%{opacity:.2;transform:scale(.5) rotate(0deg)}50%{opacity:1;transform:scale(1) rotate(45deg)}}
+@keyframes pasundan-kilau{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes pasundan-denyut{0%{box-shadow:0 0 0 0 rgba(200,162,74,.55)}100%{box-shadow:0 0 0 18px rgba(200,162,74,0)}}
+@keyframes pasundan-muncul{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes pasundan-putar{to{transform:rotate(360deg)}}
+@keyframes pasundan-pantul{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+.tpl-pasundan .ayun{transform-origin:50% 0;animation:pasundan-ayun 5s ease-in-out infinite}
+.tpl-pasundan .goyang{transform-origin:50% 100%;animation:pasundan-goyang 4.5s ease-in-out infinite}
+.tpl-pasundan .goyang-pelan{transform-origin:50% 100%;animation:pasundan-goyangPelan 6s ease-in-out infinite}
+.tpl-pasundan .goyang-daun{transform-origin:10% 15%;animation:pasundan-goyangPelan 5s ease-in-out infinite}
+.tpl-pasundan .hanyut{animation:pasundan-hanyut 14s ease-in-out infinite alternate}
+.tpl-pasundan .kelopak{position:absolute;top:-30px;width:9px;height:9px;border-radius:50% 0 50% 50%;background:#FFFFFF;box-shadow:inset -1px -1px 0 #E2D6B8;animation:pasundan-jatuh linear infinite;pointer-events:none}
+.tpl-pasundan .kelip{position:absolute;animation:pasundan-kelip 2.8s ease-in-out infinite;pointer-events:none}
+.tpl-pasundan .emas{background:linear-gradient(90deg,#B08A35,#F6E3A8 40%,#B08A35 60%,#B08A35);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:pasundan-kilau 5s linear infinite}
+.tpl-pasundan .denyut{animation:pasundan-denyut 2.2s ease-out infinite}
+.tpl-pasundan .putar{animation:pasundan-putar 80s linear infinite}
+.tpl-pasundan .pantul{animation:pasundan-pantul 1.6s ease-in-out infinite}
+.tpl-pasundan .masuk{animation:pasundan-muncul .7s ease both}
+.tpl-pasundan .cakram{animation:pasundan-putar 4s linear infinite}
+html.js .tpl-pasundan [data-anim]{opacity:0;transition:opacity 1s ease,transform 1.1s cubic-bezier(.2,.75,.2,1);transition-delay:var(--d,0s)}
+html.js .tpl-pasundan [data-anim=naik]{transform:translateY(46px)}
+html.js .tpl-pasundan [data-anim=kiri]{transform:translateX(-60px)}
+html.js .tpl-pasundan [data-anim=kanan]{transform:translateX(60px)}
+html.js .tpl-pasundan [data-anim=zoom]{transform:scale(.82)}
+html.js .tpl-pasundan [data-anim=garis]{transform:scaleY(0);transform-origin:50% 0}
+html.js .tpl-pasundan [data-anim].tampil{opacity:1;transform:none}
+.tpl-pasundan .kertas{background-color:#FBF8F0;background-image:radial-gradient(rgba(200,162,74,.08) 1px,transparent 1px),radial-gradient(rgba(47,107,79,.05) 1px,transparent 1px);background-size:14px 14px,22px 22px;background-position:0 0,7px 11px}
+.tpl-pasundan .kartu{position:relative;background:#FFFDF7;color:#1F3A2E;border-radius:22px;box-shadow:0 18px 40px rgba(31,77,58,.12)}
+.tpl-pasundan .kartu::before{content:"";position:absolute;inset:8px;border:1px solid rgba(200,162,74,.7);border-radius:16px;pointer-events:none}
+.tpl-pasundan .mata{margin:0;font-family:'Mulish',sans-serif;font-size:11px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:#2F6B4F}
+.tpl-pasundan .judul{margin:0;font-family:'Great Vibes',cursive;font-weight:400;font-size:52px;line-height:1.1;color:#1F3A2E}
+.tpl-pasundan .miring{font-family:'Playfair Display',serif;font-style:italic}
+.tpl-pasundan .foto{position:relative;overflow:hidden}
+.tpl-pasundan .foto::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.45) 50%,transparent 65%);background-size:250% 100%;animation:pasundan-kilau 7s ease-in-out infinite}
+html:has(.tpl-pasundan){background:#E9E2CC}
