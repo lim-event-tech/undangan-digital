@@ -25,7 +25,6 @@ export type PlatformStats = {
   rsvps: number;
   daily: DailyActivity[];
   funnel: { key: string; label: string; count: number }[];
-  attention: { unsent: number };
   templates: { key: string; count: number }[];
 };
 
@@ -39,7 +38,6 @@ export async function getPlatformStats(
   now: Date = new Date(),
 ): Promise<PlatformStats> {
   const since = new Date(now.getTime() - days * 86_400_000);
-  const stale = new Date(now.getTime() - 3 * 86_400_000);
 
   const count = async (query: PromiseLike<{ total: number }[]>) => (await query)[0]?.total ?? 0;
   const totalOf = sql<number>`count(*)::int`;
@@ -87,7 +85,7 @@ export async function getPlatformStats(
     daily.push({ date, opened: openedBy.get(date) ?? 0, rsvp: rsvpBy.get(date) ?? 0 });
   }
 
-  const [creators, sentInvitations, answeredInvitations, unsent, templates] =
+  const [creators, sentInvitations, answeredInvitations, templates] =
     await Promise.all([
       count(db.select({ total: sql<number>`count(distinct ${invitation.ownerId})::int` }).from(invitation)),
       count(
@@ -100,18 +98,6 @@ export async function getPlatformStats(
         db.select({ total: sql<number>`count(distinct ${guest.invitationId})::int` }).from(guest).where(
           sql`exists (select 1 from rsvp where rsvp.guest_id = ${guest.id})`,
         ),
-      ),
-      count(
-        db
-          .select({ total: totalOf })
-          .from(invitation)
-          .where(
-            and(
-              eq(invitation.status, "terbit"),
-              sql`${invitation.updatedAt} < ${stale.toISOString()}::timestamptz`,
-              sql`not exists (select 1 from guest where guest.invitation_id = ${invitation.id} and guest.sent_at is not null)`,
-            ),
-          ),
       ),
       db
         .select({ key: invitation.templateKey, total: totalOf })
@@ -140,7 +126,6 @@ export async function getPlatformStats(
       { key: "kirim", label: "Mengirim link ke tamu", count: sentInvitations },
       { key: "rsvp", label: "Menerima RSVP pertama", count: answeredInvitations },
     ],
-    attention: { unsent },
     templates: templates.map((row) => ({ key: row.key, count: row.total })),
   };
 }

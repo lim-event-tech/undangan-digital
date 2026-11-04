@@ -416,7 +416,7 @@ describe("akun pasangan", () => {
 });
 
 describe("statistik platform", () => {
-  it("menghitung akun, corong, aktivitas harian, dan hal yang perlu perhatian", async () => {
+  it("menghitung akun, corong, aktivitas harian, dan pemakaian template", async () => {
     const fresh = await createDb();
     const now = new Date("2026-11-15T05:00:00.000Z");
     const a = await seedInvitation(fresh, { groom: "Satu", bride: "A" });
@@ -463,7 +463,6 @@ describe("statistik platform", () => {
     expect(stats.daily).toHaveLength(7);
     expect(stats.daily[6]).toMatchObject({ date: "2026-11-15", rsvp: 1 });
     expect(stats.daily.find((d) => d.date === "2026-11-14")?.opened).toBe(1);
-    expect(stats.attention.unsent).toBe(1);
     expect(stats.templates).toEqual([{ key: "melati", count: 3 }]);
   });
 });

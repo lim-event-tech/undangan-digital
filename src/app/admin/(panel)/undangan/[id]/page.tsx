@@ -9,7 +9,7 @@ import { listAudit } from "@/lib/admin/audit";
 import { requireAdmin } from "@/lib/admin/guard";
 import { getInvitationAdmin } from "@/lib/admin/queries";
 import { can } from "@/lib/admin/roles";
-import { dateFromDeadline, formatDate, formatStamp } from "@/lib/datetime";
+import { dateFromDeadline, formatDate, formatStamp, todayWib } from "@/lib/datetime";
 import { formatPhone } from "@/lib/phone";
 import { getDashboard, type GuestStatus } from "@/lib/rsvp/dashboard";
 import { isUuid } from "@/lib/uuid";
@@ -234,7 +234,7 @@ export default async function DetailUndanganAdminPage({ params }: PageProps<"/ad
               Pengaturan undangan
             </h2>
             <FormSlugAdmin id={detail.id} slug={detail.slug} terkunci={detail.slugLocked} boleh={bolehUbah} />
-            <FormBatasAdmin id={detail.id} batas={dateFromDeadline(detail.rsvpDeadline)} boleh={bolehUbah} />
+            <FormBatasAdmin id={detail.id} batas={dateFromDeadline(detail.rsvpDeadline)} hariIni={todayWib()} boleh={bolehUbah} />
           </section>
 
           {bolehTangguhkan || bolehHapus ? (

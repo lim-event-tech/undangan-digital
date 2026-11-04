@@ -11,6 +11,8 @@ import {
   isTimeString,
   isZone,
   shortTime,
+  todayInZone,
+  todayWib,
 } from "./datetime";
 
 describe("isDateString", () => {
@@ -81,6 +83,23 @@ describe("format tanggal Indonesia", () => {
   it("menulis cap waktu dalam WIB", () => {
     expect(formatStamp(new Date("2026-11-01T07:05:00.000Z"))).toBe("1 Nov 2026, 14.05");
     expect(formatStamp(new Date("2026-12-31T18:00:00.000Z"))).toBe("1 Jan 2027, 01.00");
+  });
+});
+
+describe("tanggal hari ini", () => {
+  it("mengikuti zona yang dipilih ketika hari sudah berganti di Indonesia timur", () => {
+    const now = new Date("2026-11-04T15:30:00.000Z");
+    expect(todayInZone("WIB", now)).toBe("2026-11-04");
+    expect(todayInZone("WITA", now)).toBe("2026-11-04");
+    expect(todayInZone("WIT", now)).toBe("2026-11-05");
+    expect(todayWib(now)).toBe("2026-11-04");
+  });
+
+  it("mengikuti pergantian tahun di setiap zona", () => {
+    const now = new Date("2026-12-31T16:30:00.000Z");
+    expect(todayInZone("WIB", now)).toBe("2026-12-31");
+    expect(todayInZone("WITA", now)).toBe("2027-01-01");
+    expect(todayInZone("WIT", now)).toBe("2027-01-01");
   });
 });
 

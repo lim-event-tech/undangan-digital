@@ -49,6 +49,5 @@ html.js .tpl-melati [data-anim].tampil{opacity:1;transform:none}
 .tpl-melati .mata{margin:0;font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:.34em;text-transform:uppercase;color:#6E8B6A}
 .tpl-melati .judul{margin:0;font-family:'Pinyon Script',cursive;font-weight:400;font-size:46px;line-height:1.15;color:#2E3B2A}
 .tpl-melati .foto{position:relative;overflow:hidden}
-.tpl-melati .foto::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.45) 50%,transparent 65%);background-size:250% 100%;animation:melati-kilau 7s ease-in-out infinite}
 .tpl-melati .daftar-ucapan{scrollbar-width:thin}
 html:has(.tpl-melati){background:#E7E1D3}

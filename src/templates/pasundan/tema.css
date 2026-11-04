@@ -48,5 +48,4 @@ html.js .tpl-pasundan [data-anim].tampil{opacity:1;transform:none}
 .tpl-pasundan .judul{margin:0;font-family:'Great Vibes',cursive;font-weight:400;font-size:52px;line-height:1.1;color:#1F3A2E}
 .tpl-pasundan .miring{font-family:'Playfair Display',serif;font-style:italic}
 .tpl-pasundan .foto{position:relative;overflow:hidden}
-.tpl-pasundan .foto::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.45) 50%,transparent 65%);background-size:250% 100%;animation:pasundan-kilau 7s ease-in-out infinite}
 html:has(.tpl-pasundan){background:#E9E2CC}

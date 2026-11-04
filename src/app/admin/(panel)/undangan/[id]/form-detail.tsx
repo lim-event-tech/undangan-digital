@@ -80,7 +80,7 @@ export function FormSlugAdmin({
   );
 }
 
-export function FormBatasAdmin({ id, batas, boleh }: { id: string; batas: string; boleh: boolean }) {
+export function FormBatasAdmin({ id, batas, hariIni, boleh }: { id: string; batas: string; hariIni: string; boleh: boolean }) {
   const { aksi, memproses, galat, sukses } = useForm(ubahBatasAction);
   return (
     <form action={aksi} className="flex flex-col gap-2.5">
@@ -90,6 +90,7 @@ export function FormBatasAdmin({ id, batas, boleh }: { id: string; batas: string
         <input
           name="batas"
           type="date"
+          min={hariIni}
           defaultValue={batas}
           disabled={!boleh}
           aria-invalid={galat?.errors?.batas ? true : undefined}

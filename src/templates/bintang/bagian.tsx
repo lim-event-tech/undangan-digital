@@ -8,7 +8,7 @@ export const KERTAS: { className?: string; style: CSSProperties } = { className:
 
 export function Sampul({ v, berikut }: PropsBagian) {
   return (
-    <section id="sampul" style={{ minHeight: "844px", boxSizing: "border-box", position: "relative", padding: "150px 26px 60px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "24px", overflow: "hidden" }}>
+    <section id="sampul" className="sampul-undangan" style={{ boxSizing: "border-box", position: "relative", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", overflow: "hidden" }}>
       <span className="bintang" style={{ top: "120px", left: "30px", width: "2px", height: "2px" }} />
       <span className="bintang" style={{ top: "200px", left: "360px", width: "3px", height: "3px", animationDelay: "-1s" }} />
       <span className="bintang" style={{ top: "420px", left: "20px", width: "2px", height: "2px", animationDelay: "-2s" }} />
@@ -60,6 +60,7 @@ export function Sampul({ v, berikut }: PropsBagian) {
           <use href="#b-rimbun" />
         </svg>
       </div>
+      <div className="sampul-konten">
       <div className="bangkit" style={{ position: "relative", width: "270px", height: "360px", borderRadius: "50%", background: "radial-gradient(ellipse at 50% 35%, #2A3A63 0%, #1E2B4F 70%)", boxShadow: "0 0 0 2px #C9AD72, 0 0 0 9px #1B2747, 0 0 0 10px rgba(201,173,114,0.6), inset 0 10px 30px rgba(0,0,0,0.45), 0 30px 60px rgba(0,0,0,0.45)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px", padding: "30px", boxSizing: "border-box" }}>
         <svg style={{ width: "46px", height: "46px", marginBottom: "4px" }} aria-hidden="true">
           <use href="#b-tangkai" />
@@ -88,7 +89,8 @@ export function Sampul({ v, berikut }: PropsBagian) {
           {v.namaTamu}
         </p>
       </div>
-      <div className="masuk" style={{ animationDelay: ".9s", position: "relative" }}>
+      </div>
+      <div className="sampul-aksi">
         <a href={`#${berikut}`} onClick={v.bukaUndangan} className="denyut" style={{ display: "inline-flex", alignItems: "center", minHeight: "50px", padding: "0 32px", borderRadius: "999px", background: "#F1EAD8", color: "#1B2747", textDecoration: "none", fontFamily: "'Marcellus', serif", fontSize: "13px", letterSpacing: "0.24em", boxShadow: "0 0 0 4px rgba(241,234,216,0.15)" }}>
           BUKA UNDANGAN
         </a>

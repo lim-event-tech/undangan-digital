@@ -8,7 +8,7 @@ export const KERTAS: { className?: string; style: CSSProperties } = { className:
 
 export function Sampul({ v, berikut }: PropsBagian) {
   return (
-    <section id="sampul" style={{ minHeight: "844px", boxSizing: "border-box", position: "relative", padding: "92px 26px 220px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "14px", overflow: "hidden", background: "radial-gradient(110% 70% at 50% 30%, #FFFDF7 0%, #F6F1E4 70%)" }}>
+    <section id="sampul" className="sampul-undangan" style={{ boxSizing: "border-box", position: "relative", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", overflow: "hidden", background: "radial-gradient(110% 70% at 50% 30%, #FFFDF7 0%, #F6F1E4 70%)" }}>
       <span className="kelopak" style={{ left: "12%", animationDuration: "13s", animationDelay: "-2s" }} aria-hidden="true" />
       <span className="kelopak" style={{ left: "34%", width: "7px", height: "7px", animationDuration: "15s", animationDelay: "-8s" }} aria-hidden="true" />
       <span className="kelopak" style={{ left: "66%", animationDuration: "12s", animationDelay: "-5s" }} aria-hidden="true" />
@@ -25,6 +25,7 @@ export function Sampul({ v, berikut }: PropsBagian) {
           </svg>
         </div>
       </div>
+      <div className="sampul-konten">
       <div className="masuk" style={{ position: "relative", width: "260px", height: "150px" }} aria-hidden="true">
         <svg className="goyang" style={{ position: "absolute", left: "82.4px", top: "36.3px", width: "20px", height: "46px", animationDelay: "-0s" }}>
           <use href="#p-kembang" />
@@ -90,7 +91,8 @@ export function Sampul({ v, berikut }: PropsBagian) {
           {v.namaTamu}
         </p>
       </div>
-      <div className="masuk" style={{ animationDelay: "1s", position: "relative", zIndex: "2", marginTop: "6px" }}>
+      </div>
+      <div className="sampul-aksi">
         <a href={`#${berikut}`} onClick={v.bukaUndangan} className="denyut" style={{ display: "inline-flex", alignItems: "center", gap: "10px", minHeight: "50px", padding: "0 28px", borderRadius: "999px", background: "#1F4D3A", color: "#FBF8F0", border: "1px solid #C8A24A", textDecoration: "none", fontSize: "12px", fontWeight: "700", letterSpacing: "0.22em", textTransform: "uppercase" }}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <rect x="3" y="5" width="18" height="14" rx="2" />

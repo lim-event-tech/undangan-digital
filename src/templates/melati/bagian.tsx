@@ -8,7 +8,7 @@ export const KERTAS: { className?: string; style: CSSProperties } = { className:
 
 export function Sampul({ v, berikut }: PropsBagian) {
   return (
-    <section id="sampul" style={{ minHeight: "844px", boxSizing: "border-box", position: "relative", padding: "150px 30px 60px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "26px", overflow: "hidden", background: "radial-gradient(120% 70% at 50% 10%, #FBF8F0 0%, #F3EEE2 60%, #EFE9DC 100%)" }}>
+    <section id="sampul" className="sampul-undangan" style={{ boxSizing: "border-box", position: "relative", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", overflow: "hidden", background: "radial-gradient(120% 70% at 50% 10%, #FBF8F0 0%, #F3EEE2 60%, #EFE9DC 100%)" }}>
       <div style={{ position: "absolute", top: "0", left: "0", right: "0", height: "300px", transform: "translateY(calc(var(--gulir, 0) * -0.3px))" }} aria-hidden="true">
         <div style={{ position: "absolute", top: "-6px", left: "0", right: "0", height: "26px", background: "linear-gradient(180deg, #6E8B6A, #86A27E)", borderRadius: "0 0 50% 50% / 0 0 100% 100%" }} />
         <svg className="ayun" style={{ position: "absolute", top: "10px", left: "14px", width: "22px", height: "230px", animationDelay: "-1s" }}>
@@ -47,6 +47,7 @@ export function Sampul({ v, berikut }: PropsBagian) {
           <path d="M11 4 V15" stroke="#7A5A50" strokeWidth="1.2" />
         </svg>
       </div>
+      <div className="sampul-konten">
       <div className="masuk" style={{ position: "relative", width: "300px", boxSizing: "border-box", padding: "64px 24px 30px", borderRadius: "150px 150px 22px 22px", background: "rgba(255,253,248,0.82)", boxShadow: "0 20px 50px rgba(46,59,42,0.12)", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
         <span style={{ position: "absolute", inset: "8px", border: "1px solid rgba(184,154,94,0.6)", borderRadius: "142px 142px 16px 16px", pointerEvents: "none" }} />
         <span style={{ position: "absolute", inset: "13px", border: "1px solid rgba(184,154,94,0.3)", borderRadius: "137px 137px 12px 12px", pointerEvents: "none" }} />
@@ -79,7 +80,8 @@ export function Sampul({ v, berikut }: PropsBagian) {
           {v.namaTamu}
         </p>
       </div>
-      <div className="masuk" style={{ animationDelay: ".8s", position: "relative" }}>
+      </div>
+      <div className="sampul-aksi">
         <a href={`#${berikut}`} onClick={v.bukaUndangan} className="denyut" style={{ display: "inline-flex", alignItems: "center", gap: "10px", minHeight: "50px", padding: "0 30px", borderRadius: "999px", background: "#3E5239", color: "#FBF8F1", textDecoration: "none", fontSize: "13px", fontWeight: "500", letterSpacing: "0.22em", textTransform: "uppercase" }}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <rect x="3" y="5" width="18" height="14" rx="2" />

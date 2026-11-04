@@ -170,10 +170,12 @@ export function FormPenutup({ penutup }: { penutup: string }) {
 
 export function FormRsvp({
   batas,
+  hariIni,
   maksDewasa,
   maksAnak,
 }: {
   batas: string;
+  hariIni: string;
   maksDewasa: number;
   maksAnak: number;
 }) {
@@ -191,6 +193,7 @@ export function FormRsvp({
           label="Batas waktu RSVP"
           name="batas"
           type="date"
+          min={hariIni}
           defaultValue={batas}
           hint="Kosongkan bila tanpa batas"
           error={errors.batas}

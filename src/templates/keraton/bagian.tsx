@@ -8,7 +8,7 @@ export const KERTAS: { className?: string; style: CSSProperties } = { style: { m
 
 export function Sampul({ v, berikut }: PropsBagian) {
   return (
-    <section id="sampul" style={{ minHeight: "844px", boxSizing: "border-box", position: "relative", padding: "70px 24px 56px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "22px", overflow: "hidden", background: "linear-gradient(180deg, #B9CBB6 0%, #7F9C88 28%, #2F5A48 62%, #16302A 100%)" }}>
+    <section id="sampul" className="sampul-undangan" style={{ boxSizing: "border-box", position: "relative", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", overflow: "hidden", background: "linear-gradient(180deg, #B9CBB6 0%, #7F9C88 28%, #2F5A48 62%, #16302A 100%)" }}>
       <div style={{ position: "absolute", inset: "0", transform: "translateY(calc(var(--gulir, 0) * 0.05px))" }} aria-hidden="true">
         <svg className="goyang" style={{ position: "absolute", left: "-40px", bottom: "290px", width: "170px", height: "220px", color: "#8FAA97", transformOrigin: "50% 100%" }}>
           <use href="#k-palem" />
@@ -52,6 +52,7 @@ export function Sampul({ v, berikut }: PropsBagian) {
           <use href="#k-untai" />
         </svg>
       </div>
+      <div className="sampul-konten">
       <div className="bangkit" style={{ position: "relative", width: "280px", height: "400px", marginTop: "30px" }}>
         <svg style={{ width: "280px", height: "400px", filter: "drop-shadow(0 18px 30px rgba(0,0,0,0.35))" }} viewBox="0 0 300 430" aria-hidden="true">
           <use href="#k-gapura" />
@@ -101,7 +102,8 @@ export function Sampul({ v, berikut }: PropsBagian) {
           {v.namaTamu}
         </p>
       </div>
-      <div className="masuk" style={{ animationDelay: ".9s", position: "relative" }}>
+      </div>
+      <div className="sampul-aksi">
         <a href={`#${berikut}`} onClick={v.bukaUndangan} className="denyut" style={{ display: "inline-flex", alignItems: "center", gap: "10px", minHeight: "50px", padding: "0 30px", borderRadius: "999px", background: "#8A1E2D", border: "1px solid #C6A35A", color: "#F4EBD8", textDecoration: "none", fontFamily: "'Cinzel', serif", fontSize: "13px", fontWeight: "600", letterSpacing: "0.2em" }}>
           BUKA UNDANGAN
         </a>

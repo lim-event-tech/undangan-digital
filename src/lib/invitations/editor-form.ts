@@ -1,5 +1,6 @@
-import { deadlineFromDate, isDateString } from "@/lib/datetime";
+import { dateFromDeadline } from "@/lib/datetime";
 import { multiLine, singleLine } from "@/lib/form-text";
+import { parseRsvpDeadline } from "@/lib/rsvp/shared";
 import type { FieldErrors } from "@/lib/save-result";
 import { CONTENT_LIMITS, type InvitationContent } from "./content";
 
@@ -83,14 +84,19 @@ function parseCount(
 
 export type RsvpInput = { deadline: Date | null; maxAdults: number; maxChildren: number };
 
-export function parseRsvpForm(formData: FormData): Parsed<RsvpInput> {
+export function parseRsvpForm(
+  formData: FormData,
+  currentDeadline: Date | null = null,
+): Parsed<RsvpInput> {
   const errors: FieldErrors = {};
 
   const dateText = singleLine(formData, "batas");
-  let deadline: Date | null = null;
-  if (dateText) {
-    if (isDateString(dateText)) deadline = deadlineFromDate(dateText);
-    else errors.batas = "Tanggal tidak valid";
+  const parsedDeadline = parseRsvpDeadline(dateText);
+  let deadline = currentDeadline;
+  if (parsedDeadline.ok) {
+    deadline = parsedDeadline.deadline;
+  } else if (dateText !== dateFromDeadline(currentDeadline)) {
+    errors.batas = parsedDeadline.error;
   }
 
   const adults = parseCount(singleLine(formData, "maksDewasa"), "Maks. dewasa", 1, RSVP_MAX_ADULTS);

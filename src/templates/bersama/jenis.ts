@@ -1,4 +1,4 @@
-import type { ChangeEvent, CSSProperties, ComponentType } from "react";
+import type { ChangeEvent, CSSProperties, ComponentType, MouseEvent } from "react";
 import type { BagianId } from "@/lib/invitations/content";
 
 export type StatusTamu = "hadir" | "tidak" | "belum";
@@ -210,7 +210,8 @@ export type Vals = Omit<DataUndangan, "ucapan" | "galeri" | "lajurGaleri" | "cer
   label2: string;
   salin1: () => void;
   salin2: () => void;
-  bukaUndangan: () => void;
+  undanganTerbuka: boolean;
+  bukaUndangan: (event: MouseEvent<HTMLAnchorElement>) => void;
   adaMusik: boolean;
   toggleMusik: () => void;
   musikMain: boolean;

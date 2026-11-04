@@ -1,7 +1,12 @@
 export const ZONES = ["WIB", "WITA", "WIT"] as const;
 export type Zone = (typeof ZONES)[number];
 
-const WIB_OFFSET_MS = 7 * 60 * 60 * 1000;
+const ZONE_OFFSET_MS: Record<Zone, number> = {
+  WIB: 7 * 60 * 60 * 1000,
+  WITA: 8 * 60 * 60 * 1000,
+  WIT: 9 * 60 * 60 * 1000,
+};
+const WIB_OFFSET_MS = ZONE_OFFSET_MS.WIB;
 
 export function isZone(value: unknown): value is Zone {
   return typeof value === "string" && (ZONES as readonly string[]).includes(value);
@@ -76,7 +81,11 @@ export function formatStamp(value: Date): string {
 }
 
 export function todayWib(now: Date = new Date()): string {
-  return new Date(now.getTime() + WIB_OFFSET_MS).toISOString().slice(0, 10);
+  return todayInZone("WIB", now);
+}
+
+export function todayInZone(zone: Zone, now: Date = new Date()): string {
+  return new Date(now.getTime() + ZONE_OFFSET_MS[zone]).toISOString().slice(0, 10);
 }
 
 export function deadlineFromDate(value: string): Date {

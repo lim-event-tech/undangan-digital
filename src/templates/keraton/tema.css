@@ -48,5 +48,4 @@ html.js .tpl-keraton [data-anim].tampil{opacity:1;transform:none}
 .tpl-keraton .judul{margin:0;font-family:'Italianno',cursive;font-weight:400;font-size:58px;line-height:1;color:#F4EBD8}
 .tpl-keraton .judul-gelap{margin:0;font-family:'Italianno',cursive;font-weight:400;font-size:52px;line-height:1;color:#8A1E2D}
 .tpl-keraton .foto{position:relative;overflow:hidden}
-.tpl-keraton .foto::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,240,190,.3) 50%,transparent 65%);background-size:250% 100%;animation:keraton-kilau 7s ease-in-out infinite}
 html:has(.tpl-keraton){background:#0F231D}

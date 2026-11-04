@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { MAX_EVENTS, parseEventForm, parseEventName } from "@/lib/events/form";
-import { createEvent, deleteEvent, updateEvent } from "@/lib/events/service";
+import { createEvent, deleteEvent, listEventDetails, updateEvent } from "@/lib/events/service";
 import {
   parseMempelaiForm,
   parsePenutupForm,
@@ -164,7 +164,7 @@ export async function simpanSlugAction(
 
 export async function simpanRsvpAction(formData: FormData): Promise<SaveResult> {
   const { invitation } = await requireInvitation();
-  const parsed = parseRsvpForm(formData);
+  const parsed = parseRsvpForm(formData, invitation.rsvpDeadline);
   if (!parsed.ok) return { ok: false, errors: parsed.errors };
   if (!(await saveRsvpSettings(db, invitation.id, parsed.input))) return NOT_FOUND;
   return SAVED;
@@ -175,7 +175,9 @@ export async function simpanAcaraAction(formData: FormData): Promise<SaveResult>
   const id = field(formData, "id");
   if (!isUuid(id)) return { ok: false, formError: "Acara tidak ditemukan." };
 
-  const parsed = parseEventForm(formData);
+  const currentEvent = (await listEventDetails(db, invitation.id)).find((event) => event.id === id);
+  if (!currentEvent) return { ok: false, formError: "Acara tidak ditemukan. Mungkin sudah dihapus." };
+  const parsed = parseEventForm(formData, currentEvent);
   if (!parsed.ok) return { ok: false, errors: parsed.errors };
 
   const updated = await updateEvent(db, invitation.id, id, parsed.input);

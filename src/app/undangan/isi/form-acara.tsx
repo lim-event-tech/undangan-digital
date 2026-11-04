@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { kolom, labelKolom, pesanGalat, tombolBahaya, tombolGelap } from "@/components/ui";
-import { ZONES } from "@/lib/datetime";
+import { isZone, ZONES, type Zone } from "@/lib/datetime";
 import { EVENT_LIMITS, MAPS_ERROR, MAX_EVENTS } from "@/lib/events/form";
 import type { EventDetail } from "@/lib/events/service";
 import { isGoogleMapsUrl } from "@/lib/maps";
@@ -12,9 +12,10 @@ import { BidangArea, BidangTeks } from "./bidang";
 import { KartuBagian } from "./kartu-bagian";
 import { StatusSimpan, useAutoSave } from "./use-auto-save";
 
-function KartuAcara({ acara, bisaHapus }: { acara: EventDetail; bisaHapus: boolean }) {
+function KartuAcara({ acara, bisaHapus, tanggalMinimal }: { acara: EventDetail; bisaHapus: boolean; tanggalMinimal: Record<Zone, string> }) {
   const { formRef, status, errors, formError, formProps } = useAutoSave(simpanAcaraAction);
   const [maps, setMaps] = useState(acara.mapsUrl ?? "");
+  const [zona, setZona] = useState(acara.timezone);
   const [hapus, hapusAction, menghapus] = useActionState<SaveResult | null, FormData>(
     hapusAcaraAction,
     null,
@@ -51,6 +52,7 @@ function KartuAcara({ acara, bisaHapus }: { acara: EventDetail; bisaHapus: boole
             label="Tanggal"
             name="tanggal"
             type="date"
+            min={tanggalMinimal[zona]}
             defaultValue={acara.date ?? ""}
             error={errors.tanggal}
           />
@@ -66,7 +68,14 @@ function KartuAcara({ acara, bisaHapus }: { acara: EventDetail; bisaHapus: boole
         </div>
         <label className={`${labelKolom} sm:col-span-2`}>
           Zona waktu
-          <select name="zona" defaultValue={acara.timezone} className={kolom}>
+          <select
+            name="zona"
+            value={zona}
+            onChange={(event) => {
+              if (isZone(event.target.value)) setZona(event.target.value);
+            }}
+            className={kolom}
+          >
             {ZONES.map((zona) => (
               <option key={zona} value={zona}>
                 {zona}
@@ -172,7 +181,7 @@ function TambahAcara({ penuh }: { penuh: boolean }) {
   );
 }
 
-export function BagianAcara({ acara }: { acara: EventDetail[] }) {
+export function BagianAcara({ acara, tanggalMinimal }: { acara: EventDetail[]; tanggalMinimal: Record<Zone, string> }) {
   return (
     <KartuBagian
       id="acara"
@@ -181,7 +190,7 @@ export function BagianAcara({ acara }: { acara: EventDetail[] }) {
     >
       <div className="flex flex-col gap-4">
         {acara.map((item) => (
-          <KartuAcara key={item.id} acara={item} bisaHapus={acara.length > 1} />
+          <KartuAcara key={item.id} acara={item} bisaHapus={acara.length > 1} tanggalMinimal={tanggalMinimal} />
         ))}
       </div>
       <TambahAcara penuh={acara.length >= MAX_EVENTS} />

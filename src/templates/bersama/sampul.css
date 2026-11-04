@@ -1,0 +1,76 @@
+.sampul-undangan {
+  --tinggi-viewport: 100vh;
+  height: var(--tinggi-sampul, var(--tinggi-viewport));
+  min-height: 0;
+  padding: max(20px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(94px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  justify-content: center;
+}
+
+@supports (height: 100dvh) {
+  .sampul-undangan {
+    --tinggi-viewport: 100dvh;
+  }
+}
+
+.sampul-konten {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(10px, 2.5vh, 26px);
+  width: 100%;
+  transform: scale(var(--skala-sampul, 1));
+  transform-origin: center;
+  overflow-wrap: anywhere;
+}
+
+.sampul-konten > * {
+  flex-shrink: 0;
+  max-width: 100%;
+}
+
+.sampul-konten h1,
+.sampul-konten p {
+  max-width: 100%;
+}
+
+.sampul-aksi {
+  position: absolute;
+  z-index: 5;
+  right: max(12px, env(safe-area-inset-right, 0px));
+  bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  left: max(12px, env(safe-area-inset-left, 0px));
+  display: flex;
+  justify-content: center;
+}
+
+.sampul-aksi a {
+  box-sizing: border-box;
+  justify-content: center;
+  max-width: 100%;
+  line-height: 1.4;
+}
+
+.sampul-aksi a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 5px;
+}
+
+html.js:has(.undangan-template[data-terbuka="false"]),
+html.js:has(.undangan-template[data-terbuka="false"]) body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+html.js .undangan-template[data-terbuka="false"] {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  overflow: hidden;
+}
+
+html.js .undangan-template[data-terbuka="false"] .undangan-lanjutan {
+  display: none;
+}

@@ -66,8 +66,9 @@ function salinTeks(teks: string): Promise<void> {
   });
 }
 
-export function useGerak(akar: RefObject<HTMLElement | null>) {
+export function useGerak(akar: RefObject<HTMLElement | null>, aktif = true) {
   useEffect(() => {
+    if (!aktif) return;
     const root = document.documentElement;
     let raf = 0;
     const gulir = () => {
@@ -115,11 +116,12 @@ export function useGerak(akar: RefObject<HTMLElement | null>) {
       root.style.removeProperty("--gulir");
       root.style.removeProperty("--progres");
     };
-  }, [akar]);
+  }, [akar, aktif]);
 }
 
 export function useUndangan(data: DataUndangan, palet: Palet): Vals {
   const tamu = data.mode === "tamu";
+  const [undanganTerbuka, setUndanganTerbuka] = useState(false);
   const pasangan = `${data.pria} & ${data.wanita}`;
 
   const [sekarang, setSekarang] = useState(data.sekarang);
@@ -500,8 +502,15 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
     label2: rekening[1]?.label ?? "SALIN NOMOR",
     salin1: () => rekening[0]?.salin(),
     salin2: () => rekening[1]?.salin(),
-    bukaUndangan: () => {
+    undanganTerbuka,
+    bukaUndangan: (event) => {
+      event.preventDefault();
+      const tujuan = event.currentTarget.hash.slice(1);
+      setUndanganTerbuka(true);
       if (adaMusik && !musikMain) putar();
+      requestAnimationFrame(() => {
+        document.getElementById(tujuan)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
     },
     adaMusik,
     toggleMusik,

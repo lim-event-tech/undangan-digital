@@ -12,7 +12,8 @@ import {
   getInvitationAdmin,
   setInvitationStatusAdmin,
 } from "@/lib/admin/queries";
-import { dateFromDeadline, deadlineFromDate, isDateString } from "@/lib/datetime";
+import { dateFromDeadline } from "@/lib/datetime";
+import { parseRsvpDeadline } from "@/lib/rsvp/shared";
 import { SAVED, type SaveResult } from "@/lib/save-result";
 import { checkCustomSlug } from "@/lib/slug";
 import { getSettings } from "@/lib/platform/service";
@@ -95,11 +96,12 @@ export async function ubahBatasAction(
   const admin = await requireAdmin("ubah-undangan");
 
   const text = field(formData, "batas").trim();
-  if (text && !isDateString(text)) return { ok: false, errors: { batas: "Tanggal tidak valid" } };
+  const parsed = parseRsvpDeadline(text);
+  if (!parsed.ok) return { ok: false, errors: { batas: parsed.error } };
   const detail = await getInvitationAdmin(db, id);
   if (!detail) return NOT_FOUND;
 
-  await adminSetDeadline(db, id, text ? deadlineFromDate(text) : null);
+  await adminSetDeadline(db, id, parsed.deadline);
   await recordAudit(db, {
     actor: admin,
     category: "undangan",

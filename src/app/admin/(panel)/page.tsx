@@ -37,15 +37,6 @@ export default async function RingkasanAdminPage({ searchParams }: PageProps<"/a
     { label: "Tamu menjawab RSVP", nilai: stats.rsvps, catatan: `${hari} hari terakhir` },
   ];
 
-  const perhatian = [
-    {
-      ada: stats.attention.unsent > 0,
-      judul: `${stats.attention.unsent} undangan terbit tanpa link terkirim`,
-      ket: "Terbit lebih dari 3 hari tetapi belum ada tamu yang ditandai terkirim",
-      href: "/admin/undangan?status=terbit&urut=terbaru",
-    },
-  ].filter((item) => item.ada);
-
   return (
     <Halaman>
       {sp.galat === "izin" ? (
@@ -55,7 +46,7 @@ export default async function RingkasanAdminPage({ searchParams }: PageProps<"/a
       <JudulAdmin
         bagian="Ikhtisar"
         judul="Ringkasan platform"
-        keterangan="Kesehatan UndanganDigital dalam satu layar: pertumbuhan, corong pengguna, dan hal yang perlu ditangani."
+        keterangan="Kesehatan UndanganDigital dalam satu layar: pertumbuhan, aktivitas tamu, dan corong pengguna."
         aksi={
           <nav aria-label="Rentang waktu" className="flex gap-2">
             {RENTANG.map((r) => (
@@ -162,29 +153,7 @@ export default async function RingkasanAdminPage({ searchParams }: PageProps<"/a
         </section>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <section aria-labelledby="judul-perhatian" className={`${kartu} flex flex-col gap-3 p-5`}>
-          <h2 id="judul-perhatian" className="m-0 font-judul text-2xl font-medium">
-            Perlu perhatian
-          </h2>
-          {perhatian.length === 0 ? (
-            <p className="m-0 rounded-lg bg-krem-2/60 p-4 text-sm text-redup-2">
-              Tidak ada yang perlu ditangani saat ini.
-            </p>
-          ) : (
-            <ul className="m-0 flex list-none flex-col p-0">
-              {perhatian.map((item) => (
-                <li key={item.href} className="border-t border-garis-halus first:border-t-0">
-                  <Link href={item.href} className="flex flex-col gap-0.5 py-3 text-tinta no-underline hover:text-emas">
-                    <span className="font-medium">{item.judul}</span>
-                    <span className="text-xs text-redup">{item.ket}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
+      <div className="grid gap-4">
         <section aria-labelledby="judul-template" className={`${kartu} flex flex-col gap-3 p-5`}>
           <div className="flex items-baseline justify-between gap-3">
             <h2 id="judul-template" className="m-0 font-judul text-2xl font-medium">

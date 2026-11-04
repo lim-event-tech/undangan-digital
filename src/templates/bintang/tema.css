@@ -53,5 +53,4 @@ html.js .tpl-bintang [data-anim].tampil{opacity:1;transform:none}
 .tpl-bintang .judul-gelap{margin:0;font-family:'Marcellus',serif;font-weight:400;font-size:28px;letter-spacing:.08em;line-height:1.2;color:#1B2747;text-transform:uppercase}
 .tpl-bintang .miring{font-family:'Cormorant Garamond',serif;font-style:italic}
 .tpl-bintang .foto{position:relative;overflow:hidden}
-.tpl-bintang .foto::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,248,230,.25) 50%,transparent 65%);background-size:250% 100%;animation:bintang-kilau 7s ease-in-out infinite}
 html:has(.tpl-bintang){background:#0A1124}

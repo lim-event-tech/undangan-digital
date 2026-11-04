@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { judulHalaman, tombolTerang } from "@/components/ui";
 import { db } from "@/db";
-import { dateFromDeadline } from "@/lib/datetime";
+import { dateFromDeadline, todayInZone } from "@/lib/datetime";
 import { listEventDetails } from "@/lib/events/service";
 import { countGuests, firstGuestToken } from "@/lib/guests/service";
 import { readContent } from "@/lib/invitations/content";
@@ -46,6 +46,12 @@ export default async function IsiUndanganPage() {
   const fotoPria = photos.find((p) => p.kind === "pria") ?? null;
   const fotoWanita = photos.find((p) => p.kind === "wanita") ?? null;
   const template = templateInfo(invitation.templateKey);
+  const sekarang = new Date();
+  const tanggalMinimal = {
+    WIB: todayInZone("WIB", sekarang),
+    WITA: todayInZone("WITA", sekarang),
+    WIT: todayInZone("WIT", sekarang),
+  };
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-5">
@@ -100,12 +106,13 @@ export default async function IsiUndanganPage() {
       />
       <BagianFotoMempelai pria={fotoPria} wanita={fotoWanita} />
       <FormSambutan kutipan={content.kutipan} sambutan={content.sambutan} />
-      <BagianAcara acara={events} />
+      <BagianAcara acara={events} tanggalMinimal={tanggalMinimal} />
       <FormHitungMundur pengaturan={content.hitungMundur} />
       <FormCerita cerita={content.cerita} />
       <BagianGaleri foto={galeri} />
       <FormRsvp
         batas={dateFromDeadline(invitation.rsvpDeadline)}
+        hariIni={tanggalMinimal.WIB}
         maksDewasa={invitation.defaultMaxAdults}
         maksAnak={invitation.defaultMaxChildren}
       />

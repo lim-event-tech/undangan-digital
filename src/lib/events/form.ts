@@ -2,6 +2,7 @@ import {
   isDateString,
   isTimeString,
   isZone,
+  todayInZone,
   type Zone,
 } from "@/lib/datetime";
 import { multiLine, singleLine } from "@/lib/form-text";
@@ -45,7 +46,10 @@ export function parseEventName(formData: FormData, field = "nama"): ParsedEventN
   return { name };
 }
 
-export function parseEventForm(formData: FormData): ParsedEventForm {
+export function parseEventForm(
+  formData: FormData,
+  currentEvent: Pick<EventInput, "date" | "timezone"> | null = null,
+): ParsedEventForm {
   const errors: FieldErrors = {};
 
   const parsedName = parseEventName(formData);
@@ -59,6 +63,15 @@ export function parseEventForm(formData: FormData): ParsedEventForm {
 
   const zone = singleLine(formData, "zona") || "WIB";
   if (!isZone(zone)) errors.zona = "Pilih WIB, WITA, atau WIT";
+  if (
+    date &&
+    isDateString(date) &&
+    isZone(zone) &&
+    date < todayInZone(zone) &&
+    (date !== currentEvent?.date || zone !== currentEvent?.timezone)
+  ) {
+    errors.tanggal = "Tanggal acara tidak boleh sebelum hari ini";
+  }
 
   const venue = singleLine(formData, "tempat");
   if (venue.length > EVENT_LIMITS.venue) {

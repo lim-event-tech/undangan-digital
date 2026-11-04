@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MAPS_ERROR, parseEventForm, parseEventName } from "./form";
 
 function formOf(values: Record<string, string>) {
@@ -18,6 +18,52 @@ const lengkap = {
 };
 
 describe("parseEventForm", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-04T03:00:00.000Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("menolak tanggal acara baru sebelum hari ini", () => {
+    const parsed = parseEventForm(formOf({ ...lengkap, tanggal: "2026-11-03" }));
+    expect(parsed).toEqual({ ok: false, errors: { tanggal: "Tanggal acara tidak boleh sebelum hari ini" } });
+  });
+
+  it.each(["2026-11-04", "2026-11-05"])("menerima tanggal hari ini atau mendatang %s", (tanggal) => {
+    expect(parseEventForm(formOf({ ...lengkap, tanggal })).ok).toBe(true);
+  });
+
+  it("memakai hari ini menurut zona acara", () => {
+    vi.setSystemTime(new Date("2026-11-04T15:30:00.000Z"));
+    expect(parseEventForm(formOf({ ...lengkap, tanggal: "2026-11-04", zona: "WIB" })).ok).toBe(true);
+    expect(parseEventForm(formOf({ ...lengkap, tanggal: "2026-11-04", zona: "WITA" })).ok).toBe(true);
+    expect(parseEventForm(formOf({ ...lengkap, tanggal: "2026-11-04", zona: "WIT" }))).toEqual({
+      ok: false,
+      errors: { tanggal: "Tanggal acara tidak boleh sebelum hari ini" },
+    });
+  });
+
+  it("tetap mengizinkan perubahan tempat ketika tanggal dan zona acara lama tidak diubah", () => {
+    const currentEvent = { date: "2026-11-03", timezone: "WITA" as const };
+    const parsed = parseEventForm(formOf({ ...lengkap, tanggal: "2026-11-03", tempat: "Gedung Baru" }), currentEvent);
+    expect(parsed.ok && parsed.input.venueName).toBe("Gedung Baru");
+  });
+
+  it("menolak tanggal lampau lain meskipun acara sudah punya tanggal lama", () => {
+    const currentEvent = { date: "2026-11-03", timezone: "WITA" as const };
+    const parsed = parseEventForm(formOf({ ...lengkap, tanggal: "2026-11-02" }), currentEvent);
+    expect(parsed).toEqual({ ok: false, errors: { tanggal: "Tanggal acara tidak boleh sebelum hari ini" } });
+  });
+
+  it("menolak perubahan zona ketika tanggal acara tetap berada di masa lalu", () => {
+    const currentEvent = { date: "2026-11-03", timezone: "WITA" as const };
+    const parsed = parseEventForm(formOf({ ...lengkap, tanggal: "2026-11-03", zona: "WIB" }), currentEvent);
+    expect(parsed).toEqual({ ok: false, errors: { tanggal: "Tanggal acara tidak boleh sebelum hari ini" } });
+  });
+
   it("menerima isian lengkap", () => {
     const parsed = parseEventForm(formOf(lengkap));
     expect(parsed).toEqual({
