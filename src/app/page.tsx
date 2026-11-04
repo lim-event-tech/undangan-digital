@@ -13,7 +13,7 @@ import { gambarTemplate } from "@/templates/registry";
 import { listSelectableTemplates } from "@/lib/platform/templates";
 
 export const metadata: Metadata = {
-  title: { absolute: "UndanganDigital: undangan yang menyapa tiap tamu" },
+  title: { absolute: "UndanganDigital" },
 };
 
 const lebar: CSSProperties = { maxWidth: "1180px", margin: "0 auto" };
