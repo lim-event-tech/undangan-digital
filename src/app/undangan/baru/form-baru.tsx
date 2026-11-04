@@ -8,6 +8,7 @@ import {
   tombolGelap,
 } from "@/components/ui";
 import { createInvitationAction, type BaruState } from "./actions";
+import { MAX_INVITATION_TITLE } from "@/lib/invitations/title";
 
 const awal: BaruState = {};
 
@@ -21,28 +22,15 @@ export function FormBaru({ template }: { template: string }) {
     <form action={action} className="flex flex-col gap-4">
       <input type="hidden" name="template" value={template} />
       <label className={labelKolom}>
-        Nama panggilan mempelai pria
+        Judul event
         <input
-          name="pria"
+          name="title"
           type="text"
           required
-          maxLength={40}
+          maxLength={MAX_INVITATION_TITLE}
           autoComplete="off"
-          placeholder="mis. Raka"
-          defaultValue={state.values?.pria ?? ""}
-          className={kolom}
-        />
-      </label>
-      <label className={labelKolom}>
-        Nama panggilan mempelai wanita
-        <input
-          name="wanita"
-          type="text"
-          required
-          maxLength={40}
-          autoComplete="off"
-          placeholder="mis. Nadia"
-          defaultValue={state.values?.wanita ?? ""}
+          placeholder="mis. Gathering Komunitas 2026"
+          defaultValue={state.values?.title ?? ""}
           className={kolom}
         />
       </label>

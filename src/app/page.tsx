@@ -23,7 +23,7 @@ const FITUR = [
   "Sapaan nama per tamu",
   "RSVP dewasa dan anak",
   "Kirim lewat WhatsApp",
-  "Akad dan resepsi terpisah",
+  "Akad dan lanjutan terpisah",
   "Peta dan simpan ke kalender",
   "Dashboard real-time",
   "Susun blok sesuka hati",
@@ -135,7 +135,7 @@ export default async function Beranda() {
         >
           <div style={{ flex: "1 1 460px", minWidth: 0, display: "flex", flexDirection: "column", gap: "22px" }}>
             <h1 className="jdl jdl-raksasa" style={{ fontSize: "74px" }}>
-              Undangan pernikahan yang menyapa tiap tamu dengan <span className="stabilo">namanya.</span>
+              Undangan event yang menyapa tiap tamu dengan <span className="stabilo">namanya.</span>
             </h1>
             <p style={{ margin: 0, maxWidth: "540px", fontSize: "18px", fontWeight: 400, lineHeight: 1.6 }}>
               Pilih template beranimasi, isi dan susun detail acara, impor daftar tamu, lalu kirim link personal lewat
@@ -205,7 +205,7 @@ export default async function Beranda() {
           >
             {[
               ["Pilih template", `${angkaKata(jumlah)} tema beranimasi. Lihat pratinjau di HP dan desktop sebelum menyimpan.`],
-              ["Isi dan susun", "Nama mempelai, foto, dan tiap acara lengkap dengan peta. Susun ulang bagiannya dengan seret."],
+              ["Isi dan susun", "Judul event, foto, dan tiap acara lengkap dengan peta. Susun ulang bagiannya dengan seret."],
               ["Impor tamu", "Unggah spreadsheet, atur batas dewasa dan anak serta acara yang diundang per tamu."],
               ["Kirim dan pantau", "Satu ketukan langsung kirim semua undangan. RSVP masuk ke dashboard."],
             ].map(([judul, teks], i) => (
@@ -249,7 +249,7 @@ export default async function Beranda() {
               </JudulBagian>
             </div>
             <p style={{ margin: 0, maxWidth: "420px", fontSize: "16px", fontWeight: 400, lineHeight: 1.55 }}>
-              Bunga yang bergoyang, siger berkilau, bintang jatuh, dan angklung berayun.
+              Botani, bingkai geometris, orbit bintang, dan garis alam untuk berbagai acara.
             </p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(200px, 100%), 1fr))", gap: "24px" }}>

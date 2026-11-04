@@ -26,7 +26,7 @@ beforeAll(async () => {
 });
 
 async function setup() {
-  const seeded = await seedInvitation(db, { groom: "Raka", bride: "Nadia" });
+  const seeded = await seedInvitation(db, { title: "Raka" });
   await db.update(invitation).set({ status: "terbit" }).where(eq(invitation.id, seeded.invitation.id));
   const events = await listEventDetails(db, seeded.invitation.id);
   const make = (name: string, phone: string) =>

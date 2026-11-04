@@ -189,10 +189,10 @@ function collectRows(
 
 export const SAMPLE_CSV = [
   "nama,whatsapp,grup,acara,maks_dewasa,maks_anak",
-  "Bapak Hendra & Istri,0812-0000-0101,Keluarga pria,akad;resepsi,2,0",
-  "Kak Dimas Aditya,0857 0000 0102,Teman kuliah,resepsi,1,0",
-  "Mbak Ayu & Keluarga,+62 811-0000-0103,Teman kantor,resepsi,2,2",
-  "Tante Lina,81200000104,Keluarga wanita,,,",
+  "Bapak Hendra & Istri,0812-0000-0101,Komunitas,utama;lanjutan,2,0",
+  "Kak Dimas Aditya,0857 0000 0102,Teman kuliah,lanjutan,1,0",
+  "Mbak Ayu & Keluarga,+62 811-0000-0103,Teman kantor,lanjutan,2,2",
+  "Tante Lina,81200000104,Panitia,,,",
   "",
 ].join("\r\n");
 

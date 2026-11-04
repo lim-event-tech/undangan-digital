@@ -51,8 +51,7 @@ export async function generateMetadata({
   return {
     metadataBase,
     ...buildInvitationMeta({
-      groomName: data.invitation.groomName,
-      brideName: data.invitation.brideName,
+      title: data.invitation.title,
       events: data.events.map((e) => ({ date: e.date, venueName: e.venueName })),
       coverPhotoId: data.photos.find((p) => p.kind === "cover")?.id ?? null,
     }),
@@ -96,8 +95,7 @@ export default async function UndanganTamuPage({ params }: PageProps<"/[slug]/[t
     mode: preview ? "pratinjau" : "tamu",
     slug: invitation.slug,
     token,
-    groomName: invitation.groomName,
-    brideName: invitation.brideName,
+    title: invitation.title,
     guest: {
       name: guest.name,
       maxAdults: guest.maxAdults,

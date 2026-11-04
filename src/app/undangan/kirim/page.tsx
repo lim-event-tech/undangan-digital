@@ -47,7 +47,7 @@ export default async function KirimPage({ searchParams }: PageProps<"/undangan/k
   const pengingat = tampil === "pengingat";
   const pesanBawaan = (await getSettings(db)).pesanWaBawaan || DEFAULT_MESSAGE;
   const template = pickTemplate(tampil === "pengingat" ? "pengingat" : "undangan", content, pesanBawaan);
-  const couple = `${invitation.groomName} & ${invitation.brideName}`;
+  const eventTitle = `${invitation.title}`;
   const deadlineText = invitation.rsvpDeadline
     ? formatDate(dateFromDeadline(invitation.rsvpDeadline))
     : null;
@@ -87,7 +87,7 @@ export default async function KirimPage({ searchParams }: PageProps<"/undangan/k
     nama: firstGuest?.name ?? "Bapak Hendra",
     link: guestLink(invitation.slug, firstGuest?.token ?? "kode-tamu"),
     batas_rsvp: phrase,
-    mempelai: couple,
+    event: eventTitle,
   };
 
   function href(next: Tampil) {
@@ -212,7 +212,7 @@ export default async function KirimPage({ searchParams }: PageProps<"/undangan/k
                 nama: g.name,
                 link: guestLink(invitation.slug, g.token),
                 batas_rsvp: phrase,
-                mempelai: couple,
+                event: eventTitle,
               });
               return (
                 <li

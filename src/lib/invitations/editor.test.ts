@@ -11,7 +11,7 @@ import {
   getMissingForPublish,
   publishInvitation,
   saveContentText,
-  saveMempelai,
+  saveTitle,
   saveRsvpSettings,
   unpublishInvitation,
 } from "./editor";
@@ -59,12 +59,12 @@ describe("getMissingForPublish", () => {
     const missing = await getMissingForPublish(db, created.id);
     expect(missing.map((m) => m.label)).toEqual([
       "Foto cover",
-      "Tanggal Akad Nikah",
-      "Jam Akad Nikah",
-      "Link Maps Akad Nikah",
-      "Tanggal Resepsi",
-      "Jam Resepsi",
-      "Link Maps Resepsi",
+      "Tanggal Acara utama",
+      "Jam Acara utama",
+      "Link Maps Acara utama",
+      "Tanggal Sesi lanjutan",
+      "Jam Sesi lanjutan",
+      "Link Maps Sesi lanjutan",
     ]);
     expect(missing[0].anchor).toBe("sampul");
     expect(missing[1].anchor).toMatch(/^acara-[0-9a-f-]{36}$/);
@@ -120,19 +120,16 @@ describe("publishInvitation", () => {
 });
 
 describe("konten undangan", () => {
-  it("menyimpan nama dan data mempelai tanpa menimpa teks sambutan", async () => {
-    const { invitation: created } = await seedInvitation(db, { groom: "Raka", bride: "Nadia" });
+  it("menyimpan judul event tanpa menimpa teks sambutan", async () => {
+    const { invitation: created } = await seedInvitation(db, { title: "Raka" });
     await saveContentText(db, created.id, { kutipan: "Dan di antara tanda-tanda-Nya", sambutan: "Selamat datang" });
-    await saveMempelai(db, created.id, {
-      groomName: "Rakai",
-      brideName: "Nadia",
-      pria: { namaLengkap: "Raka Pratama", orangTua: "Putra Bapak A dan Ibu B" },
-      wanita: { namaLengkap: "Nadia Putri", orangTua: "Putri Bapak C dan Ibu D" },
+    await saveTitle(db, created.id, {
+      title: "Rakai",
     });
 
     const [row] = await db.select().from(invitation).where(eq(invitation.id, created.id));
-    expect(row.groomName).toBe("Rakai");
-    expect(row.slug).toBe("raka-dan-nadia");
+    expect(row.title).toBe("Rakai");
+    expect(row.slug).toBe("raka");
     expect(readContent(row.content)).toEqual({
       kutipan: "Dan di antara tanda-tanda-Nya",
       sambutan: "Selamat datang",
@@ -146,8 +143,6 @@ describe("konten undangan", () => {
       musik: { aktif: false },
       checkin: { aktif: true },
       susunan: DEFAULT_SUSUNAN,
-      pria: { namaLengkap: "Raka Pratama", orangTua: "Putra Bapak A dan Ibu B" },
-      wanita: { namaLengkap: "Nadia Putri", orangTua: "Putri Bapak C dan Ibu D" },
     });
   });
 
@@ -196,8 +191,6 @@ describe("readContent", () => {
       musik: { aktif: false },
       checkin: { aktif: true },
       susunan: DEFAULT_SUSUNAN,
-      pria: { namaLengkap: "", orangTua: "" },
-      wanita: { namaLengkap: "", orangTua: "" },
     };
     expect(readContent({})).toEqual(empty);
     expect(readContent(null)).toEqual(empty);

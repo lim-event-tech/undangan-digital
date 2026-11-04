@@ -1,56 +1,27 @@
-html:has(.tpl-bintang){scroll-behavior:smooth}
-html:has(.tpl-bintang) body{margin:0;background:#0A1124}
-.tpl-bintang a{color:#C9AD72}
-.tpl-bintang a:hover{color:#F1EAD8}
-.tpl-bintang::selection,.tpl-bintang ::selection{background:#C9AD72;color:#121C36}
-html:has(.tpl-bintang)::-webkit-scrollbar,html:has(.tpl-bintang) ::-webkit-scrollbar{width:10px;height:8px}
-html:has(.tpl-bintang)::-webkit-scrollbar-track,html:has(.tpl-bintang) ::-webkit-scrollbar-track{background:#121C36}
-html:has(.tpl-bintang)::-webkit-scrollbar-thumb,html:has(.tpl-bintang) ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#F1EAD8,#C9AD72);border-radius:10px;border:2px solid #121C36}
-html:has(.tpl-bintang)::-webkit-scrollbar-thumb:hover,html:has(.tpl-bintang) ::-webkit-scrollbar-thumb:hover{background:#9AA46F}
-@supports (-moz-appearance:none){
-html:has(.tpl-bintang),.tpl-bintang,.tpl-bintang *{scrollbar-color:#C9AD72 #121C36;scrollbar-width:thin}
+.tpl-bintang {
+  --event-utama: #e7cf98;
+  --event-teks: #c6cbd3;
+  --event-kertas: #152039;
+  --event-kartu: #1b2942;
+  --event-lembut: #202e49;
+  --event-latar: #0c1425;
+  --event-garis: #627084;
+  --event-aksen: #bca577;
+  --event-tombol-teks: #152039;
+  --event-sans: 'Jost', sans-serif;
+  --event-serif: 'Marcellus', serif;
+  --event-radius: 6px;
 }
-@keyframes bintang-ayun{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
-@keyframes bintang-kelip{0%,100%{opacity:.15}50%{opacity:1}}
-@keyframes bintang-meteor{0%{transform:translate(0,0) rotate(-28deg);opacity:0}5%{opacity:1}20%{transform:translate(-340px,180px) rotate(-28deg);opacity:0}100%{opacity:0}}
-@keyframes bintang-halo{0%,100%{box-shadow:0 0 40px 10px rgba(241,234,216,.18)}50%{box-shadow:0 0 70px 24px rgba(241,234,216,.34)}}
-@keyframes bintang-kunang{0%,100%{transform:translate(0,0);opacity:.2}25%{transform:translate(18px,-14px);opacity:1}50%{transform:translate(-10px,-26px);opacity:.4}75%{transform:translate(-20px,-6px);opacity:1}}
-@keyframes bintang-kilau{0%{background-position:200% 0}100%{background-position:-200% 0}}
-@keyframes bintang-denyut{0%{box-shadow:0 0 0 0 rgba(241,234,216,.45)}100%{box-shadow:0 0 0 18px rgba(241,234,216,0)}}
-@keyframes bintang-muncul{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-@keyframes bintang-putar{to{transform:rotate(360deg)}}
-@keyframes bintang-pantul{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
-@keyframes bintang-naikBulan{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}
-@keyframes bintang-bangkit{from{opacity:0;transform:translateY(30px) scale(.94)}to{opacity:1;transform:none}}
-@keyframes bintang-goyang{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(1.5deg)}}
-.tpl-bintang .ayun{transform-origin:50% 0;animation:bintang-ayun 6s ease-in-out infinite}
-.tpl-bintang .bintang{position:absolute;border-radius:50%;background:#FFF8E6;animation:bintang-kelip 3s ease-in-out infinite;pointer-events:none}
-.tpl-bintang .meteor{position:absolute;width:110px;height:1.5px;background:linear-gradient(90deg,#FFF8E6,transparent);animation:bintang-meteor 10s ease-in infinite;pointer-events:none}
-.tpl-bintang .bulan{animation:bintang-halo 5s ease-in-out infinite}
-.tpl-bintang .kunang{position:absolute;width:5px;height:5px;border-radius:50%;background:#F5E7B0;box-shadow:0 0 10px 3px rgba(245,231,176,.7);animation:bintang-kunang 7s ease-in-out infinite;pointer-events:none}
-.tpl-bintang .emas{background:linear-gradient(90deg,#B4975A,#FFF3D6 40%,#B4975A 60%,#B4975A);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:bintang-kilau 5s linear infinite}
-.tpl-bintang .denyut{animation:bintang-denyut 2.4s ease-out infinite}
-.tpl-bintang .putar{animation:bintang-putar 90s linear infinite}
-.tpl-bintang .pantul{animation:bintang-pantul 1.6s ease-in-out infinite}
-.tpl-bintang .masuk{animation:bintang-muncul .7s ease both}
-.tpl-bintang .bangkit{animation:bintang-bangkit 1.4s cubic-bezier(.2,.75,.2,1) both}
-.tpl-bintang .naik-bulan{animation:bintang-naikBulan 2s ease-out both}
-.tpl-bintang .goyang{animation:bintang-goyang 7s ease-in-out infinite}
-.tpl-bintang .cakram{animation:bintang-putar 4s linear infinite}
-html.js .tpl-bintang [data-anim]{opacity:0;transition:opacity 1.1s ease,transform 1.2s cubic-bezier(.2,.75,.2,1);transition-delay:var(--d,0s)}
-html.js .tpl-bintang [data-anim=naik]{transform:translateY(46px)}
-html.js .tpl-bintang [data-anim=kiri]{transform:translateX(-60px)}
-html.js .tpl-bintang [data-anim=kanan]{transform:translateX(60px)}
-html.js .tpl-bintang [data-anim=zoom]{transform:scale(.82)}
-html.js .tpl-bintang [data-anim=garis]{transform:scaleY(0);transform-origin:50% 0}
-html.js .tpl-bintang [data-anim].tampil{opacity:1;transform:none}
-.tpl-bintang .malam{background-color:#1B2747;background-image:radial-gradient(120% 60% at 50% 0%,rgba(255,255,255,.05),transparent 60%),radial-gradient(rgba(255,255,255,.035) 1px,transparent 1px);background-size:100% 100%,6px 6px}
-.tpl-bintang .kartu{position:relative;background:#F7F2E6;color:#1B2747;border-radius:200px 200px 24px 24px;box-shadow:0 20px 44px rgba(0,0,0,.35)}
-.tpl-bintang .kartu-kotak{position:relative;background:#F7F2E6;color:#1B2747;border-radius:22px;box-shadow:0 20px 44px rgba(0,0,0,.3)}
-.tpl-bintang .kartu::before,.tpl-bintang .kartu-kotak::before{content:"";position:absolute;inset:8px;border:1px solid rgba(201,173,114,.8);border-radius:inherit;pointer-events:none}
-.tpl-bintang .mata{margin:0;font-family:'Marcellus',serif;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:#C9AD72}
-.tpl-bintang .judul{margin:0;font-family:'Marcellus',serif;font-weight:400;font-size:32px;letter-spacing:.08em;line-height:1.2;color:#F1EAD8;text-transform:uppercase}
-.tpl-bintang .judul-gelap{margin:0;font-family:'Marcellus',serif;font-weight:400;font-size:28px;letter-spacing:.08em;line-height:1.2;color:#1B2747;text-transform:uppercase}
-.tpl-bintang .miring{font-family:'Cormorant Garamond',serif;font-style:italic}
-.tpl-bintang .foto{position:relative;overflow:hidden}
-html:has(.tpl-bintang){background:#0A1124}
+.tpl-bintang { background-image: radial-gradient(circle at 12% 22%, #e7cf9866 1px, transparent 2px), radial-gradient(circle at 82% 68%, #e7cf9866 1px, transparent 2px); background-size: 145px 170px, 210px 245px; }
+.tpl-bintang::before { border-style: dashed; box-shadow: 0 0 0 45px #0c1425, 0 0 0 46px #627084; transform: rotate(-25deg); border-radius: 50%; height: 130px; }
+.tpl-bintang .event-sampul { background: radial-gradient(ellipse at 80% 18%, #3c4a6555, transparent 65%), radial-gradient(circle at 15% 35%, #e7cf9866 1px, transparent 2px), radial-gradient(circle at 86% 66%, #e7cf9888 1px, transparent 2px), #152039; }
+.tpl-bintang .event-bingkai { border: 0; border-top: 1px solid #627084; border-bottom: 1px solid #627084; inset: 22px; }
+.tpl-bintang .event-identitas h1 { letter-spacing: -.01em; font-size: calc(var(--ukuran-judul) * .95); }
+.tpl-bintang .event-sampul .event-hiasan { width: 210px; }
+.tpl-bintang .event-pembuka { background: radial-gradient(ellipse at 50% 20%, #36446188, transparent 65%), #152039; }
+.tpl-bintang .event-hitung { background: #202e49; color: #e7cf98; border-block: 1px solid #627084; }
+.tpl-bintang .event-hitung .event-sekunder { color: #e7cf98; }
+.tpl-bintang .event-hitungan > div { border-color: #627084; }
+.tpl-bintang .event-kartu { box-shadow: 0 12px 25px #0001; }
+.tpl-bintang .event-jumlah button { background: #152039; }
+.tpl-bintang .event-penutup { background: radial-gradient(ellipse at 50% 80%, #36446188, transparent 65%), #152039; }

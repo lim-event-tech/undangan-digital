@@ -7,19 +7,18 @@ export type MetaEvent = {
 };
 
 export type MetaInput = {
-  groomName: string;
-  brideName: string;
+  title: string;
   events: MetaEvent[];
   coverPhotoId: string | null;
 };
 
-export const GENERIC_TITLE = "Undangan pernikahan";
+export const GENERIC_TITLE = "Undangan event";
 
 export function buildInvitationMeta(input: MetaInput): Metadata {
-  const title = `Undangan Pernikahan ${input.groomName} & ${input.brideName}`;
+  const title = `Undangan ${input.title}`;
   const first = input.events.find((e) => e.date);
   const parts = [first?.date ? formatLongDate(first.date) : null, first?.venueName ?? null];
-  const description = parts.filter(Boolean).join(" · ") || "Anda diundang ke pernikahan kami.";
+  const description = parts.filter(Boolean).join(" · ") || "Anda diundang untuk menghadiri acara ini.";
 
   const images = input.coverPhotoId
     ? [
@@ -27,7 +26,7 @@ export function buildInvitationMeta(input: MetaInput): Metadata {
           url: `/og/${input.coverPhotoId}`,
           width: 1200,
           height: 630,
-          alt: `${input.groomName} & ${input.brideName}`,
+          alt: `${input.title}`,
         },
       ]
     : [];

@@ -19,7 +19,7 @@ export const RESERVED_SLUGS = new Set([
   "www",
 ]);
 
-const SLUG_CADANGAN = "pernikahan";
+const SLUG_CADANGAN = "event";
 
 export const CUSTOM_SLUG_MIN = 3;
 export const CUSTOM_SLUG_MAX = 60;
@@ -54,10 +54,8 @@ export function slugify(input: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-export function makeSlugBase(groomName: string, brideName: string): string {
-  const groom = slugify(groomName);
-  const bride = slugify(brideName);
-  let base = [groom, bride].filter(Boolean).join("-dan-");
+export function makeSlugBase(title: string): string {
+  let base = slugify(title);
   base = base.slice(0, 60).replace(/-+$/, "");
   if (!base) base = SLUG_CADANGAN;
   else if (RESERVED_SLUGS.has(base)) base = `${base}-undangan`;

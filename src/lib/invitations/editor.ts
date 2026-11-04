@@ -5,36 +5,21 @@ import { isUniqueViolation } from "@/lib/db-errors";
 import { listEventDetails, type EventDetail } from "@/lib/events/service";
 import { listPhotos, type PhotoInfo } from "@/lib/photos/service";
 import type { InvitationContent } from "./content";
+import { parseInvitationTitle } from "./title";
 
 export type MissingItem = { id: string; label: string; anchor: string };
 
-export async function saveMempelai(
-  db: AppDb,
-  invitationId: string,
-  input: {
-    groomName: string;
-    brideName: string;
-    pria: InvitationContent["pria"];
-    wanita: InvitationContent["wanita"];
-  },
-): Promise<boolean> {
-  const patch = JSON.stringify({ pria: input.pria, wanita: input.wanita });
-  const rows = await db
-    .update(invitation)
-    .set({
-      groomName: input.groomName,
-      brideName: input.brideName,
-      content: sql`${invitation.content} || ${patch}::jsonb`,
-    })
-    .where(eq(invitation.id, invitationId))
-    .returning({ id: invitation.id });
+export async function saveTitle(db: AppDb, invitationId: string, input: { title: string }): Promise<boolean> {
+  const parsed = parseInvitationTitle(input.title);
+  if (!parsed.ok) return false;
+  const rows = await db.update(invitation).set({ title: parsed.title }).where(eq(invitation.id, invitationId)).returning({ id: invitation.id });
   return rows.length > 0;
 }
 
 export async function saveContentText(
   db: AppDb,
   invitationId: string,
-  patch: Partial<Omit<InvitationContent, "pria" | "wanita">>,
+  patch: Partial<InvitationContent>,
 ): Promise<boolean> {
   const rows = await db
     .update(invitation)

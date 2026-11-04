@@ -22,8 +22,7 @@ const NAV_DENGAN_UNDANGAN: ItemNav[] = [
 
 export type ShellUser = { name: string; email: string };
 export type ShellInvitation = {
-  groomName: string;
-  brideName: string;
+  title: string;
   status: keyof typeof STATUS_UNDANGAN;
 };
 
@@ -64,7 +63,7 @@ export function AppShell({
           <div className="flex flex-col gap-0.5 rounded-lg bg-kertas p-3">
             <span className="text-xs text-redup">Undangan</span>
             <span className="font-medium">
-              {invitation.groomName} &amp; {invitation.brideName}
+              {invitation.title}
             </span>
             <span
               className={`mt-1 self-start rounded-full px-2 py-0.5 text-xs font-medium ${status.kelas}`}

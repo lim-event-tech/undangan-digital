@@ -4,19 +4,19 @@ export const MESSAGE_PLACEHOLDERS = [
   { key: "nama", label: "Nama tamu" },
   { key: "link", label: "Link pribadi" },
   { key: "batas_rsvp", label: "Batas RSVP" },
-  { key: "mempelai", label: "Nama mempelai" },
+  { key: "event", label: "Judul event" },
 ] as const;
 
 export type MessageVars = {
   nama: string;
   link: string;
   batas_rsvp: string;
-  mempelai: string;
+  event: string;
 };
 
 export const DEFAULT_MESSAGE = `Yth. {nama},
 
-Dengan penuh syukur, kami mengundang Bapak/Ibu/Saudara/i ke pernikahan {mempelai}. Detail acara dan konfirmasi kehadiran ada di link pribadi berikut:
+Kami mengundang Bapak/Ibu/Saudara/i untuk menghadiri {event}. Detail acara dan konfirmasi kehadiran ada di link pribadi berikut:
 {link}
 
 Mohon konfirmasi kehadiran {batas_rsvp}.
@@ -25,14 +25,14 @@ Terima kasih.`;
 
 export const DEFAULT_REMINDER_MESSAGE = `Yth. {nama},
 
-Kami mengingatkan dengan hormat bahwa konfirmasi kehadiran Bapak/Ibu/Saudara/i di pernikahan {mempelai} belum kami terima. Mohon berkenan mengisinya {batas_rsvp} lewat link pribadi berikut:
+Kami mengingatkan dengan hormat bahwa konfirmasi kehadiran Bapak/Ibu/Saudara/i untuk {event} belum kami terima. Mohon berkenan mengisinya {batas_rsvp} lewat link pribadi berikut:
 {link}
 
 Terima kasih.`;
 
 export function renderMessage(template: string, vars: MessageVars): string {
   return template.replace(
-    /\{(nama|link|batas_rsvp|mempelai)\}/g,
+    /\{(nama|link|batas_rsvp|event)\}/g,
     (_match, key: keyof MessageVars) => vars[key],
   );
 }

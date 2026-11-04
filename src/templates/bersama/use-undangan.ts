@@ -122,7 +122,6 @@ export function useGerak(akar: RefObject<HTMLElement | null>, aktif = true) {
 export function useUndangan(data: DataUndangan, palet: Palet): Vals {
   const tamu = data.mode === "tamu";
   const [undanganTerbuka, setUndanganTerbuka] = useState(false);
-  const pasangan = `${data.pria} & ${data.wanita}`;
 
   const [sekarang, setSekarang] = useState(data.sekarang);
   const adaHitung = data.hitung !== null;
@@ -294,7 +293,7 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
         }
         setTeks("");
         if (hasil.status === "ditahan") {
-          setPesanUcapan("Terima kasih. Ucapan Anda akan tampil setelah disetujui mempelai.");
+          setPesanUcapan("Terima kasih. Ucapan Anda akan tampil setelah disetujui pengelola.");
           return;
         }
         if (hasil.halaman) setHalaman(hasil.halaman);
@@ -412,14 +411,9 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
 
   return {
     ...data,
-    priaBesar: data.pria.toUpperCase(),
-    wanitaBesar: data.wanita.toUpperCase(),
-    pasangan,
-    pasanganBesar: pasangan.toUpperCase(),
-    inisialPria: inisialNama(data.pria),
-    inisialWanita: inisialNama(data.wanita),
-    altPria: `Foto ${data.priaLengkap}`,
-    altWanita: `Foto ${data.wanitaLengkap}`,
+    judulBesar: data.judul.toUpperCase(),
+    ukuranJudul: data.judul.length > 80 ? 20 : data.judul.length > 50 ? 24 : data.judul.length > 30 ? 30 : 40,
+    inisialEvent: inisialNama(data.judul),
     kutipanTampil,
     inisialTamu: inisialNama(data.namaTamu),
     keteranganMaks:
@@ -461,7 +455,7 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
     teksUcapan: teks,
     sisaKarakter,
     maksUcapan: WISH_MAX_LENGTH,
-    placeholderUcapan: `Tulis ucapan untuk ${pasangan}`,
+    placeholderUcapan: `Tulis ucapan untuk ${data.judul}`,
     ucapanOpacity: bisaKirimUcapan ? "1" : "0.45",
     ucapanNonaktif: !bisaKirimUcapan,
     ketikUcapan: (e) => {

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { db } from "@/db";
 import { canUseTemplate } from "@/lib/platform/templates";
-import { contohView } from "@/templates/bersama/contoh";
+import { contohTemplateView } from "@/templates/bersama/contoh";
 import { isTemplateKey, templateInfo } from "@/templates/registry";
 import { renderTemplate } from "@/templates/render";
 
@@ -21,5 +21,5 @@ export default async function ContohPage({ params }: PageProps<"/contoh/[templat
   const { template } = await params;
   await connection();
   if (!isTemplateKey(template) || !(await canUseTemplate(db, template))) notFound();
-  return renderTemplate(template, contohView(Date.now()));
+  return renderTemplate(template, contohTemplateView(template, Date.now()));
 }

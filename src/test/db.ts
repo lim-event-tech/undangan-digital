@@ -19,21 +19,22 @@ let counter = 0;
 
 export async function seedInvitation(
   db: TestDb,
-  names?: { groom: string; bride: string },
+  options?: { title: string; extraEvent?: boolean },
 ) {
-  const { user } = schema;
+  const { user, event } = schema;
   const { createInvitation } = await import("@/lib/invitations/service");
   counter += 1;
   const ownerId = `user-${counter}`;
-  const chosen = names ?? { groom: `Mempelai${counter}a`, bride: `Mempelai${counter}b` };
   await db.insert(user).values({
     id: ownerId,
     name: `Pemilik ${counter}`,
     email: `pemilik${counter}@example.com`,
   });
   const invitation = await createInvitation(db, ownerId, {
-    groomName: chosen.groom,
-    brideName: chosen.bride,
+    title: options?.title ?? `Event ${counter}`,
   });
+  if (options?.extraEvent !== false) {
+    await db.insert(event).values({ invitationId: invitation.id, key: "lanjutan", name: "Sesi lanjutan", sortOrder: 1 });
+  }
   return { ownerId, invitation };
 }

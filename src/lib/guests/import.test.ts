@@ -12,8 +12,8 @@ import {
 
 const context: ImportContext = {
   events: [
-    { id: "e-akad", key: "akad", name: "Akad Nikah" },
-    { id: "e-resepsi", key: "resepsi", name: "Resepsi" },
+    { id: "e-utama", key: "utama", name: "Acara utama" },
+    { id: "e-lanjutan", key: "lanjutan", name: "Sesi lanjutan" },
   ],
   groups: ["Keluarga pria"],
   existing: [{ name: "Ibu Sari", phone: "+6281200000101" }],
@@ -36,7 +36,7 @@ function raw(row: number, nama: string, whatsapp: string, extra: Partial<RawRow>
 describe("parseGuestCsv", () => {
   it("membaca judul kolom dengan alias dan nomor baris seperti di spreadsheet", () => {
     const result = parseGuestCsv(
-      "Nama Tamu,No WA,Kelompok,Event,Dewasa,Anak\r\nIbu Sari,0812-0000-0101,Keluarga,akad,2,1\r\n\r\nPak Budi,0813-0000-0102,,,,\r\n",
+      "Nama Tamu,No WA,Kelompok,Event,Dewasa,Anak\r\nIbu Sari,0812-0000-0101,Keluarga,utama,2,1\r\n\r\nPak Budi,0813-0000-0102,,,,\r\n",
     );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -46,7 +46,7 @@ describe("parseGuestCsv", () => {
         nama: "Ibu Sari",
         whatsapp: "0812-0000-0101",
         grup: "Keluarga",
-        acara: "akad",
+        acara: "utama",
         maks_dewasa: "2",
         maks_anak: "1",
       },
@@ -112,7 +112,7 @@ describe("validateImportRows", () => {
     expect(row).toMatchObject({
       status: "siap",
       phone: "+6281300000102",
-      eventIds: ["e-akad", "e-resepsi"],
+      eventIds: ["e-utama", "e-lanjutan"],
       maxAdults: 2,
       maxChildren: 0,
       adultsFromDefault: true,
@@ -124,14 +124,14 @@ describe("validateImportRows", () => {
   it("memetakan acara dengan pemisah ; , / | dan menolak acara tak dikenal", () => {
     const rows = validateImportRows(
       [
-        raw(2, "A", "0813-0000-0102", { acara: "Akad; resepsi" }),
-        raw(3, "B", "0813-0000-0103", { acara: "akad nikah/resepsi" }),
+        raw(2, "A", "0813-0000-0102", { acara: "UTAMA; lanjutan" }),
+        raw(3, "B", "0813-0000-0103", { acara: "acara utama/lanjutan" }),
         raw(4, "C", "0813-0000-0104", { acara: "pengajian" }),
       ],
       context,
     );
-    expect(rows[0].eventIds).toEqual(["e-akad", "e-resepsi"]);
-    expect(rows[1].eventIds).toEqual(["e-akad", "e-resepsi"]);
+    expect(rows[0].eventIds).toEqual(["e-utama", "e-lanjutan"]);
+    expect(rows[1].eventIds).toEqual(["e-utama", "e-lanjutan"]);
     expect(rows[2].status).toBe("perlu_diperbaiki");
     expect(rows[2].issues).toEqual(['Acara "pengajian" tidak dikenal']);
   });

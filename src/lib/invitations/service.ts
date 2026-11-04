@@ -4,11 +4,9 @@ import { event, invitation } from "@/db/schema";
 import type { AppDb } from "@/db/types";
 import { isUniqueViolation } from "@/lib/db-errors";
 import { makeSlugBase, slugCandidate } from "@/lib/slug";
+import { parseInvitationTitle } from "./title";
 
-export const DEFAULT_EVENTS = [
-  { key: "akad", name: "Akad Nikah" },
-  { key: "resepsi", name: "Resepsi" },
-] as const;
+export const DEFAULT_EVENTS = [{ key: "utama", name: "Acara utama" }] as const;
 
 const SEQUENTIAL_ATTEMPTS = 10;
 const RANDOM_ATTEMPTS = 5;
@@ -28,14 +26,16 @@ export async function getInvitationForOwner(
   return row ?? null;
 }
 
-export type CreateInvitationInput = { groomName: string; brideName: string; templateKey?: string };
+export type CreateInvitationInput = { title: string; templateKey?: string };
 
 export async function createInvitation(
   db: AppDb,
   ownerId: string,
   input: CreateInvitationInput,
 ): Promise<Invitation> {
-  const base = makeSlugBase(input.groomName, input.brideName);
+  const parsed = parseInvitationTitle(input.title);
+  if (!parsed.ok) throw new Error(parsed.error);
+  const base = makeSlugBase(parsed.title);
 
   for (let attempt = 0; attempt < SEQUENTIAL_ATTEMPTS + RANDOM_ATTEMPTS; attempt++) {
     const slug =
@@ -49,8 +49,7 @@ export async function createInvitation(
           .values({
             ownerId,
             slug,
-            groomName: input.groomName,
-            brideName: input.brideName,
+            title: parsed.title,
             ...(input.templateKey ? { templateKey: input.templateKey } : {}),
           })
           .returning();

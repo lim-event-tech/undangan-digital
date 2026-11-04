@@ -9,41 +9,30 @@ import {
 } from "@/lib/invitations/service";
 import { canUseTemplate } from "@/lib/platform/templates";
 import { requireUser } from "@/lib/session";
+import { parseInvitationTitle } from "@/lib/invitations/title";
 import { DEFAULT_TEMPLATE } from "@/templates/registry";
 
 export type BaruState = {
   error?: string;
-  values?: { pria: string; wanita: string };
+  values?: { title: string };
 };
-
-const MAKS_NAMA = 40;
-
-function bersihkan(value: FormDataEntryValue | null): string {
-  return typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "";
-}
 
 export async function createInvitationAction(
   _state: BaruState,
   formData: FormData,
 ): Promise<BaruState> {
   const user = await requireUser();
-  const pria = bersihkan(formData.get("pria"));
-  const wanita = bersihkan(formData.get("wanita"));
-  const values = { pria, wanita };
+  const parsed = parseInvitationTitle(formData.get("title"));
+  const rawTitle = formData.get("title");
+  const values = { title: typeof rawTitle === "string" ? rawTitle : "" };
+  if (!parsed.ok) return { error: parsed.error, values };
   const pilihan = formData.get("template");
   const templateKey =
     typeof pilihan === "string" && (await canUseTemplate(db, pilihan)) ? pilihan : DEFAULT_TEMPLATE;
 
-  if (!pria || !wanita) {
-    return { error: "Isi nama panggilan kedua mempelai.", values };
-  }
-  if (pria.length > MAKS_NAMA || wanita.length > MAKS_NAMA) {
-    return { error: `Nama maksimal ${MAKS_NAMA} karakter.`, values };
-  }
-
   const existing = await getInvitationForOwner(db, user.id);
   if (!existing) {
-    await createInvitation(db, user.id, { groomName: pria, brideName: wanita, templateKey });
+    await createInvitation(db, user.id, { title: parsed.title, templateKey });
   }
   revalidatePath("/undangan", "layout");
   redirect("/undangan/isi");

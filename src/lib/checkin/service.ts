@@ -42,8 +42,7 @@ export async function regenerateCheckinKey(db: AppDb, invitationId: string): Pro
 export type UsherInvitation = {
   id: string;
   slug: string;
-  groomName: string;
-  brideName: string;
+  title: string;
 };
 
 export async function findInvitationByKey(
@@ -55,8 +54,7 @@ export async function findInvitationByKey(
     .select({
       id: invitation.id,
       slug: invitation.slug,
-      groomName: invitation.groomName,
-      brideName: invitation.brideName,
+      title: invitation.title,
     })
     .from(invitation)
     .where(

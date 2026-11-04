@@ -6,7 +6,7 @@ import { db } from "@/db";
 import { MAX_EVENTS, parseEventForm, parseEventName } from "@/lib/events/form";
 import { createEvent, deleteEvent, listEventDetails, updateEvent } from "@/lib/events/service";
 import {
-  parseMempelaiForm,
+  parseTitleForm,
   parsePenutupForm,
   parseRsvpForm,
   parseSambutanForm,
@@ -16,7 +16,7 @@ import {
   deleteInvitation,
   publishInvitation,
   saveContentText,
-  saveMempelai,
+  saveTitle,
   saveRsvpSettings,
   unpublishInvitation,
 } from "@/lib/invitations/editor";
@@ -45,11 +45,11 @@ function field(formData: FormData, name: string): string {
   return typeof value === "string" ? value : "";
 }
 
-export async function simpanMempelaiAction(formData: FormData): Promise<SaveResult> {
+export async function simpanTitleAction(formData: FormData): Promise<SaveResult> {
   const { invitation } = await requireInvitation();
-  const parsed = parseMempelaiForm(formData);
+  const parsed = parseTitleForm(formData);
   if (!parsed.ok) return { ok: false, errors: parsed.errors };
-  if (!(await saveMempelai(db, invitation.id, parsed.input))) return NOT_FOUND;
+  if (!(await saveTitle(db, invitation.id, parsed.input))) return NOT_FOUND;
   revalidatePath("/undangan", "layout");
   return SAVED;
 }

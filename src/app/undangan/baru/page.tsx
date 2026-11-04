@@ -37,7 +37,7 @@ export default async function UndanganBaruPage({ searchParams }: PageProps<"/und
       <div>
         <h1 className={`m-0 ${judulHalaman}`}>Mulai undangan Anda</h1>
         <p className="mt-2 mb-0 text-[15px] leading-relaxed text-redup">
-          Cukup nama panggilan dulu. Tanggal, tempat, dan isi undangan bisa
+          Cukup judul event dulu. Tanggal, tempat, dan isi undangan bisa
           diisi nanti.
         </p>
         <p className="mt-2 mb-0 text-sm text-redup-2">

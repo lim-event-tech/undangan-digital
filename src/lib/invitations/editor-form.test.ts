@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  parseMempelaiForm,
+  parseTitleForm,
   parsePenutupForm,
   parseRsvpForm,
   parseSambutanForm,
@@ -12,41 +12,14 @@ function formOf(values: Record<string, string>) {
   return formData;
 }
 
-describe("parseMempelaiForm", () => {
-  it("merapikan spasi dan menyimpan keterangan orang tua multi baris", () => {
-    const parsed = parseMempelaiForm(
-      formOf({
-        panggilanPria: "  Raka ",
-        panggilanWanita: "Nadia",
-        namaLengkapPria: "Raka   Pratama",
-        namaLengkapWanita: "",
-        orangTuaPria: "Putra Bapak A\r\ndan Ibu B",
-        orangTuaWanita: "",
-      }),
-    );
-    expect(parsed).toEqual({
-      ok: true,
-      input: {
-        groomName: "Raka",
-        brideName: "Nadia",
-        pria: { namaLengkap: "Raka Pratama", orangTua: "Putra Bapak A\ndan Ibu B" },
-        wanita: { namaLengkap: "", orangTua: "" },
-      },
-    });
+describe("parseTitleForm", () => {
+  it("merapikan spasi pada judul event", () => {
+    expect(parseTitleForm(formOf({ title: "  Gathering   Komunitas  " }))).toEqual({ ok: true, input: { title: "Gathering Komunitas" } });
   });
-
-  it("mewajibkan nama panggilan dan membatasi panjang", () => {
-    const parsed = parseMempelaiForm(
-      formOf({ panggilanPria: "", panggilanWanita: "N".repeat(41), namaLengkapPria: "X".repeat(81) }),
-    );
-    expect(parsed.ok).toBe(false);
-    if (!parsed.ok) {
-      expect(Object.keys(parsed.errors).sort()).toEqual([
-        "namaLengkapPria",
-        "panggilanPria",
-        "panggilanWanita",
-      ]);
-    }
+  it("mewajibkan judul dan membatasi panjangnya", () => {
+    expect(parseTitleForm(formOf({}))).toMatchObject({ ok: false, errors: { title: expect.any(String) } });
+    expect(parseTitleForm(formOf({ title: "a".repeat(121) }))).toMatchObject({ ok: false, errors: { title: expect.stringContaining("120") } });
+    expect(parseTitleForm(formOf({ title: "a".repeat(120) })).ok).toBe(true);
   });
 });
 

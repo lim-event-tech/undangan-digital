@@ -91,7 +91,7 @@ export function FormCerita({ cerita }: { cerita: Momen[] }) {
   return (
     <KartuBagian
       id="cerita"
-      judul="Cerita kami"
+      judul="Cerita dan momen"
       deskripsi={`Momen perjalanan berdua, maksimal ${MAX_MOMEN}. Bagian ini disembunyikan dari undangan bila kosong.`}
       aksi={<StatusSimpan status={status} />}
     >
@@ -170,7 +170,7 @@ export function FormUcapan({ pengaturan }: { pengaturan: UcapanSettings }) {
   return (
     <KartuBagian
       id="ucapan"
-      judul="Ucapan dan doa"
+      judul="Pesan dan harapan"
       deskripsi="Tamu menulis ucapan di undangan, maksimal 300 karakter. Kelola, sembunyikan, dan unduh ucapan di halaman Ucapan."
       aksi={<StatusSimpan status={status} />}
     >
@@ -246,7 +246,7 @@ export function FormAmplop({
   return (
     <KartuBagian
       id="tanda-kasih"
-      judul="Tanda kasih"
+      judul="Informasi rekening"
       deskripsi={`Hingga ${MAX_REKENING} rekening dan satu kode QRIS. Tamu bisa menyalin nomor rekening. Platform ini tidak memproses uang. Bagian ini disembunyikan dari undangan bila kosong.`}
       aksi={<StatusSimpan status={status} />}
     >

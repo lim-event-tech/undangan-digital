@@ -23,7 +23,7 @@ export async function GET(_request: Request, ctx: RouteContext<"/[slug]/[token]/
   }
   if (page.invitation.status !== "terbit") return NOT_FOUND();
 
-  const couple = `${page.invitation.groomName} & ${page.invitation.brideName}`;
+  const eventTitle = `${page.invitation.title}`;
   const slots = calendarSlots(
     page.events.map((e) => ({
       id: e.id,
@@ -35,7 +35,7 @@ export async function GET(_request: Request, ctx: RouteContext<"/[slug]/[token]/
       address: e.address,
       mapsUrl: e.mapsUrl,
     })),
-    couple,
+    eventTitle,
   );
   if (slots.length === 0) return NOT_FOUND();
 

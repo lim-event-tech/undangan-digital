@@ -11,7 +11,7 @@ import { isWishStatus, type WishStatus } from "@/lib/wishes/shared";
 import { ubahStatusUcapanAction } from "./actions";
 import { TombolHapusUcapan } from "./tombol-hapus";
 
-export const metadata: Metadata = { title: "Ucapan dan doa" };
+export const metadata: Metadata = { title: "Pesan dan harapan" };
 
 const MAKS_BARIS = 200;
 
@@ -65,7 +65,7 @@ export default async function UcapanPage({ searchParams }: PageProps<"/undangan/
     <div className="mx-auto flex max-w-3xl flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className={`m-0 ${judulHalaman}`}>Ucapan dan doa</h1>
+          <h1 className={`m-0 ${judulHalaman}`}>Pesan dan harapan</h1>
           <p className="mt-1 mb-0 text-sm text-redup">
             Ucapan yang ditulis tamu di undangan. Anda bisa menyetujui, menyembunyikan, atau
             menghapusnya.

@@ -183,12 +183,12 @@ describe("tim admin", () => {
     expect(await db.select().from(account).where(eq(account.userId, created.id))).toHaveLength(1);
   });
 
-  it("menolak email yang sudah dipakai akun pasangan", async () => {
+  it("menolak email yang sudah dipakai akun pengguna", async () => {
     const seeded = await seedInvitation(db);
     const [owner] = await db.select().from(user).where(eq(user.id, seeded.ownerId));
     expect(await createAdmin(db, { name: "Pasangan", email: owner.email, role: "lihat" })).toEqual({
       ok: false,
-      error: "email-pasangan",
+      error: "email-pengguna",
     });
   });
 
@@ -250,8 +250,8 @@ async function createDb() {
 
 describe("daftar undangan admin", () => {
   it("memuat hitungan tamu, terkirim, dibuka, dan menjawab serta bisa dicari dan disaring", async () => {
-    const a = await seedInvitation(db, { groom: "Andi", bride: "Putri" });
-    const b = await seedInvitation(db, { groom: "Bagas", bride: "Citra" });
+    const a = await seedInvitation(db, { title: "Andi" });
+    const b = await seedInvitation(db, { title: "Bagas" });
     const g1 = await addGuest(a.invitation.id, "Tamu A1", "+6281500000001");
     const g2 = await addGuest(a.invitation.id, "Tamu A2", "+6281500000002");
     await addGuest(a.invitation.id, "Tamu A3", "+6281500000003");
@@ -274,8 +274,8 @@ describe("daftar undangan admin", () => {
 
   it("mengurutkan menurut jumlah tamu dan memotong halaman", async () => {
     const fresh = await createDb();
-    const small = await seedInvitation(fresh, { groom: "Kecil", bride: "Satu" });
-    const big = await seedInvitation(fresh, { groom: "Besar", bride: "Dua" });
+    const small = await seedInvitation(fresh, { title: "Kecil" });
+    const big = await seedInvitation(fresh, { title: "Besar" });
     for (const [index, owner] of [small, big].entries()) {
       const count = index === 0 ? 1 : 3;
       const events = await listEventDetails(fresh, owner.invitation.id);
@@ -291,16 +291,16 @@ describe("daftar undangan admin", () => {
       }
     }
     const byGuests = await listInvitationsAdmin(fresh, { sort: "tamu" });
-    expect(byGuests.rows.map((r) => r.groomName)).toEqual(["Besar", "Kecil"]);
+    expect(byGuests.rows.map((r) => r.title)).toEqual(["Besar", "Kecil"]);
     const paged = await listInvitationsAdmin(fresh, { sort: "tamu", pageSize: 1, page: 2 });
     expect(paged).toMatchObject({ total: 2, page: 2 });
-    expect(paged.rows.map((r) => r.groomName)).toEqual(["Kecil"]);
+    expect(paged.rows.map((r) => r.title)).toEqual(["Kecil"]);
     expect((await listInvitationsAdmin(fresh, { sort: "terdekat" })).rows).toHaveLength(2);
     expect((await listInvitationsAdmin(fresh, { sort: "respons" })).rows).toHaveLength(2);
   });
 
   it("memuat detail undangan, pemilik, metode masuk, dan kekurangan isian", async () => {
-    const seeded = await seedInvitation(db, { groom: "Detail", bride: "Uji" });
+    const seeded = await seedInvitation(db, { title: "Detail" });
     await db.insert(account).values({
       id: `akun-${seeded.ownerId}`,
       accountId: seeded.ownerId,
@@ -351,11 +351,11 @@ describe("tindakan admin atas undangan", () => {
 
 });
 
-describe("akun pasangan", () => {
+describe("akun pengguna", () => {
   it("mendaftar akun tanpa admin, dengan metode masuk dan undangannya", async () => {
     const fresh = await createDb();
-    const google = await seedInvitation(fresh, { groom: "Gugel", bride: "Satu" });
-    const email = await seedInvitation(fresh, { groom: "Imel", bride: "Dua" });
+    const google = await seedInvitation(fresh, { title: "Gugel" });
+    const email = await seedInvitation(fresh, { title: "Imel" });
     await fresh.insert(account).values([
       { id: "a-google", accountId: google.ownerId, providerId: "google", userId: google.ownerId },
       { id: "a-email", accountId: email.ownerId, providerId: "credential", userId: email.ownerId, password: "x" },
@@ -374,7 +374,7 @@ describe("akun pasangan", () => {
     expect(list.total).toBe(2);
     expect(list.rows.find((r) => r.id === google.ownerId)).toMatchObject({
       methods: ["Google"],
-      invitationName: "Gugel & Satu",
+      invitationName: "Gugel",
       invitationStatus: "draf",
     });
     expect((await listAccounts(fresh, { method: "email" })).rows.map((r) => r.id)).toEqual([email.ownerId]);
@@ -403,7 +403,7 @@ describe("akun pasangan", () => {
     expect(again.status).toBe("ditangguhkan");
   });
 
-  it("tidak bisa memblokir akun admin lewat jalur akun pasangan", async () => {
+  it("tidak bisa memblokir akun admin lewat jalur akun pengguna", async () => {
     const admin = await createAdmin(db, {
       name: "Admin Lain",
       email: "lain@example.com",
@@ -419,9 +419,9 @@ describe("statistik platform", () => {
   it("menghitung akun, corong, aktivitas harian, dan pemakaian template", async () => {
     const fresh = await createDb();
     const now = new Date("2026-11-15T05:00:00.000Z");
-    const a = await seedInvitation(fresh, { groom: "Satu", bride: "A" });
-    const b = await seedInvitation(fresh, { groom: "Dua", bride: "B" });
-    await seedInvitation(fresh, { groom: "Tiga", bride: "C" });
+    const a = await seedInvitation(fresh, { title: "Satu" });
+    const b = await seedInvitation(fresh, { title: "Dua" });
+    await seedInvitation(fresh, { title: "Tiga" });
     await fresh
       .update(invitation)
       .set({ status: "terbit", updatedAt: new Date("2026-11-01T00:00:00.000Z") })

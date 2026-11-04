@@ -27,9 +27,9 @@ beforeAll(async () => {
 async function fresh() {
   const { invitation } = await seedInvitation(db);
   const events = await listEvents(db, invitation.id);
-  const akad = events.find((e) => e.key === "akad")!;
-  const resepsi = events.find((e) => e.key === "resepsi")!;
-  return { invitation, akad, resepsi };
+  const utama = events.find((e) => e.key === "utama")!;
+  const lanjutan = events.find((e) => e.key === "lanjutan")!;
+  return { invitation, utama, lanjutan };
 }
 
 function input(overrides: Partial<GuestInput> & Pick<GuestInput, "name" | "phone">): GuestInput {
@@ -57,7 +57,7 @@ function raw(row: number, nama: string, whatsapp: string, extra: Partial<RawRow>
 
 describe("createGuest dan listGuests", () => {
   it("membuat tamu dengan token pribadi, grup otomatis, dan daftar acara", async () => {
-    const { invitation, akad, resepsi } = await fresh();
+    const { invitation, utama, lanjutan } = await fresh();
     const created = await createGuest(
       db,
       invitation.id,
@@ -65,7 +65,7 @@ describe("createGuest dan listGuests", () => {
         name: "Ibu Sari",
         phone: "+6281200000101",
         groupName: "Keluarga wanita",
-        eventIds: [akad.id, resepsi.id],
+        eventIds: [utama.id, lanjutan.id],
       }),
     );
     expect(created.token).toMatch(/^[A-Za-z0-9_-]{16}$/);
@@ -77,7 +77,7 @@ describe("createGuest dan listGuests", () => {
       phone: "+6281200000101",
       groupName: "Keluarga wanita",
     });
-    expect([...rows[0].eventIds].sort()).toEqual([akad.id, resepsi.id].sort());
+    expect([...rows[0].eventIds].sort()).toEqual([utama.id, lanjutan.id].sort());
   });
 
   it("memakai ulang grup yang sama tanpa membedakan huruf besar", async () => {
@@ -89,9 +89,9 @@ describe("createGuest dan listGuests", () => {
   });
 
   it("mencari menurut nama, nomor, grup, dan acara", async () => {
-    const { invitation, akad, resepsi } = await fresh();
-    await createGuest(db, invitation.id, input({ name: "Ibu Sari", phone: "+6281200000101", groupName: "Keluarga wanita", eventIds: [akad.id, resepsi.id] }));
-    await createGuest(db, invitation.id, input({ name: "Kak Dimas", phone: "+6285700000103", groupName: "Teman kuliah", eventIds: [resepsi.id] }));
+    const { invitation, utama, lanjutan } = await fresh();
+    await createGuest(db, invitation.id, input({ name: "Ibu Sari", phone: "+6281200000101", groupName: "Keluarga wanita", eventIds: [utama.id, lanjutan.id] }));
+    await createGuest(db, invitation.id, input({ name: "Kak Dimas", phone: "+6285700000103", groupName: "Teman kuliah", eventIds: [lanjutan.id] }));
 
     const names = async (filters: Parameters<typeof listGuests>[2]) =>
       (await listGuests(db, invitation.id, filters)).map((g) => g.name);
@@ -103,8 +103,8 @@ describe("createGuest dan listGuests", () => {
     const groups = await listGroups(db, invitation.id);
     const kuliah = groups.find((g) => g.name === "Teman kuliah")!;
     expect(await names({ groupId: kuliah.id })).toEqual(["Kak Dimas"]);
-    expect(await names({ eventId: akad.id })).toEqual(["Ibu Sari"]);
-    expect((await names({ eventId: resepsi.id })).sort()).toEqual(["Ibu Sari", "Kak Dimas"]);
+    expect(await names({ eventId: utama.id })).toEqual(["Ibu Sari"]);
+    expect((await names({ eventId: lanjutan.id })).sort()).toEqual(["Ibu Sari", "Kak Dimas"]);
     expect(await names({ q: "sari", groupId: kuliah.id })).toEqual([]);
   });
 
@@ -130,10 +130,10 @@ describe("createGuest dan listGuests", () => {
     const created = await createGuest(
       db,
       a.invitation.id,
-      input({ name: "Tamu", phone: "+6281200000101", eventIds: [a.akad.id, b.akad.id] }),
+      input({ name: "Tamu", phone: "+6281200000101", eventIds: [a.utama.id, b.utama.id] }),
     );
     const links = await db.select().from(guestEvent).where(eq(guestEvent.guestId, created.id));
-    expect(links.map((l) => l.eventId)).toEqual([a.akad.id]);
+    expect(links.map((l) => l.eventId)).toEqual([a.utama.id]);
   });
 
   it("menolak batas tamu yang tidak masuk akal di tingkat basis data", async () => {
@@ -146,15 +146,15 @@ describe("createGuest dan listGuests", () => {
 
 describe("updateGuest", () => {
   it("mengganti data, daftar acara, dan membuang RSVP untuk acara yang dicabut", async () => {
-    const { invitation, akad, resepsi } = await fresh();
+    const { invitation, utama, lanjutan } = await fresh();
     const created = await createGuest(
       db,
       invitation.id,
-      input({ name: "Ibu Sari", phone: "+6281200000101", eventIds: [akad.id, resepsi.id] }),
+      input({ name: "Ibu Sari", phone: "+6281200000101", eventIds: [utama.id, lanjutan.id] }),
     );
     await db.insert(rsvp).values([
-      { guestId: created.id, eventId: akad.id, attending: true, adults: 2 },
-      { guestId: created.id, eventId: resepsi.id, attending: true, adults: 2 },
+      { guestId: created.id, eventId: utama.id, attending: true, adults: 2 },
+      { guestId: created.id, eventId: lanjutan.id, attending: true, adults: 2 },
     ]);
 
     const updated = await updateGuest(
@@ -165,7 +165,7 @@ describe("updateGuest", () => {
         name: "Ibu Sari R.",
         phone: "+6281300000999",
         groupName: "Keluarga wanita",
-        eventIds: [resepsi.id],
+        eventIds: [lanjutan.id],
         maxAdults: 3,
         maxChildren: 2,
       }),
@@ -174,9 +174,9 @@ describe("updateGuest", () => {
     expect(updated?.token).toBe(created.token);
 
     const after = await getGuest(db, invitation.id, created.id);
-    expect(after).toMatchObject({ phone: "+6281300000999", groupName: "Keluarga wanita", eventIds: [resepsi.id] });
+    expect(after).toMatchObject({ phone: "+6281300000999", groupName: "Keluarga wanita", eventIds: [lanjutan.id] });
     const answers = await db.select().from(rsvp).where(eq(rsvp.guestId, created.id));
-    expect(answers.map((r) => r.eventId)).toEqual([resepsi.id]);
+    expect(answers.map((r) => r.eventId)).toEqual([lanjutan.id]);
   });
 
   it("mengembalikan null untuk tamu milik undangan lain", async () => {
@@ -192,8 +192,8 @@ describe("updateGuest", () => {
 
 describe("deleteGuest", () => {
   it("menghapus tamu beserta relasinya", async () => {
-    const { invitation, akad } = await fresh();
-    const created = await createGuest(db, invitation.id, input({ name: "Tamu", phone: "+6281200000101", eventIds: [akad.id] }));
+    const { invitation, utama } = await fresh();
+    const created = await createGuest(db, invitation.id, input({ name: "Tamu", phone: "+6281200000101", eventIds: [utama.id] }));
     expect(await deleteGuest(db, invitation.id, created.id)).toBe(true);
     expect(await getGuest(db, invitation.id, created.id)).toBeNull();
     const links = await db.select().from(guestEvent).where(eq(guestEvent.guestId, created.id));
@@ -242,15 +242,15 @@ describe("commitImport", () => {
   });
 
   it("mengimpor baris siap, melewati yang bermasalah, dan membuat grup sekali", async () => {
-    const { invitation, akad, resepsi } = await fresh();
+    const { invitation, utama, lanjutan } = await fresh();
     await createGuest(db, invitation.id, input({ name: "Ibu Sari", phone: "+6281200000101" }));
 
     const result = await commitImport(
       db,
       invitation.id,
       [
-        raw(2, "Pak Budi", "0813-0000-0102", { grup: "Teman SMA", acara: "akad;resepsi", maks_dewasa: "3", maks_anak: "1" }),
-        raw(3, "Kak Nisa", "+62 857-0000-0112", { grup: "teman sma", acara: "resepsi" }),
+        raw(2, "Pak Budi", "0813-0000-0102", { grup: "Teman SMA", acara: "utama;lanjutan", maks_dewasa: "3", maks_anak: "1" }),
+        raw(3, "Kak Nisa", "+62 857-0000-0112", { grup: "teman sma", acara: "lanjutan" }),
         raw(4, "Mas Fajar", "0812"),
         raw(5, "Sari Dobel", "0812-0000-0101"),
       ],
@@ -266,17 +266,17 @@ describe("commitImport", () => {
     const budi = rows.find((g) => g.name === "Pak Budi")!;
     const nisa = rows.find((g) => g.name === "Kak Nisa")!;
     expect(budi).toMatchObject({ phone: "+6281300000102", groupName: "Teman SMA", maxAdults: 3, maxChildren: 1 });
-    expect([...budi.eventIds].sort()).toEqual([akad.id, resepsi.id].sort());
+    expect([...budi.eventIds].sort()).toEqual([utama.id, lanjutan.id].sort());
     expect(nisa).toMatchObject({ phone: "+6285700000112", groupName: "Teman SMA", maxAdults: 2, maxChildren: 0 });
-    expect(nisa.eventIds).toEqual([resepsi.id]);
+    expect(nisa.eventIds).toEqual([lanjutan.id]);
   });
 
   it("memakai semua acara bila kolom acara kosong", async () => {
-    const { invitation, akad, resepsi } = await fresh();
+    const { invitation, utama, lanjutan } = await fresh();
     const result = await commitImport(db, invitation.id, [raw(2, "Tante Lina", "81200000104")], false);
     expect(result).toMatchObject({ ok: true, imported: 1 });
     const [row] = await listGuests(db, invitation.id);
-    expect([...row.eventIds].sort()).toEqual([akad.id, resepsi.id].sort());
+    expect([...row.eventIds].sort()).toEqual([utama.id, lanjutan.id].sort());
   });
 
   it("memvalidasi ulang di server walau klien mengirim data tak layak", async () => {
@@ -335,10 +335,10 @@ describe("commitImport", () => {
 
 describe("getImportContext", () => {
   it("mengumpulkan acara, grup, tamu yang ada, dan bawaan undangan", async () => {
-    const { invitation, akad, resepsi } = await fresh();
+    const { invitation, utama, lanjutan } = await fresh();
     await createGuest(db, invitation.id, input({ name: "Ibu Sari", phone: "+6281200000101", groupName: "Keluarga" }));
     const context = await getImportContext(db, invitation.id);
-    expect(context.events.map((e) => e.id)).toEqual([akad.id, resepsi.id]);
+    expect(context.events.map((e) => e.id)).toEqual([utama.id, lanjutan.id]);
     expect(context.groups).toEqual(["Keluarga"]);
     expect(context.existing).toEqual([{ name: "Ibu Sari", phone: "+6281200000101" }]);
     expect(context.defaults).toEqual({ maxAdults: 2, maxChildren: 0 });

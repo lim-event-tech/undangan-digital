@@ -243,7 +243,7 @@ export type FailureRow = {
   id: string;
   guestName: string;
   phone: string;
-  coupleName: string;
+  eventTitle: string;
   error: string;
   at: Date | null;
 };
@@ -257,8 +257,7 @@ export async function recentFailures(
       id: waJob.id,
       guestName: guest.name,
       phone: waJob.phone,
-      groom: invitation.groomName,
-      bride: invitation.brideName,
+      title: invitation.title,
       error: waJob.error,
       at: waJob.processedAt,
     })
@@ -277,7 +276,7 @@ export async function recentFailures(
     id: row.id,
     guestName: row.guestName,
     phone: row.phone,
-    coupleName: `${row.groom} & ${row.bride}`,
+    eventTitle: row.title,
     error: row.error ?? "Gagal dikirim",
     at: row.at,
   }));

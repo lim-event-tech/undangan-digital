@@ -16,7 +16,7 @@ describe("registry template", () => {
 
   it("melengkapi katalog dari database dengan keterangan dari kode", () => {
     expect(keDaftarPilihan([{ key: "bintang", label: "Bintang Malam", ribbon: "Baru" }])).toEqual([
-      expect.objectContaining({ key: "bintang", label: "Bintang Malam", ribbon: "Baru", ket: "Navy klasik, willow, kunang-kunang" }),
+      expect.objectContaining({ key: "bintang", label: "Bintang Malam", ribbon: "Baru", ket: "Navy dan emas, orbit serta taburan bintang" }),
     ]);
   });
 });

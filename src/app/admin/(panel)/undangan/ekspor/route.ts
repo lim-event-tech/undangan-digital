@@ -21,9 +21,9 @@ export async function GET(request: Request) {
   });
 
   const rows = [
-    ["Pasangan", "Slug", "Pemilik", "Email pemilik", "Template", "Tanggal acara", "Status", "Tamu", "Terkirim", "Dibuka", "Menjawab"],
+    ["Event", "Slug", "Pemilik", "Email pemilik", "Template", "Tanggal acara", "Status", "Tamu", "Terkirim", "Dibuka", "Menjawab"],
     ...data.rows.map((r) => [
-      `${r.groomName} & ${r.brideName}`,
+      `${r.title}`,
       r.slug,
       r.ownerName,
       r.ownerEmail,

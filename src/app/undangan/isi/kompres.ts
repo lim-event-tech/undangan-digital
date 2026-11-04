@@ -50,7 +50,7 @@ export async function kompresGambar(file: File, longestSide: number): Promise<Bl
 
 export async function unggahFoto(
   file: File,
-  kind: "cover" | "galeri" | "pria" | "wanita",
+  kind: "cover" | "galeri",
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   let blob: Blob;
   try {

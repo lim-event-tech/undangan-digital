@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { buildIcs, calendarSlots, googleCalendarUrl, type CalendarEvent } from "./calendar";
 import { countdownTarget, eventInstant, remaining } from "./countdown";
 
-const akad: CalendarEvent = {
-  id: "akad-1",
-  name: "Akad Nikah",
+const utama: CalendarEvent = {
+  id: "utama-1",
+  name: "Acara utama",
   date: "2026-12-12",
   time: "08:00",
   timezone: "WIB",
@@ -13,10 +13,10 @@ const akad: CalendarEvent = {
   mapsUrl: "https://maps.app.goo.gl/abc123",
 };
 
-const resepsi: CalendarEvent = {
-  ...akad,
-  id: "resepsi-1",
-  name: "Resepsi",
+const lanjutan: CalendarEvent = {
+  ...utama,
+  id: "lanjutan-1",
+  name: "Sesi lanjutan",
   time: "11:00:00",
   timezone: "WITA",
 };
@@ -61,13 +61,13 @@ describe("countdownTarget dan remaining", () => {
 });
 
 describe("calendarSlots dan googleCalendarUrl", () => {
-  const slots = calendarSlots([resepsi, akad, { ...akad, id: "x", date: null }], "Raka & Nadia");
+  const slots = calendarSlots([lanjutan, utama, { ...utama, id: "x", date: null }], "Raka & Nadia");
 
   it("mengurutkan menurut waktu, melewati acara tanpa tanggal, dan memberi durasi 2 jam", () => {
-    expect(slots.map((s) => s.id)).toEqual(["akad-1", "resepsi-1"]);
+    expect(slots.map((s) => s.id)).toEqual(["utama-1", "lanjutan-1"]);
     expect(slots[1].start.toISOString()).toBe("2026-12-12T03:00:00.000Z");
     expect(slots[1].end.getTime() - slots[1].start.getTime()).toBe(120 * 60_000);
-    expect(slots[1].title).toBe("Resepsi Raka & Nadia");
+    expect(slots[1].title).toBe("Sesi lanjutan Raka & Nadia");
     expect(slots[1].location).toBe("Aula Graha Puspa, Jl. Dago Atas No. 88, Bandung");
   });
 
@@ -75,27 +75,27 @@ describe("calendarSlots dan googleCalendarUrl", () => {
     const url = new URL(googleCalendarUrl(slots[0]));
     expect(url.origin + url.pathname).toBe("https://calendar.google.com/calendar/render");
     expect(url.searchParams.get("action")).toBe("TEMPLATE");
-    expect(url.searchParams.get("text")).toBe("Akad Nikah Raka & Nadia");
+    expect(url.searchParams.get("text")).toBe("Acara utama Raka & Nadia");
     expect(url.searchParams.get("dates")).toBe("20261212T010000Z/20261212T030000Z");
     expect(url.searchParams.get("details")).toContain("https://maps.app.goo.gl/abc123");
   });
 });
 
 describe("buildIcs", () => {
-  const slots = calendarSlots([akad], "Raka; Nadia, berdua");
+  const slots = calendarSlots([utama], "Raka; Nadia, berdua");
   const ics = buildIcs(slots, { uidDomain: "undangan.test", now: new Date("2026-11-01T00:00:00.000Z") });
 
   it("menghasilkan kalender dengan akhir baris CRLF dan acara lengkap", () => {
     expect(ics.startsWith("BEGIN:VCALENDAR\r\nVERSION:2.0\r\n")).toBe(true);
     expect(ics.endsWith("END:VEVENT\r\nEND:VCALENDAR\r\n")).toBe(true);
-    expect(ics).toContain("UID:akad-1@undangan.test\r\n");
+    expect(ics).toContain("UID:utama-1@undangan.test\r\n");
     expect(ics).toContain("DTSTAMP:20261101T000000Z\r\n");
     expect(ics).toContain("DTSTART:20261212T010000Z\r\n");
     expect(ics).toContain("DTEND:20261212T030000Z\r\n");
   });
 
   it("meloloskan koma dan titik koma, dan melipat baris yang lebih dari 75 byte", () => {
-    expect(ics).toContain("SUMMARY:Akad Nikah Raka\\; Nadia\\, berdua\r\n");
+    expect(ics).toContain("SUMMARY:Acara utama Raka\\; Nadia\\, berdua\r\n");
     for (const line of ics.split("\r\n")) {
       expect(new TextEncoder().encode(line).length).toBeLessThanOrEqual(75);
     }

@@ -15,7 +15,7 @@ export default async function DaftarPage() {
   return (
     <LayoutAuth
       judul="Daftar"
-      deskripsi="Buat akun untuk menyiapkan undangan pernikahan Anda."
+      deskripsi="Buat akun untuk menyiapkan undangan event Anda."
     >
       <FormDaftar />
 

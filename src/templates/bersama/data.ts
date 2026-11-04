@@ -8,13 +8,12 @@ import { RASIO_CONTOH, rasioFoto, susunLajur } from "./pola-galeri";
 import { kotaDari, tanggalKata } from "./teks";
 
 export const PENUTUP_BAWAAN =
-  "Merupakan kehormatan dan kebahagiaan bagi kami apabila Anda berkenan hadir dan memberikan doa restu.";
+  "Merupakan kehormatan dan kebahagiaan bagi kami apabila Anda berkenan hadir dalam acara ini.";
 
 const foto = (id: string) => `/foto/${id}`;
 
 export function siapkanData(view: InvitationView): DataUndangan {
   const { content, events, photos } = view;
-  const pasangan = `${view.groomName} & ${view.brideName}`;
   const pertama = events.find((e) => e.date) ?? null;
   const tanggal = pertama?.date ?? null;
   const kota = kotaDari(pertama?.address ?? null);
@@ -32,7 +31,7 @@ export function siapkanData(view: InvitationView): DataUndangan {
         address: e.address,
         mapsUrl: e.mapsUrl,
       })),
-      pasangan,
+      view.title,
     );
   const slots = new Map(daftarSlot.map((slot) => [slot.id, slot]));
   const kalender =
@@ -87,8 +86,6 @@ export function siapkanData(view: InvitationView): DataUndangan {
   }));
   const rekening = content.amplop.filter((r) => r.nomor.trim());
   const qrisFoto = photos.find((p) => p.kind === "qris");
-  const fotoPria = photos.find((p) => p.kind === "pria");
-  const fotoWanita = photos.find((p) => p.kind === "wanita");
   const cerita = content.cerita.filter((m) => m.judul.trim() || m.teks.trim());
   const ucapan: DataUndangan["ucapan"] =
     content.ucapan.tampil && view.wishes ? view.wishes : null;
@@ -97,7 +94,6 @@ export function siapkanData(view: InvitationView): DataUndangan {
     sampul: true,
     pembuka: true,
     salam: Boolean(content.kutipan.trim() || content.sambutan.trim()),
-    mempelai: true,
     hitung: target !== null,
     acara: events.length > 0,
     cerita: cerita.length > 0,
@@ -114,14 +110,7 @@ export function siapkanData(view: InvitationView): DataUndangan {
     mode: view.mode,
     slug: view.slug,
     token: view.token,
-    pria: view.groomName,
-    wanita: view.brideName,
-    priaLengkap: content.pria.namaLengkap.trim() || view.groomName,
-    wanitaLengkap: content.wanita.namaLengkap.trim() || view.brideName,
-    priaOrtu: content.pria.orangTua.trim(),
-    wanitaOrtu: content.wanita.orangTua.trim(),
-    fotoPria: fotoPria ? foto(fotoPria.id) : null,
-    fotoWanita: fotoWanita ? foto(fotoWanita.id) : null,
+    judul: view.title,
     tglTitik: tanggal ? formatDots(tanggal) : "",
     tglTitikTengah: tanggal ? formatDots(tanggal).replaceAll(" . ", " · ") : "",
     tglPanjang: tanggal ? formatLongDate(tanggal) : "",

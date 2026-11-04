@@ -25,7 +25,7 @@ function compactUtc(value: Date): string {
 
 export function calendarSlots(
   events: CalendarEvent[],
-  couple: string,
+  eventTitle: string,
   minutes: number = DEFAULT_DURATION_MINUTES,
 ): CalendarSlot[] {
   const slots: CalendarSlot[] = [];
@@ -36,7 +36,7 @@ export function calendarSlots(
     const location = [e.venueName, e.address].filter(Boolean).join(", ");
     slots.push({
       id: e.id,
-      title: `${e.name} ${couple}`,
+      title: `${e.name} ${eventTitle}`,
       start,
       end: new Date(start.getTime() + minutes * 60_000),
       location,

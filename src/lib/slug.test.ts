@@ -14,20 +14,20 @@ describe("slugify", () => {
 });
 
 describe("makeSlugBase", () => {
-  it("menggabungkan nama kedua mempelai", () => {
-    expect(makeSlugBase("Raka", "Nádia")).toBe("raka-dan-nadia");
+  it("membuat slug dari judul event", () => {
+    expect(makeSlugBase("Gathering Komunitas")).toBe("gathering-komunitas");
   });
 
   it("memberi nilai bawaan bila nama kosong", () => {
-    expect(makeSlugBase("", "")).toBe("pernikahan");
-    expect(makeSlugBase("!!!", "???")).toBe("pernikahan");
+    expect(makeSlugBase("")).toBe("event");
+    expect(makeSlugBase("!!!")).toBe("event");
   });
 
   it("menghindari kata yang dicadangkan sistem", () => {
-    expect(makeSlugBase("admin", "")).toBe("admin-undangan");
-    expect(makeSlugBase("", "api")).toBe("api-undangan");
-    expect(makeSlugBase("Foto", "")).toBe("foto-undangan");
-    expect(makeSlugBase("", "Contoh")).toBe("contoh-undangan");
+    expect(makeSlugBase("admin")).toBe("admin-undangan");
+    expect(makeSlugBase("api")).toBe("api-undangan");
+    expect(makeSlugBase("Foto")).toBe("foto-undangan");
+    expect(makeSlugBase("Contoh")).toBe("contoh-undangan");
   });
 
   it("mencadangkan setiap rute tingkat atas aplikasi agar tidak bentrok dengan link tamu", () => {
@@ -36,7 +36,7 @@ describe("makeSlugBase", () => {
       .map((d) => d.name);
     expect(rute.length).toBeGreaterThan(5);
     for (const nama of rute) expect({ nama, dicadangkan: RESERVED_SLUGS.has(nama) }).toEqual({ nama, dicadangkan: true });
-    expect(RESERVED_SLUGS.has(makeSlugBase("", ""))).toBe(false);
+    expect(RESERVED_SLUGS.has(makeSlugBase(""))).toBe(false);
   });
 
   it("mencadangkan setiap folder di public agar tidak bentrok dengan link tamu", () => {
@@ -48,7 +48,7 @@ describe("makeSlugBase", () => {
   });
 
   it("memotong nama panjang tanpa meninggalkan tanda hubung di ujung", () => {
-    const slug = makeSlugBase("a".repeat(40), "b".repeat(40));
+    const slug = makeSlugBase("a".repeat(40) + " " + "b".repeat(40));
     expect(slug.length).toBeLessThanOrEqual(60);
     expect(slug.endsWith("-")).toBe(false);
   });

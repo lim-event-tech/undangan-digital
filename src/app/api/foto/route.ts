@@ -44,7 +44,7 @@ export async function POST(request: Request) {
   const kind = formData.get("jenis");
   if (
     !(file instanceof File) ||
-    (kind !== "cover" && kind !== "galeri" && kind !== "qris" && kind !== "pria" && kind !== "wanita")
+    (kind !== "cover" && kind !== "galeri" && kind !== "qris")
   ) {
     return fail("Data unggahan tidak lengkap.", 400);
   }

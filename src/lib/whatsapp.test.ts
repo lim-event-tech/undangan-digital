@@ -12,14 +12,14 @@ const vars = {
   nama: "Bapak Hendra & Istri",
   link: "https://undangan.example.com/u/raka-dan-nadia/AbCdEfGh12345678",
   batas_rsvp: "sebelum 10 Desember 2026",
-  mempelai: "Raka & Nadia",
+  event: "Gathering Komunitas",
 };
 
 describe("renderMessage", () => {
   it("mengganti semua sisipan, termasuk yang muncul berulang", () => {
-    const text = renderMessage("{nama} - {nama} - {mempelai} - {batas_rsvp}\n{link}", vars);
+    const text = renderMessage("{nama} - {nama} - {event} - {batas_rsvp}\n{link}", vars);
     expect(text).toBe(
-      "Bapak Hendra & Istri - Bapak Hendra & Istri - Raka & Nadia - sebelum 10 Desember 2026\nhttps://undangan.example.com/u/raka-dan-nadia/AbCdEfGh12345678",
+      "Bapak Hendra & Istri - Bapak Hendra & Istri - Gathering Komunitas - sebelum 10 Desember 2026\nhttps://undangan.example.com/u/raka-dan-nadia/AbCdEfGh12345678",
     );
   });
 

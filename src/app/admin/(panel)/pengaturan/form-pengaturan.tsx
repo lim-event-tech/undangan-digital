@@ -70,7 +70,7 @@ export function FormPengaturan({ pengaturan }: { pengaturan: PlatformSettings })
       <Bagian
         id="pesan-wa"
         judul="Pesan WhatsApp bawaan"
-        keterangan="Isi awal pesan saat pengguna belum menulis sendiri. Sisipan: {nama}, {link}, {batas_rsvp}, {mempelai}. Kosongkan untuk memakai pesan sistem."
+        keterangan="Isi awal pesan saat pengguna belum menulis sendiri. Sisipan: {nama}, {link}, {batas_rsvp}, {event}. Kosongkan untuk memakai pesan sistem."
       >
         <label className={labelKolom}>
           Teks pesan

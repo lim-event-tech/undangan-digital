@@ -140,8 +140,7 @@ export function isInvitationSort(value: unknown): value is InvitationSort {
 export type AdminInvitationRow = {
   id: string;
   slug: string;
-  groomName: string;
-  brideName: string;
+  title: string;
   status: InvitationStatus;
   templateKey: string;
   ownerId: string;
@@ -186,8 +185,7 @@ export async function listInvitationsAdmin(
     conditions.push(
       or(
         ilike(invitation.slug, pattern),
-        ilike(invitation.groomName, pattern),
-        ilike(invitation.brideName, pattern),
+        ilike(invitation.title, pattern),
         ilike(user.email, pattern),
         ilike(user.name, pattern),
       ),
@@ -216,8 +214,7 @@ export async function listInvitationsAdmin(
     .select({
       id: invitation.id,
       slug: invitation.slug,
-      groomName: invitation.groomName,
-      brideName: invitation.brideName,
+      title: invitation.title,
       status: invitation.status,
       templateKey: invitation.templateKey,
       ownerId: user.id,
@@ -261,8 +258,7 @@ export async function getInvitationAdmin(
     .select({
       id: invitation.id,
       slug: invitation.slug,
-      groomName: invitation.groomName,
-      brideName: invitation.brideName,
+      title: invitation.title,
       status: invitation.status,
       templateKey: invitation.templateKey,
       rsvpDeadline: invitation.rsvpDeadline,
@@ -434,8 +430,7 @@ export async function listAccounts(
       providers: sql<string[]>`coalesce((select array_agg(account.provider_id) from account where account.user_id = ${user.id}), '{}')`,
       invitationId: invitation.id,
       invitationSlug: invitation.slug,
-      groomName: invitation.groomName,
-      brideName: invitation.brideName,
+      title: invitation.title,
       invitationStatus: invitation.status,
     })
     .from(user)
@@ -456,7 +451,7 @@ export async function listAccounts(
       lastActive: row.lastActive ? new Date(row.lastActive) : null,
       invitationId: row.invitationId,
       invitationSlug: row.invitationSlug,
-      invitationName: row.groomName && row.brideName ? `${row.groomName} & ${row.brideName}` : null,
+      invitationName: row.title ?? null,
       invitationStatus: row.invitationStatus,
     })),
     total: totalRow?.total ?? 0,

@@ -120,8 +120,7 @@ export const invitation = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     slug: text().notNull().unique(),
-    groomName: text().notNull(),
-    brideName: text().notNull(),
+    title: text().notNull(),
     templateKey: text().notNull().default("melati"),
     status: text({ enum: ["draf", "terbit", "ditangguhkan"] })
       .notNull()
@@ -174,7 +173,7 @@ export const photo = pgTable(
     invitationId: uuid()
       .notNull()
       .references(() => invitation.id, { onDelete: "cascade" }),
-    kind: text({ enum: ["cover", "galeri", "qris", "pria", "wanita"] }).notNull(),
+    kind: text({ enum: ["cover", "galeri", "qris"] }).notNull(),
     sortOrder: integer().notNull().default(0),
     fileName: text().notNull(),
     contentType: text().notNull(),

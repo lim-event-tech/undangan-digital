@@ -1,7 +1,4 @@
 export const CONTENT_LIMITS = {
-  panggilan: 40,
-  namaLengkap: 80,
-  orangTua: 160,
   kutipan: 300,
   sambutan: 1200,
   penutup: 600,
@@ -17,8 +14,6 @@ export const CONTENT_LIMITS = {
 
 export const MAX_REKENING = 2;
 export const MAX_MOMEN = 6;
-
-export type PersonContent = { namaLengkap: string; orangTua: string };
 
 export type Rekening = { bank: string; nomor: string; atasNama: string };
 
@@ -36,7 +31,6 @@ export type BagianId =
   | "sampul"
   | "pembuka"
   | "salam"
-  | "mempelai"
   | "hitung"
   | "acara"
   | "cerita"
@@ -50,14 +44,13 @@ export const BAGIAN: readonly { id: BagianId; label: string; tetap: boolean; waj
   { id: "sampul", label: "Sampul", tetap: true, wajib: true },
   { id: "pembuka", label: "Pembuka", tetap: false, wajib: false },
   { id: "salam", label: "Salam dan sambutan", tetap: false, wajib: false },
-  { id: "mempelai", label: "Mempelai", tetap: false, wajib: false },
   { id: "hitung", label: "Hitung mundur", tetap: false, wajib: false },
   { id: "acara", label: "Waktu dan tempat", tetap: false, wajib: false },
-  { id: "cerita", label: "Cerita kami", tetap: false, wajib: false },
+  { id: "cerita", label: "Cerita dan momen", tetap: false, wajib: false },
   { id: "galeri", label: "Galeri", tetap: false, wajib: false },
   { id: "rsvp", label: "Konfirmasi kehadiran", tetap: false, wajib: true },
-  { id: "ucapan", label: "Ucapan dan doa", tetap: false, wajib: false },
-  { id: "amplop", label: "Tanda kasih", tetap: false, wajib: false },
+  { id: "ucapan", label: "Pesan dan harapan", tetap: false, wajib: false },
+  { id: "amplop", label: "Informasi rekening", tetap: false, wajib: false },
   { id: "penutup", label: "Penutup", tetap: true, wajib: true },
 ];
 
@@ -95,8 +88,6 @@ export type InvitationContent = {
   penutup: string;
   pesanWa: string;
   pesanPengingat: string;
-  pria: PersonContent;
-  wanita: PersonContent;
   amplop: Rekening[];
   cerita: Momen[];
   ucapan: UcapanSettings;
@@ -132,14 +123,6 @@ function list(value: unknown, max: number): Record<string, unknown>[] {
     .slice(0, max) as Record<string, unknown>[];
 }
 
-function person(value: unknown): PersonContent {
-  const source = record(value);
-  return {
-    namaLengkap: text(source.namaLengkap, CONTENT_LIMITS.namaLengkap),
-    orangTua: text(source.orangTua, CONTENT_LIMITS.orangTua),
-  };
-}
-
 export function readContent(raw: unknown): InvitationContent {
   const source = record(raw);
   const ucapan = record(source.ucapan);
@@ -153,8 +136,6 @@ export function readContent(raw: unknown): InvitationContent {
     penutup: text(source.penutup, CONTENT_LIMITS.penutup),
     pesanWa: text(source.pesanWa, CONTENT_LIMITS.pesanWa),
     pesanPengingat: text(source.pesanPengingat, CONTENT_LIMITS.pesanPengingat),
-    pria: person(source.pria),
-    wanita: person(source.wanita),
     amplop: list(source.amplop, MAX_REKENING).map((item) => ({
       bank: text(item.bank, CONTENT_LIMITS.bank),
       nomor: text(item.nomor, CONTENT_LIMITS.nomorRekening),

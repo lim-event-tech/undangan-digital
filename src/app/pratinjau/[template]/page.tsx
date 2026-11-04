@@ -8,7 +8,7 @@ import { getMusic } from "@/lib/music/service";
 import { listPhotos } from "@/lib/photos/service";
 import { isRsvpClosed } from "@/lib/rsvp/shared";
 import { loadInvitation, requireUser } from "@/lib/session";
-import { contohView } from "@/templates/bersama/contoh";
+import { contohTemplateView } from "@/templates/bersama/contoh";
 import { semuaUcapan } from "@/templates/bersama/ucapan-server";
 import { isTemplateKey, templateInfo } from "@/templates/registry";
 import { renderTemplate } from "@/templates/render";
@@ -30,7 +30,7 @@ export default async function PratinjauPage({ params }: PageProps<"/pratinjau/[t
   const user = await requireUser();
   const invitation = await loadInvitation(user.id);
   const now = new Date();
-  if (!invitation) return renderTemplate(template, contohView(now.getTime()));
+  if (!invitation) return renderTemplate(template, contohTemplateView(template, now.getTime()));
 
   const content = readContent(invitation.content);
   const [events, photos, music, wishes] = await Promise.all([
@@ -44,8 +44,7 @@ export default async function PratinjauPage({ params }: PageProps<"/pratinjau/[t
     mode: "pratinjau",
     slug: invitation.slug,
     token: "",
-    groomName: invitation.groomName,
-    brideName: invitation.brideName,
+    title: invitation.title,
     guest: {
       name: "Nama Tamu",
       maxAdults: invitation.defaultMaxAdults,

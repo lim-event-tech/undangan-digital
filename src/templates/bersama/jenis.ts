@@ -42,14 +42,7 @@ export type DataUndangan = {
   mode: "tamu" | "pratinjau" | "contoh";
   slug: string;
   token: string;
-  pria: string;
-  wanita: string;
-  priaLengkap: string;
-  wanitaLengkap: string;
-  priaOrtu: string;
-  wanitaOrtu: string;
-  fotoPria: string | null;
-  fotoWanita: string | null;
+  judul: string;
   tglTitik: string;
   tglTitikTengah: string;
   tglPanjang: string;
@@ -89,8 +82,6 @@ export type Palet = {
   lencana: Record<StatusTamu, [string, string, string]>;
   galeriWarna: string[];
 };
-
-export type Tepi = Record<BagianId, { atas: string; bawah: string }>;
 
 export type RsvpAcara = AcaraData & {
   ya: boolean;
@@ -144,14 +135,9 @@ export type RekeningTampil = RekeningData & {
 export type MomenTampil = MomenData & { kunci: string; akhir: boolean; tunda: string; tundaGaris: string };
 
 export type Vals = Omit<DataUndangan, "ucapan" | "galeri" | "lajurGaleri" | "cerita" | "rekening" | "hitung"> & {
-  priaBesar: string;
-  wanitaBesar: string;
-  pasangan: string;
-  pasanganBesar: string;
-  inisialPria: string;
-  inisialWanita: string;
-  altPria: string;
-  altWanita: string;
+  judulBesar: string;
+  ukuranJudul: number;
+  inisialEvent: string;
   kutipanTampil: string;
   inisialTamu: string;
   keteranganMaks: string;
@@ -219,7 +205,7 @@ export type Vals = Omit<DataUndangan, "ucapan" | "galeri" | "lajurGaleri" | "cer
   musikLabel: string;
 };
 
-export type PropsBagian = { v: Vals; atas: string; bawah: string; berikut: string };
+export type PropsBagian = { v: Vals; berikut: string };
 
 export type KomponenBagian = ComponentType<PropsBagian>;
 
@@ -227,9 +213,7 @@ export type ModulTemplate = {
   kunci: string;
   akar: CSSProperties;
   kertas: { className?: string; style: CSSProperties };
-  defs: string;
   palet: Palet;
-  tepi: Tepi;
   bagian: Record<BagianId, KomponenBagian>;
   Progres: ComponentType<{ v: Vals }>;
   Lightbox: ComponentType<{ v: Vals }>;

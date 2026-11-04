@@ -73,7 +73,7 @@ export default async function UndanganAdminPage({ searchParams }: PageProps<"/ad
             type="search"
             name="q"
             defaultValue={q ?? ""}
-            placeholder="Nama mempelai, slug, atau email pemilik"
+            placeholder="Judul event, slug, atau email pemilik"
             className="min-h-11 rounded-md border border-garis-input bg-white px-3 text-sm font-normal text-tinta focus:border-emas-muda focus:ring-3 focus:ring-emas-muda/20 focus:outline-none"
           />
         </label>
@@ -145,7 +145,7 @@ export default async function UndanganAdminPage({ searchParams }: PageProps<"/ad
                   <tr key={row.id} className="border-t border-garis-halus align-top">
                     <td className="px-3 py-3">
                       <Link href={`/admin/undangan/${row.id}`} className="font-medium text-tinta">
-                        {row.groomName} &amp; {row.brideName}
+                        {row.title}
                       </Link>
                       <span className="block text-xs text-redup">
                         /{row.slug} · {TEMPLATES.find((t) => t.key === row.templateKey)?.label ?? row.templateKey}
@@ -178,7 +178,7 @@ export default async function UndanganAdminPage({ searchParams }: PageProps<"/ad
               <li key={row.id} className={`${kartu} flex flex-col gap-2 p-4`}>
                 <div className="flex items-start justify-between gap-3">
                   <Link href={`/admin/undangan/${row.id}`} className="font-medium text-tinta">
-                    {row.groomName} &amp; {row.brideName}
+                    {row.title}
                   </Link>
                   <LencanaUndangan status={row.status} />
                 </div>

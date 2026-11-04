@@ -191,7 +191,7 @@ export function ImportClient({ context }: { context: ImportContext }) {
           </code>
           <span>
             Acara dipisah titik koma, mis.{" "}
-            <code className="rounded bg-krem-2 px-1.5 py-px">akad;resepsi</code>
+            <code className="rounded bg-krem-2 px-1.5 py-px">utama;lanjutan</code>
             . Acara kosong berarti semua acara. Kosongkan maks untuk memakai
             bawaan.{" "}
             Unduh contoh:{" "}

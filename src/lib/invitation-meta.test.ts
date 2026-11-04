@@ -2,8 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildInvitationMeta } from "./invitation-meta";
 
 const base = {
-  groomName: "Raka",
-  brideName: "Nadia",
+  title: "Seminar Komunitas",
   coverPhotoId: "3f4b6c1e-7d5a-4d0e-9d57-2f1d1e6c9a11",
   events: [
     { date: null, venueName: "Aula Tanpa Tanggal" },
@@ -12,12 +11,12 @@ const base = {
 };
 
 describe("buildInvitationMeta", () => {
-  it("memuat nama mempelai, tanggal acara pertama yang punya tanggal, tempat, dan foto cover", () => {
+  it("memuat judul event, tanggal acara pertama yang punya tanggal, tempat, dan foto cover", () => {
     const meta = buildInvitationMeta(base);
-    expect(meta.title).toEqual({ absolute: "Undangan Pernikahan Raka & Nadia" });
+    expect(meta.title).toEqual({ absolute: "Undangan Seminar Komunitas" });
     expect(meta.description).toBe("Sabtu, 12 Desember 2026 · Gedung Melati, Bandung");
     expect(meta.openGraph).toMatchObject({
-      title: "Undangan Pernikahan Raka & Nadia",
+      title: "Undangan Seminar Komunitas",
       description: "Sabtu, 12 Desember 2026 · Gedung Melati, Bandung",
       type: "website",
       locale: "id_ID",
@@ -42,7 +41,7 @@ describe("buildInvitationMeta", () => {
 
   it("memberi deskripsi cadangan bila tanggal dan tempat belum ada", () => {
     const meta = buildInvitationMeta({ ...base, events: [{ date: null, venueName: null }] });
-    expect(meta.description).toBe("Anda diundang ke pernikahan kami.");
+    expect(meta.description).toBe("Anda diundang untuk menghadiri acara ini.");
   });
 
   it("menulis tanggal saja bila tempat kosong", () => {

@@ -21,12 +21,17 @@ function jpeg(size = 64, fill = 7): Buffer {
 }
 
 describe("addPhoto", () => {
+  it.each(["pria", "wanita", "lainnya"])("menolak jenis foto yang tidak lagi didukung: %s", async (kind) => {
+    const { invitation } = await seedInvitation(db);
+    expect(await addPhoto(db, invitation.id, { kind: kind as never, fileName: "foto.jpg", bytes: jpeg() })).toEqual({ ok: false, error: "format" });
+    expect(await listPhotos(db, invitation.id)).toEqual([]);
+  });
   it("menyimpan foto dan mengembalikan isinya persis sama", async () => {
     const { invitation } = await seedInvitation(db);
     const bytes = jpeg(2048, 42);
     const added = await addPhoto(db, invitation.id, {
       kind: "galeri",
-      fileName: "pre wedding.jpg",
+      fileName: "kegiatan.jpg",
       bytes,
     });
     expect(added.ok).toBe(true);
@@ -34,7 +39,7 @@ describe("addPhoto", () => {
     expect(added.photo).toMatchObject({
       kind: "galeri",
       sortOrder: 0,
-      fileName: "pre wedding.jpg",
+      fileName: "kegiatan.jpg",
       sizeBytes: 2048,
     });
 
@@ -159,20 +164,6 @@ describe("addPhoto qris", () => {
     expect(kinds).toEqual(["cover", "galeri", "qris"]);
     const qris = (await listPhotos(db, invitation.id)).find((p) => p.kind === "qris");
     expect(qris?.fileName).toBe("qris2.jpg");
-  });
-});
-
-describe("addPhoto mempelai", () => {
-  it("menyimpan satu foto per mempelai dan mengganti foto lama", async () => {
-    const { invitation } = await seedInvitation(db);
-    await addPhoto(db, invitation.id, { kind: "pria", fileName: "pria1.jpg", bytes: jpeg() });
-    await addPhoto(db, invitation.id, { kind: "pria", fileName: "pria2.jpg", bytes: jpeg(70) });
-    await addPhoto(db, invitation.id, { kind: "wanita", fileName: "wanita.jpg", bytes: jpeg() });
-    await addPhoto(db, invitation.id, { kind: "galeri", fileName: "g.jpg", bytes: jpeg() });
-
-    const photos = await listPhotos(db, invitation.id);
-    expect(photos.map((p) => p.kind).sort()).toEqual(["galeri", "pria", "wanita"]);
-    expect(photos.find((p) => p.kind === "pria")?.fileName).toBe("pria2.jpg");
   });
 });
 

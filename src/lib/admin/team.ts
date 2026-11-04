@@ -65,7 +65,7 @@ export type CreateAdminResult =
   | { ok: true; id: string }
   | {
       ok: false;
-      error: "email-dipakai" | "email-pasangan" | "email-tidak-valid" | "nama-kosong" | "sandi" | "peran";
+      error: "email-dipakai" | "email-pengguna" | "email-tidak-valid" | "nama-kosong" | "sandi" | "peran";
       message?: string;
     };
 
@@ -92,7 +92,7 @@ export async function createAdmin(
     .select({ id: user.id, role: user.adminRole })
     .from(user)
     .where(eq(user.email, email));
-  if (existing) return { ok: false, error: existing.role ? "email-dipakai" : "email-pasangan" };
+  if (existing) return { ok: false, error: existing.role ? "email-dipakai" : "email-pengguna" };
 
   const id = randomUUID();
   const hash = password ? await hashPassword(password) : null;

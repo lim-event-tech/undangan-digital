@@ -17,7 +17,7 @@ export type HasilKirimUcapan =
 const PESAN_GALAT = {
   "tidak-ditemukan": "Undangan tidak ditemukan.",
   "belum-terbit": "Undangan ini belum dibuka untuk ucapan.",
-  dimatikan: "Ucapan sedang tidak dibuka oleh mempelai.",
+  dimatikan: "Ucapan sedang tidak dibuka oleh pengelola.",
   kosong: "Tulis ucapan terlebih dahulu.",
   "terlalu-panjang": `Ucapan maksimal ${WISH_MAX_LENGTH} karakter.`,
   batas: `Setiap tamu bisa mengirim paling banyak ${WISH_MAX_PER_GUEST} ucapan.`,

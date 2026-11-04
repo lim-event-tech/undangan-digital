@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     template: "%s · UndanganDigital",
   },
   description:
-    "Undangan pernikahan digital dengan link pribadi untuk setiap tamu.",
+    "Undangan event digital dengan link pribadi untuk setiap tamu.",
   robots: { index: false, follow: false },
 };
 

@@ -2,7 +2,8 @@ import { dateFromDeadline } from "@/lib/datetime";
 import { multiLine, singleLine } from "@/lib/form-text";
 import { parseRsvpDeadline } from "@/lib/rsvp/shared";
 import type { FieldErrors } from "@/lib/save-result";
-import { CONTENT_LIMITS, type InvitationContent } from "./content";
+import { CONTENT_LIMITS } from "./content";
+import { parseInvitationTitle } from "./title";
 
 type Parsed<T> = { ok: true; input: T } | { ok: false; errors: FieldErrors };
 
@@ -10,41 +11,9 @@ function tooLong(errors: FieldErrors, field: string, value: string, max: number,
   if (value.length > max) errors[field] = `${label} maksimal ${max} karakter`;
 }
 
-export type MempelaiInput = {
-  groomName: string;
-  brideName: string;
-  pria: InvitationContent["pria"];
-  wanita: InvitationContent["wanita"];
-};
-
-export function parseMempelaiForm(formData: FormData): Parsed<MempelaiInput> {
-  const errors: FieldErrors = {};
-  const groomName = singleLine(formData, "panggilanPria");
-  const brideName = singleLine(formData, "panggilanWanita");
-  const priaNama = singleLine(formData, "namaLengkapPria");
-  const wanitaNama = singleLine(formData, "namaLengkapWanita");
-  const priaOrtu = multiLine(formData, "orangTuaPria");
-  const wanitaOrtu = multiLine(formData, "orangTuaWanita");
-
-  if (!groomName) errors.panggilanPria = "Nama panggilan wajib diisi";
-  if (!brideName) errors.panggilanWanita = "Nama panggilan wajib diisi";
-  tooLong(errors, "panggilanPria", groomName, CONTENT_LIMITS.panggilan, "Nama panggilan");
-  tooLong(errors, "panggilanWanita", brideName, CONTENT_LIMITS.panggilan, "Nama panggilan");
-  tooLong(errors, "namaLengkapPria", priaNama, CONTENT_LIMITS.namaLengkap, "Nama lengkap");
-  tooLong(errors, "namaLengkapWanita", wanitaNama, CONTENT_LIMITS.namaLengkap, "Nama lengkap");
-  tooLong(errors, "orangTuaPria", priaOrtu, CONTENT_LIMITS.orangTua, "Keterangan orang tua");
-  tooLong(errors, "orangTuaWanita", wanitaOrtu, CONTENT_LIMITS.orangTua, "Keterangan orang tua");
-
-  if (Object.keys(errors).length > 0) return { ok: false, errors };
-  return {
-    ok: true,
-    input: {
-      groomName,
-      brideName,
-      pria: { namaLengkap: priaNama, orangTua: priaOrtu },
-      wanita: { namaLengkap: wanitaNama, orangTua: wanitaOrtu },
-    },
-  };
+export function parseTitleForm(formData: FormData): Parsed<{ title: string }> {
+  const parsed = parseInvitationTitle(formData.get("title"));
+  return parsed.ok ? { ok: true, input: { title: parsed.title } } : { ok: false, errors: { title: parsed.error } };
 }
 
 export function parseSambutanForm(

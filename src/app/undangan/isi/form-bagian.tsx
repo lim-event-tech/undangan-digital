@@ -1,10 +1,11 @@
 "use client";
 
 import { pesanGalat } from "@/components/ui";
-import { CONTENT_LIMITS, type InvitationContent } from "@/lib/invitations/content";
+import { CONTENT_LIMITS } from "@/lib/invitations/content";
+import { MAX_INVITATION_TITLE } from "@/lib/invitations/title";
 import { RSVP_MAX_ADULTS, RSVP_MAX_CHILDREN } from "@/lib/invitations/editor-form";
 import {
-  simpanMempelaiAction,
+  simpanTitleAction,
   simpanPenutupAction,
   simpanRsvpAction,
   simpanSambutanAction,
@@ -22,88 +23,13 @@ function GalatForm({ pesan }: { pesan?: string }) {
   );
 }
 
-export function FormMempelai({
-  groomName,
-  brideName,
-  pria,
-  wanita,
-}: {
-  groomName: string;
-  brideName: string;
-  pria: InvitationContent["pria"];
-  wanita: InvitationContent["wanita"];
-}) {
-  const { formRef, status, errors, formError, formProps } = useAutoSave(simpanMempelaiAction);
-
+export function FormTitle({ title }: { title: string }) {
+  const { formRef, status, errors, formError, formProps } = useAutoSave(simpanTitleAction);
   return (
-    <KartuBagian
-      id="mempelai"
-      judul="Mempelai"
-      deskripsi="Nama panggilan dipakai di sampul dan sapaan. Nama lengkap dan orang tua tampil di bagian Mempelai."
-      aksi={<StatusSimpan status={status} />}
-    >
-      <form ref={formRef} {...formProps} className="grid gap-6 md:grid-cols-2">
-        <fieldset className="m-0 flex min-w-0 flex-col gap-3.5 border-0 p-0">
-          <legend className="mb-1 text-[13px] font-medium tracking-[0.06em] text-emas uppercase">
-            Mempelai pria
-          </legend>
-          <BidangTeks
-            label="Nama panggilan"
-            name="panggilanPria"
-            required
-            maxLength={CONTENT_LIMITS.panggilan}
-            defaultValue={groomName}
-            error={errors.panggilanPria}
-          />
-          <BidangTeks
-            label="Nama lengkap"
-            name="namaLengkapPria"
-            maxLength={CONTENT_LIMITS.namaLengkap}
-            defaultValue={pria.namaLengkap}
-            error={errors.namaLengkapPria}
-          />
-          <BidangArea
-            label="Keterangan orang tua"
-            name="orangTuaPria"
-            rows={3}
-            maxLength={CONTENT_LIMITS.orangTua}
-            placeholder="mis. Putra pertama Bapak Hendra dan Ibu Sari"
-            defaultValue={pria.orangTua}
-            error={errors.orangTuaPria}
-          />
-        </fieldset>
-        <fieldset className="m-0 flex min-w-0 flex-col gap-3.5 border-0 p-0">
-          <legend className="mb-1 text-[13px] font-medium tracking-[0.06em] text-emas uppercase">
-            Mempelai wanita
-          </legend>
-          <BidangTeks
-            label="Nama panggilan"
-            name="panggilanWanita"
-            required
-            maxLength={CONTENT_LIMITS.panggilan}
-            defaultValue={brideName}
-            error={errors.panggilanWanita}
-          />
-          <BidangTeks
-            label="Nama lengkap"
-            name="namaLengkapWanita"
-            maxLength={CONTENT_LIMITS.namaLengkap}
-            defaultValue={wanita.namaLengkap}
-            error={errors.namaLengkapWanita}
-          />
-          <BidangArea
-            label="Keterangan orang tua"
-            name="orangTuaWanita"
-            rows={3}
-            maxLength={CONTENT_LIMITS.orangTua}
-            placeholder="mis. Putri kedua Bapak Wahyu dan Ibu Lestari"
-            defaultValue={wanita.orangTua}
-            error={errors.orangTuaWanita}
-          />
-        </fieldset>
-        <div className="md:col-span-2">
-          <GalatForm pesan={formError} />
-        </div>
+    <KartuBagian id="identitas-event" judul="Identitas event" deskripsi="Judul event tampil pada sampul, pesan undangan, dan pratinjau tautan." aksi={<StatusSimpan status={status} />}>
+      <form ref={formRef} {...formProps} className="flex flex-col gap-3.5">
+        <BidangTeks label="Judul event" name="title" required maxLength={MAX_INVITATION_TITLE} defaultValue={title} error={errors.title} />
+        <GalatForm pesan={formError} />
       </form>
     </KartuBagian>
   );

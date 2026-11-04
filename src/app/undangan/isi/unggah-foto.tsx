@@ -19,7 +19,7 @@ function ukuran(bytes: number): string {
   return `${Math.max(1, Math.round(bytes / 1000))} KB`;
 }
 
-function useUnggah(kind: "cover" | "galeri" | "pria" | "wanita") {
+function useUnggah(kind: "cover" | "galeri") {
   const router = useRouter();
   const [mengunggah, setMengunggah] = useState(false);
   const [galat, setGalat] = useState<string | undefined>();
@@ -168,89 +168,6 @@ export function BagianGaleri({ foto }: { foto: PhotoInfo[] }) {
           ))}
         </ul>
       )}
-    </KartuBagian>
-  );
-}
-
-function SlotMempelai({
-  jenis,
-  label,
-  foto,
-}: {
-  jenis: "pria" | "wanita";
-  label: string;
-  foto: PhotoInfo | null;
-}) {
-  const { mengunggah, galat, unggah } = useUnggah(jenis);
-
-  return (
-    <div className="flex flex-col items-start gap-3">
-      <span className="text-sm font-medium text-tinta-2">{label}</span>
-      {foto ? (
-        <Image
-          src={`/foto/${foto.id}`}
-          alt={`Foto ${label.toLowerCase()}`}
-          width={180}
-          height={240}
-          unoptimized
-          className="h-60 w-45 rounded-t-[90px] rounded-b-lg border border-garis object-cover"
-        />
-      ) : (
-        <div className="flex h-60 w-45 items-center justify-center rounded-t-[90px] rounded-b-lg border border-dashed border-garis-input bg-kertas px-3 text-center text-sm text-redup">
-          Belum ada foto
-        </div>
-      )}
-      <div className="flex flex-wrap items-center gap-2">
-        <label className={LABEL_UNGGAH} aria-disabled={mengunggah}>
-          <Ikon nama="unduh" ukuran={16} className="rotate-180" />
-          {mengunggah ? "Mengunggah…" : foto ? "Ganti foto" : "Unggah foto"}
-          <input
-            type="file"
-            accept={ACCEPT}
-            disabled={mengunggah}
-            className="sr-only"
-            onChange={(event) => {
-              const files = Array.from(event.target.files ?? []);
-              event.target.value = "";
-              if (files.length > 0) void unggah(files.slice(0, 1));
-            }}
-          />
-        </label>
-        {foto ? (
-          <form action={hapusFotoAction}>
-            <input type="hidden" name="id" value={foto.id} />
-            <button type="submit" className={`${tombolTerang} text-galat`}>
-              Hapus
-            </button>
-          </form>
-        ) : null}
-      </div>
-      {galat ? (
-        <p role="alert" className={`m-0 ${pesanGalat}`}>
-          {galat}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-export function BagianFotoMempelai({
-  pria,
-  wanita,
-}: {
-  pria: PhotoInfo | null;
-  wanita: PhotoInfo | null;
-}) {
-  return (
-    <KartuBagian
-      id="foto-mempelai"
-      judul="Foto mempelai"
-      deskripsi="Tampil di bagian Mempelai. Tidak wajib; tanpa foto, bingkai menampilkan inisial nama."
-    >
-      <div className="flex flex-wrap gap-8">
-        <SlotMempelai jenis="pria" label="Mempelai pria" foto={pria} />
-        <SlotMempelai jenis="wanita" label="Mempelai wanita" foto={wanita} />
-      </div>
     </KartuBagian>
   );
 }

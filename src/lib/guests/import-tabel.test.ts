@@ -3,8 +3,8 @@ import { parseGuestCsv, parseGuestTable, validateImportRows, type ImportContext 
 
 const konteks: ImportContext = {
   events: [
-    { id: "e1", key: "akad", name: "Akad Nikah" },
-    { id: "e2", key: "resepsi", name: "Resepsi" },
+    { id: "e1", key: "utama", name: "Acara utama" },
+    { id: "e2", key: "lanjutan", name: "Sesi lanjutan" },
   ],
   groups: [],
   existing: [],
@@ -15,7 +15,7 @@ describe("parseGuestTable (Excel)", () => {
   it("membaca tabel dengan judul kolom di baris pertama dan memakai nomor baris lembar", () => {
     const hasil = parseGuestTable([
       ["Nama", "WhatsApp", "Grup", "Acara", "Maks dewasa", "Maks anak"],
-      ["Bapak Hendra", "81200000101", "Keluarga", "akad;resepsi", "2", "1"],
+      ["Bapak Hendra", "81200000101", "Keluarga", "utama;lanjutan", "2", "1"],
       ["", "", "", "", "", ""],
       ["Tante Lina", "0812-0000-0104", "", "", "", ""],
     ]);

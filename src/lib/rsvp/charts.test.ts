@@ -25,7 +25,7 @@ const when = (iso: string) => new Date(iso);
 
 const answer = {
   eventId: "e",
-  eventName: "Resepsi",
+  eventName: "Sesi lanjutan",
   attending: true,
   adults: 1,
   children: 0,

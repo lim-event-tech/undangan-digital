@@ -115,7 +115,7 @@ async function Isi() {
                   {f.guestName} · {formatPhone(f.phone)}
                 </span>
                 <span className="text-[13px] text-redup">
-                  {f.coupleName}
+                  {f.eventTitle}
                   {f.at ? ` · ${formatStamp(f.at)}` : ""}
                 </span>
                 <span className="text-[13px] text-galat">{f.error}</span>

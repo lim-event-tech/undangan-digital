@@ -1,8 +1,8 @@
 export const TEMPLATES = [
-  { key: "melati", label: "Melati", ket: "Ivory dan sage, untaian melati" },
-  { key: "keraton", label: "Keraton", ket: "Hijau zamrud dan emas, gapura" },
-  { key: "bintang", label: "Malam Berbintang", ket: "Navy klasik, willow, kunang-kunang" },
-  { key: "pasundan", label: "Pasundan", ket: "Siger, angklung, mega mendung" },
+  { key: "melati", label: "Melati", ket: "Ivory dan sage, botani dengan tata letak editorial" },
+  { key: "keraton", label: "Keraton", ket: "Zamrud dan emas, bingkai geometris yang formal" },
+  { key: "bintang", label: "Malam Berbintang", ket: "Navy dan emas, orbit serta taburan bintang" },
+  { key: "pasundan", label: "Pasundan", ket: "Gading hangat, garis alam dan pola perbukitan" },
 ] as const satisfies readonly { key: string; label: string; ket: string }[];
 
 export type TemplateKey = (typeof TEMPLATES)[number]["key"];

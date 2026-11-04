@@ -188,7 +188,7 @@ describe("susunan bagian", () => {
     const { urutan } = parsed.input.susunan;
     expect(urutan[0]).toBe("sampul");
     expect(urutan[urutan.length - 1]).toBe("penutup");
-    expect(new Set(urutan).size).toBe(12);
+    expect(new Set(urutan).size).toBe(11);
     expect(urutan.indexOf("galeri")).toBeLessThan(urutan.indexOf("acara"));
   });
 

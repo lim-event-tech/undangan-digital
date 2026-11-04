@@ -12,7 +12,7 @@ import { listPhotos } from "@/lib/photos/service";
 import { requireInvitation } from "@/lib/session";
 import { BagianAcara } from "./form-acara";
 import {
-  FormMempelai,
+  FormTitle,
   FormPenutup,
   FormRsvp,
   FormSambutan,
@@ -22,7 +22,7 @@ import { FormAmplop, FormCerita, FormCheckin, FormHitungMundur, FormUcapan } fro
 import { HapusUndangan } from "./hapus-undangan";
 import { PanelTerbit } from "./panel-terbit";
 import { templateInfo } from "@/templates/registry";
-import { BagianCover, BagianFotoMempelai, BagianGaleri } from "./unggah-foto";
+import { BagianCover, BagianGaleri } from "./unggah-foto";
 import { BagianMusik, FormLink, UnggahQris } from "./unggah-tambahan";
 
 export const metadata: Metadata = { title: "Isi undangan" };
@@ -43,8 +43,6 @@ export default async function IsiUndanganPage() {
   const cover = photos.find((p) => p.kind === "cover") ?? null;
   const galeri = photos.filter((p) => p.kind === "galeri");
   const qris = photos.find((p) => p.kind === "qris") ?? null;
-  const fotoPria = photos.find((p) => p.kind === "pria") ?? null;
-  const fotoWanita = photos.find((p) => p.kind === "wanita") ?? null;
   const template = templateInfo(invitation.templateKey);
   const sekarang = new Date();
   const tanggalMinimal = {
@@ -98,13 +96,7 @@ export default async function IsiUndanganPage() {
       <PanelTerbit status={invitation.status} missing={missing} />
 
       <BagianCover cover={cover} />
-      <FormMempelai
-        groomName={invitation.groomName}
-        brideName={invitation.brideName}
-        pria={content.pria}
-        wanita={content.wanita}
-      />
-      <BagianFotoMempelai pria={fotoPria} wanita={fotoWanita} />
+      <FormTitle title={invitation.title} />
       <FormSambutan kutipan={content.kutipan} sambutan={content.sambutan} />
       <BagianAcara acara={events} tanggalMinimal={tanggalMinimal} />
       <FormHitungMundur pengaturan={content.hitungMundur} />

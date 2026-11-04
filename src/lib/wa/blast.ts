@@ -87,7 +87,7 @@ export async function queueBlast(
   const content = readContent(invitation.content);
   const settings = await getSettings(db);
   const template = pickTemplate(kind, content, settings.pesanWaBawaan);
-  const couple = `${invitation.groomName} & ${invitation.brideName}`;
+  const eventTitle = `${invitation.title}`;
   const deadlineText = invitation.rsvpDeadline
     ? formatDate(dateFromDeadline(invitation.rsvpDeadline))
     : null;
@@ -100,7 +100,7 @@ export async function queueBlast(
       nama: g.name,
       link: guestLink(invitation.slug, g.token),
       batas_rsvp: phrase,
-      mempelai: couple,
+      event: eventTitle,
     }),
   }));
   const added = await enqueueJobs(db, invitation.id, kind, jobs);

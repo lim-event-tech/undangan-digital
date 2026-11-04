@@ -23,8 +23,7 @@ export default async function UndanganLayout({
       invitation={
         invitation && !settings.pemeliharaan.aktif
           ? {
-              groomName: invitation.groomName,
-              brideName: invitation.brideName,
+              title: invitation.title,
               status: invitation.status,
             }
           : null

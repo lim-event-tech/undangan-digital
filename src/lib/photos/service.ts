@@ -9,9 +9,9 @@ import {
   type ImageType,
 } from "@/lib/images";
 
-export type PhotoKind = "cover" | "galeri" | "qris" | "pria" | "wanita";
+export type PhotoKind = "cover" | "galeri" | "qris";
 
-export const SINGLE_PHOTO_KINDS: readonly PhotoKind[] = ["cover", "qris", "pria", "wanita"];
+export const SINGLE_PHOTO_KINDS: readonly PhotoKind[] = ["cover", "qris"];
 
 export type PhotoInfo = {
   id: string;
@@ -89,6 +89,9 @@ export async function addPhoto(
   invitationId: string,
   input: { kind: PhotoKind; fileName: string; bytes: Buffer },
 ): Promise<AddPhotoResult> {
+  if (input.kind !== "cover" && input.kind !== "galeri" && input.kind !== "qris") {
+    return { ok: false, error: "format" };
+  }
   if (input.bytes.length === 0) return { ok: false, error: "kosong" };
   if (input.bytes.length > MAX_PHOTO_BYTES) {
     return { ok: false, error: "terlalu-besar" };

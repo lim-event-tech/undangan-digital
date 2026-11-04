@@ -4,8 +4,8 @@ import type { DashboardGuest } from "./dashboard";
 import { CSV_DELIMITER, buildRsvpCsv, exportPhone, safeCell } from "./export";
 
 const events = [
-  { id: "akad", name: "Akad" },
-  { id: "resepsi", name: "Resepsi" },
+  { id: "utama", name: "Utama" },
+  { id: "lanjutan", name: "Sesi lanjutan" },
 ];
 
 function guest(overrides: Partial<DashboardGuest> & { id: string; name: string }): DashboardGuest {
@@ -16,7 +16,7 @@ function guest(overrides: Partial<DashboardGuest> & { id: string; name: string }
     sentAt: null,
     openedAt: null,
     remindedAt: null,
-    invitedEventIds: ["akad", "resepsi"],
+    invitedEventIds: ["utama", "lanjutan"],
     status: "belum",
     answers: [],
     adults: 0,
@@ -65,8 +65,8 @@ describe("buildRsvpCsv", () => {
       openedAt: new Date("2026-11-03T03:00:00.000Z"),
       answers: [
         {
-          eventId: "akad",
-          eventName: "Akad",
+          eventId: "utama",
+          eventName: "Utama",
           attending: true,
           adults: 2,
           children: 1,
@@ -74,8 +74,8 @@ describe("buildRsvpCsv", () => {
           respondedAt,
         },
         {
-          eventId: "resepsi",
-          eventName: "Resepsi",
+          eventId: "lanjutan",
+          eventName: "Sesi lanjutan",
           attending: false,
           adults: 0,
           children: 0,
@@ -84,7 +84,7 @@ describe("buildRsvpCsv", () => {
         },
       ],
     }),
-    guest({ id: "g2", name: "=cmd|calc!A0", invitedEventIds: ["resepsi"] }),
+    guest({ id: "g2", name: "=cmd|calc!A0", invitedEventIds: ["lanjutan"] }),
   ];
 
   const csv = buildRsvpCsv(events, guests);
@@ -99,8 +99,8 @@ describe("buildRsvpCsv", () => {
     expect(rows).toHaveLength(3);
     expect(new Set(rows.map((r) => r.length)).size).toBe(1);
     expect(rows[0].slice(0, 4)).toEqual(["Nama", "Grup", "Nomor WhatsApp", "Status"]);
-    expect(rows[0]).toContain("Akad: jawaban");
-    expect(rows[0]).toContain("Resepsi: pesan");
+    expect(rows[0]).toContain("Utama: jawaban");
+    expect(rows[0]).toContain("Sesi lanjutan: pesan");
   });
 
   it("menulis jawaban per acara, jumlah, dan pesan dengan tanda kutip yang benar", () => {
@@ -109,17 +109,17 @@ describe("buildRsvpCsv", () => {
     expect(row[2]).toBe("0812-3456-7890");
     expect(row[3]).toBe("Hadir");
     expect(row.slice(4, 6)).toEqual(["2", "1"]);
-    const akad = rows[0].indexOf("Akad: jawaban");
-    expect(row.slice(akad, akad + 4)).toEqual(["Hadir", "2", "1", 'Sampai jumpa; "insya Allah"']);
-    const resepsi = rows[0].indexOf("Resepsi: jawaban");
-    expect(row[resepsi]).toBe("Tidak hadir");
+    const utama = rows[0].indexOf("Utama: jawaban");
+    expect(row.slice(utama, utama + 4)).toEqual(["Hadir", "2", "1", 'Sampai jumpa; "insya Allah"']);
+    const lanjutan = rows[0].indexOf("Sesi lanjutan: jawaban");
+    expect(row[lanjutan]).toBe("Tidak hadir");
   });
 
   it("menandai acara yang tidak diundang dan tamu yang belum menjawab", () => {
     const row = rows[2];
     expect(row[0]).toBe("'=cmd|calc!A0");
     expect(row[3]).toBe("Belum menjawab");
-    expect(row[rows[0].indexOf("Akad: jawaban")]).toBe("Tidak diundang");
-    expect(row[rows[0].indexOf("Resepsi: jawaban")]).toBe("Belum menjawab");
+    expect(row[rows[0].indexOf("Utama: jawaban")]).toBe("Tidak diundang");
+    expect(row[rows[0].indexOf("Sesi lanjutan: jawaban")]).toBe("Belum menjawab");
   });
 });

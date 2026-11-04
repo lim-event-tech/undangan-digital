@@ -1,8 +1,12 @@
 # UndanganDigital
 
-Aplikasi undangan pernikahan digital. Setiap tamu mendapat link pribadi, dan pengguna memantau semuanya dari satu dashboard.
+Aplikasi undangan event digital. Setiap tamu mendapat link pribadi, dan pengguna memantau semuanya dari satu dashboard.
 
-Status: Sprint 1 berjalan di localhost dan Docker. Sudah ada daftar dan masuk dengan Google atau email dan kata sandi (R0, R19 tanpa verifikasi email dan tanpa lupa kata sandi karena belum ada layanan email), daftar tamu (R4: tambah manual, impor CSV, cari dan saring), editor undangan (R2 form konten dengan simpan otomatis dan unggah foto, R3 multi-acara dengan validasi link Maps, R10 privasi dasar), halaman tamu bertema Melati dengan RSVP per acara (R1, R5, R6), pratinjau link WhatsApp (R9), kirim undangan lewat WhatsApp per klik (R8), dan dashboard RSVP (R7). Hosting belum disiapkan.
+Sprint 1 event umum terdiri dari dua batch: fondasi judul event beserta penghapusan profil/foto mempelai, lalu konsep visual dan isi keempat template. Melati memakai botani editorial, Keraton bingkai geometris, Malam Berbintang orbit bintang, dan Pasundan pola alam. Data contoh serta delapan gambar pratinjau HP/desktop mengikuti tampilan baru. Beberapa undangan per akun serta halaman awal internal berada pada sprint berikutnya.
+
+Migrasi `0012_event_umum` menambahkan judul event, menghapus kolom dan profil mempelai serta foto jenis pria/wanita, lalu mengganti placeholder pesan lama menjadi `{event}`. Draf development yang sudah ada mendapat judul `Event` diikuti delapan karakter ID dan dapat disunting melalui editor. Terapkan migrasi dengan `npm run db:migrate` sebelum menjalankan kode baru pada database yang sudah ada.
+
+Sudah ada daftar dan masuk dengan Google atau email dan kata sandi (tanpa verifikasi email dan tanpa lupa kata sandi karena belum ada layanan email), daftar tamu dengan impor CSV/Excel, editor konten dengan simpan otomatis dan unggah foto, beberapa acara dalam satu undangan, empat template event umum dengan RSVP per acara, pratinjau link WhatsApp, kirim undangan lewat WhatsApp, serta ringkasan RSVP. Perubahan Sprint 1 diverifikasi secara lokal; database operasional dan deployment belum diubah.
 
 ## Kebutuhan
 

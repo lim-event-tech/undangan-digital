@@ -9,8 +9,7 @@ export type InvitationView = {
   mode: ModeTampilan;
   slug: string;
   token: string;
-  groomName: string;
-  brideName: string;
+  title: string;
   guest: { name: string; maxAdults: number; maxChildren: number };
   content: InvitationContent;
   events: GuestEvent[];

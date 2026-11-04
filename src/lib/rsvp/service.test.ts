@@ -23,7 +23,7 @@ function jpeg(): Buffer {
 }
 
 async function setup(options: { published?: boolean; maxAdults?: number; maxChildren?: number } = {}) {
-  const seeded = await seedInvitation(db, { groom: "Raka", bride: "Nadia" });
+  const seeded = await seedInvitation(db, { title: "Raka" });
   const events = await listEventDetails(db, seeded.invitation.id);
   const created = await createGuest(db, seeded.invitation.id, {
     name: "Bapak Hendra & Istri",
@@ -69,26 +69,26 @@ describe("findGuestPage", () => {
     const page = await findGuestPage(db, ctx.invitation.slug, ctx.guest.token);
     expect(page).not.toBeNull();
     expect(page!.guest).toMatchObject({ name: "Bapak Hendra & Istri", maxAdults: 2, maxChildren: 1 });
-    expect(page!.invitation).toMatchObject({ slug: "raka-dan-nadia", groomName: "Raka", status: "terbit" });
+    expect(page!.invitation).toMatchObject({ slug: "raka", title: "Raka", status: "terbit" });
     expect(page!.invitation.content.sambutan).toBe("Selamat datang");
-    expect(page!.events.map((e) => e.name)).toEqual(["Akad Nikah", "Resepsi"]);
+    expect(page!.events.map((e) => e.name)).toEqual(["Acara utama", "Sesi lanjutan"]);
     expect(page!.events.every((e) => e.response === null)).toBe(true);
     expect(page!.photos.map((p) => p.kind)).toEqual(["cover"]);
   });
 
   it("hanya menampilkan acara yang diundangkan untuk tamu itu", async () => {
     const seeded = await seedInvitation(db);
-    const [akad] = await listEventDetails(db, seeded.invitation.id);
+    const [utama] = await listEventDetails(db, seeded.invitation.id);
     const created = await createGuest(db, seeded.invitation.id, {
       name: "Ibu Sari",
       phone: "+6281200000002",
       groupName: null,
-      eventIds: [akad.id],
+      eventIds: [utama.id],
       maxAdults: 1,
       maxChildren: 0,
     });
     const page = await findGuestPage(db, seeded.invitation.slug, created.token);
-    expect(page!.events.map((e) => e.name)).toEqual(["Akad Nikah"]);
+    expect(page!.events.map((e) => e.name)).toEqual(["Acara utama"]);
   });
 
   it("mengembalikan null untuk token salah, slug salah, atau token milik undangan lain", async () => {
@@ -102,8 +102,8 @@ describe("findGuestPage", () => {
 
   it("mengisi jawaban sebelumnya per acara", async () => {
     const ctx = await setup();
-    const [akad, resepsi] = ctx.events;
-    await submit(ctx, { [akad.id]: hadir("2", "1", "Datang bersama cucu"), [resepsi.id]: tidak() });
+    const [utama, lanjutan] = ctx.events;
+    await submit(ctx, { [utama.id]: hadir("2", "1", "Datang bersama cucu"), [lanjutan.id]: tidak() });
 
     const page = await findGuestPage(db, ctx.invitation.slug, ctx.guest.token);
     expect(page!.events[0].response).toEqual({
@@ -119,22 +119,22 @@ describe("findGuestPage", () => {
 describe("submitRsvp", () => {
   it("menyimpan jawaban tiap acara dengan jumlah dewasa dan anak terpisah", async () => {
     const ctx = await setup();
-    const [akad, resepsi] = ctx.events;
+    const [utama, lanjutan] = ctx.events;
     const result = await submit(ctx, {
-      [akad.id]: hadir("2", "1", "  Mohon kursi dekat pintu  "),
-      [resepsi.id]: tidak("Berhalangan"),
+      [utama.id]: hadir("2", "1", "  Mohon kursi dekat pintu  "),
+      [lanjutan.id]: tidak("Berhalangan"),
     });
     expect(result).toEqual({ ok: true });
 
     const rows = await db.select().from(rsvp).where(eq(rsvp.guestId, ctx.guest.id));
     const byEvent = new Map(rows.map((r) => [r.eventId, r]));
-    expect(byEvent.get(akad.id)).toMatchObject({
+    expect(byEvent.get(utama.id)).toMatchObject({
       attending: true,
       adults: 2,
       children: 1,
       note: "Mohon kursi dekat pintu",
     });
-    expect(byEvent.get(resepsi.id)).toMatchObject({
+    expect(byEvent.get(lanjutan.id)).toMatchObject({
       attending: false,
       adults: 0,
       children: 0,
@@ -144,27 +144,27 @@ describe("submitRsvp", () => {
 
   it("memperbarui jawaban lama tanpa membuat baris ganda", async () => {
     const ctx = await setup();
-    const [akad, resepsi] = ctx.events;
-    await submit(ctx, { [akad.id]: tidak(), [resepsi.id]: tidak() });
-    await submit(ctx, { [akad.id]: hadir("1", "0"), [resepsi.id]: hadir("2", "1") });
+    const [utama, lanjutan] = ctx.events;
+    await submit(ctx, { [utama.id]: tidak(), [lanjutan.id]: tidak() });
+    await submit(ctx, { [utama.id]: hadir("1", "0"), [lanjutan.id]: hadir("2", "1") });
 
     const rows = await db.select().from(rsvp).where(eq(rsvp.guestId, ctx.guest.id));
     expect(rows).toHaveLength(2);
-    expect(rows.find((r) => r.eventId === akad.id)).toMatchObject({ attending: true, adults: 1 });
-    expect(rows.find((r) => r.eventId === resepsi.id)).toMatchObject({ attending: true, adults: 2, children: 1 });
+    expect(rows.find((r) => r.eventId === utama.id)).toMatchObject({ attending: true, adults: 1 });
+    expect(rows.find((r) => r.eventId === lanjutan.id)).toMatchObject({ attending: true, adults: 2, children: 1 });
   });
 
   it("menolak jumlah di atas batas tamu dan menyebut acara yang bermasalah", async () => {
     const ctx = await setup({ maxAdults: 2, maxChildren: 1 });
-    const [akad, resepsi] = ctx.events;
-    const result = await submit(ctx, { [akad.id]: hadir("3", "0"), [resepsi.id]: hadir("2", "2") });
+    const [utama, lanjutan] = ctx.events;
+    const result = await submit(ctx, { [utama.id]: hadir("3", "0"), [lanjutan.id]: hadir("2", "2") });
 
     expect(result).toEqual({
       ok: false,
       error: "tidak-valid",
       errors: {
-        [akad.id]: "Jumlah dewasa harus 1 sampai 2.",
-        [resepsi.id]: "Jumlah anak maksimal 1.",
+        [utama.id]: "Jumlah dewasa harus 1 sampai 2.",
+        [lanjutan.id]: "Jumlah anak maksimal 1.",
       },
     });
     expect(await db.select().from(rsvp).where(eq(rsvp.guestId, ctx.guest.id))).toEqual([]);
@@ -172,44 +172,44 @@ describe("submitRsvp", () => {
 
   it("menolak hadir dengan nol dewasa, angka bukan bilangan, dan anak saat batas anak nol", async () => {
     const ctx = await setup({ maxAdults: 2, maxChildren: 0 });
-    const [akad, resepsi] = ctx.events;
-    const result = await submit(ctx, { [akad.id]: hadir("0", "0"), [resepsi.id]: hadir("1", "1") });
+    const [utama, lanjutan] = ctx.events;
+    const result = await submit(ctx, { [utama.id]: hadir("0", "0"), [lanjutan.id]: hadir("1", "1") });
     expect(result.ok).toBe(false);
     if (!result.ok && result.error === "tidak-valid") {
-      expect(result.errors[akad.id]).toBe("Jumlah dewasa harus 1 sampai 2.");
-      expect(result.errors[resepsi.id]).toBe("Undangan ini tidak mencakup anak.");
+      expect(result.errors[utama.id]).toBe("Jumlah dewasa harus 1 sampai 2.");
+      expect(result.errors[lanjutan.id]).toBe("Undangan ini tidak mencakup anak.");
     }
-    const garbage = await submit(ctx, { [akad.id]: hadir("dua", "0"), [resepsi.id]: hadir("-1", "0") });
+    const garbage = await submit(ctx, { [utama.id]: hadir("dua", "0"), [lanjutan.id]: hadir("-1", "0") });
     expect(garbage.ok).toBe(false);
   });
 
   it("wajib menjawab semua acara yang diundang", async () => {
     const ctx = await setup();
-    const [akad, resepsi] = ctx.events;
-    const result = await submit(ctx, { [akad.id]: hadir() });
+    const [utama, lanjutan] = ctx.events;
+    const result = await submit(ctx, { [utama.id]: hadir() });
     expect(result).toEqual({
       ok: false,
       error: "tidak-valid",
-      errors: { [resepsi.id]: "Pilih hadir atau tidak hadir." },
+      errors: { [lanjutan.id]: "Pilih hadir atau tidak hadir." },
     });
   });
 
   it("menolak pesan yang terlalu panjang", async () => {
     const ctx = await setup();
-    const [akad, resepsi] = ctx.events;
-    const result = await submit(ctx, { [akad.id]: hadir("2", "0", "x".repeat(301)), [resepsi.id]: tidak() });
+    const [utama, lanjutan] = ctx.events;
+    const result = await submit(ctx, { [utama.id]: hadir("2", "0", "x".repeat(301)), [lanjutan.id]: tidak() });
     expect(result).toMatchObject({ ok: false, error: "tidak-valid" });
   });
 
   it("tidak mencatat jawaban untuk acara yang tidak diundangkan", async () => {
     const seeded = await seedInvitation(db);
-    const [akad, resepsi] = await listEventDetails(db, seeded.invitation.id);
+    const [utama, lanjutan] = await listEventDetails(db, seeded.invitation.id);
     await db.update(invitation).set({ status: "terbit" }).where(eq(invitation.id, seeded.invitation.id));
     const created = await createGuest(db, seeded.invitation.id, {
       name: "Ibu Sari",
       phone: "+6281200000003",
       groupName: null,
-      eventIds: [akad.id],
+      eventIds: [utama.id],
       maxAdults: 2,
       maxChildren: 0,
     });
@@ -221,14 +221,14 @@ describe("submitRsvp", () => {
     });
     expect(result).toEqual({ ok: true });
     const rows = await db.select().from(rsvp).where(eq(rsvp.guestId, created.id));
-    expect(rows.map((r) => r.eventId)).toEqual([akad.id]);
-    expect(rows.some((r) => r.eventId === resepsi.id)).toBe(false);
+    expect(rows.map((r) => r.eventId)).toEqual([utama.id]);
+    expect(rows.some((r) => r.eventId === lanjutan.id)).toBe(false);
   });
 
   it("menolak token atau slug yang salah dan undangan yang belum terbit atau ditangguhkan", async () => {
     const ctx = await setup();
-    const [akad, resepsi] = ctx.events;
-    const answers = { [akad.id]: hadir(), [resepsi.id]: hadir() };
+    const [utama, lanjutan] = ctx.events;
+    const answers = { [utama.id]: hadir(), [lanjutan.id]: hadir() };
     expect(await submit(ctx, answers, { token: "TokenSalahTokenSa" })).toEqual({ ok: false, error: "tidak-ditemukan" });
     expect(await submit(ctx, answers, { slug: "slug-lain" })).toEqual({ ok: false, error: "tidak-ditemukan" });
 
@@ -241,8 +241,8 @@ describe("submitRsvp", () => {
 
   it("menolak jawaban setelah batas waktu RSVP dan menerimanya tepat sebelum batas", async () => {
     const ctx = await setup();
-    const [akad, resepsi] = ctx.events;
-    const answers = { [akad.id]: hadir(), [resepsi.id]: hadir() };
+    const [utama, lanjutan] = ctx.events;
+    const answers = { [utama.id]: hadir(), [lanjutan.id]: hadir() };
     const deadline = new Date("2026-12-10T16:59:59.000Z");
     await saveRsvpSettings(db, ctx.invitation.id, { deadline, maxAdults: 2, maxChildren: 1 });
 
@@ -255,8 +255,8 @@ describe("submitRsvp", () => {
 
   it("menerima jawaban kapan saja bila tidak ada batas waktu", async () => {
     const ctx = await setup();
-    const [akad, resepsi] = ctx.events;
-    const result = await submit(ctx, { [akad.id]: hadir(), [resepsi.id]: tidak() }, {
+    const [utama, lanjutan] = ctx.events;
+    const result = await submit(ctx, { [utama.id]: hadir(), [lanjutan.id]: tidak() }, {
       now: new Date("2099-01-01T00:00:00.000Z"),
     });
     expect(result).toEqual({ ok: true });
@@ -272,13 +272,13 @@ describe("submitRsvp", () => {
       maxAdults: 2,
       maxChildren: 0,
     });
-    const [akad, resepsi] = ctx.events;
-    await submit(ctx, { [akad.id]: hadir("2", "1", "Rahasia tamu pertama"), [resepsi.id]: tidak() });
+    const [utama, lanjutan] = ctx.events;
+    await submit(ctx, { [utama.id]: hadir("2", "1", "Rahasia tamu pertama"), [lanjutan.id]: tidak() });
 
     const otherPage = await findGuestPage(db, ctx.invitation.slug, other.token);
     expect(otherPage!.events.every((e) => e.response === null)).toBe(true);
-    await updateEvent(db, ctx.invitation.id, akad.id, {
-      name: "Akad Nikah",
+    await updateEvent(db, ctx.invitation.id, utama.id, {
+      name: "Acara utama",
       date: "2026-12-20",
       time: "09:00",
       timezone: "WIB",

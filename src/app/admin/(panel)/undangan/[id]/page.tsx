@@ -73,7 +73,7 @@ export default async function DetailUndanganAdminPage({ params }: PageProps<"/ad
 
       <JudulAdmin
         bagian="Detail undangan"
-        judul={`${detail.groomName} & ${detail.brideName}`}
+        judul={`${detail.title}`}
         keterangan={`/${detail.slug} · Template ${templateLabel} · acara ${
           detail.eventDate ? formatDate(detail.eventDate) : "belum bertanggal"
         } · dibuat ${formatStamp(detail.createdAt)}`}

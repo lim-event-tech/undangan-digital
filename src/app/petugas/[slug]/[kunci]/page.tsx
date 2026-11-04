@@ -30,7 +30,7 @@ export default async function PetugasPage({ params }: PageProps<"/petugas/[slug]
         <header className="flex flex-col gap-1">
           <span className="text-xs tracking-[0.16em] text-emas uppercase">Petugas penerima tamu</span>
           <h1 className="m-0 font-judul text-[32px] leading-tight font-medium">
-            {invitation.groomName} &amp; {invitation.brideName}
+            {invitation.title}
           </h1>
           <p className="m-0 text-sm text-redup">
             {counts.inside} dari {counts.confirmed} tamu yang konfirmasi hadir sudah masuk

@@ -8,7 +8,7 @@ function formOf(values: Record<string, string>) {
 }
 
 const lengkap = {
-  nama: "Akad Nikah",
+  nama: "Acara utama",
   tanggal: "2026-12-20",
   jam: "09:00",
   zona: "WITA",
@@ -69,7 +69,7 @@ describe("parseEventForm", () => {
     expect(parsed).toEqual({
       ok: true,
       input: {
-        name: "Akad Nikah",
+        name: "Acara utama",
         date: "2026-12-20",
         time: "09:00",
         timezone: "WITA",
@@ -81,11 +81,11 @@ describe("parseEventForm", () => {
   });
 
   it("mengizinkan isian sebagian sebagai draf dan memakai WIB bila zona kosong", () => {
-    const parsed = parseEventForm(formOf({ nama: "Resepsi" }));
+    const parsed = parseEventForm(formOf({ nama: "Sesi lanjutan" }));
     expect(parsed).toEqual({
       ok: true,
       input: {
-        name: "Resepsi",
+        name: "Sesi lanjutan",
         date: null,
         time: null,
         timezone: "WIB",
@@ -97,7 +97,7 @@ describe("parseEventForm", () => {
   });
 
   it("menolak link yang bukan Google Maps dengan pesan petunjuk", () => {
-    const parsed = parseEventForm(formOf({ ...lengkap, maps: "https://bit.ly/resepsi-raka" }));
+    const parsed = parseEventForm(formOf({ ...lengkap, maps: "https://bit.ly/lanjutan-raka" }));
     expect(parsed).toEqual({ ok: false, errors: { maps: MAPS_ERROR } });
   });
 

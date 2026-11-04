@@ -1,12 +1,12 @@
-import type { TemplateKey } from "@/templates/registry";
+import { templateInfo, type TemplateKey } from "@/templates/registry";
 
 export type KartuTemplate = { ket: string };
 
 export const KARTU_TEMPLATE: Record<TemplateKey, KartuTemplate> = {
-  melati: { ket: "Ivory dan sage, untaian melati, kupu-kupu" },
-  keraton: { ket: "Hijau zamrud dan emas, gapura berukir" },
-  bintang: { ket: "Navy klasik, willow, kunang-kunang" },
-  pasundan: { ket: "Siger, angklung, mega mendung, sawah" },
+  melati: { ket: templateInfo("melati").ket },
+  keraton: { ket: templateInfo("keraton").ket },
+  bintang: { ket: templateInfo("bintang").ket },
+  pasundan: { ket: templateInfo("pasundan").ket },
 };
 
 const ANGKA = ["Nol", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh"];

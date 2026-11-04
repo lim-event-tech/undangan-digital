@@ -16,7 +16,7 @@ describe("isGoogleMapsUrl", () => {
 
   it.each([
     "",
-    "https://bit.ly/resepsi-raka",
+    "https://bit.ly/lanjutan-raka",
     "http://maps.app.goo.gl/AbC123",
     "https://maps.app.goo.gl.evil.com/AbC123",
     "https://evil.com/maps/place/x",

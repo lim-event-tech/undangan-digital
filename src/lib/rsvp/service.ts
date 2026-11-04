@@ -16,8 +16,7 @@ export type GuestPage = {
     slug: string;
     ownerId: string;
     status: InvitationStatus;
-    groomName: string;
-    brideName: string;
+    title: string;
     templateKey: string;
     content: InvitationContent;
     rsvpDeadline: Date | null;
@@ -43,8 +42,7 @@ const GUEST_COLUMNS = {
   slug: invitation.slug,
   ownerId: invitation.ownerId,
   status: invitation.status,
-  groomName: invitation.groomName,
-  brideName: invitation.brideName,
+  title: invitation.title,
   templateKey: invitation.templateKey,
   content: invitation.content,
   rsvpDeadline: invitation.rsvpDeadline,
@@ -86,8 +84,7 @@ export async function findGuestPage(
       slug: row.slug,
       ownerId: row.ownerId,
       status: row.status,
-      groomName: row.groomName,
-      brideName: row.brideName,
+      title: row.title,
       templateKey: row.templateKey,
       content: readContent(row.content),
       rsvpDeadline: row.rsvpDeadline,
