@@ -38,7 +38,9 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
    - Menu APIs & Services, OAuth consent screen: pilih External, isi nama aplikasi, lalu tambahkan email Anda sebagai test user.
    - Menu APIs & Services, Credentials, Create credentials, OAuth client ID, jenis Web application.
    - Authorized JavaScript origins: `http://localhost:3000`
-   - Authorized redirect URIs: `http://localhost:3000/api/auth/callback/google`
+   - Authorized redirect URIs: `http://localhost:3000/api/auth/google/callback`
+
+   Callback publik Google memakai `/api/auth/google/callback`, sama seperti WordCLD. Permintaan diteruskan ke handler Better Auth agar validasi state, PKCE, dan sesi tetap berjalan. Di produksi, daftarkan `https://domain-anda/api/auth/google/callback` pada OAuth Client yang sesuai dengan `GOOGLE_CLIENT_ID` server; entri Google Cloud yang sudah ada bisa dipakai bila domain, path, dan Client ID memang sama.
 
 5. Nyalakan PostgreSQL di Docker, lalu terapkan skema.
 
