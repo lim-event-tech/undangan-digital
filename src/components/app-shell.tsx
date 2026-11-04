@@ -74,7 +74,10 @@ export function AppShell({
           </div>
         ) : null}
 
-        {invitation ? <SidebarNav items={NAV_DENGAN_UNDANGAN} /> : null}
+        <SidebarNav items={[
+          ...(invitation ? NAV_DENGAN_UNDANGAN : [{ label: "Buat undangan", ikon: "pena" as const, href: "/undangan/baru" }]),
+          ...(!kelola ? [{ label: "Pengaturan akun", ikon: "kunci" as const, href: "/undangan/akun" }] : []),
+        ]} />
 
         <div className="mt-auto flex items-center justify-between gap-3 border-t border-garis-halus pt-4 lg:flex-col lg:items-stretch">
           <div className="flex min-w-0 flex-col px-1">

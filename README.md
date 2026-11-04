@@ -97,6 +97,12 @@ docker compose up -d --force-recreate app
 
 Kata sandi dan port PostgreSQL bisa diganti lewat variabel `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, dan `DB_PORT`. Jika diganti, sesuaikan `DATABASE_URL` di `.env`.
 
+## Pengaturan akun pengguna
+
+Menu **Pengaturan akun** di `/undangan/akun` tersedia sebelum maupun sesudah membuat undangan. Pengguna dapat mengubah email dengan kata sandi saat ini, mengganti kata sandi, dan menautkan Google dengan email yang sama. Akun yang hanya memakai Google dapat membuat kata sandi dari sesi masuk yang berusia kurang dari 24 jam sebelum mengubah email. Perubahan email dan kata sandi mengakhiri sesi di perangkat lain.
+
+Tidak ada email verifikasi yang dikirim; email baru disimpan sebagai belum diverifikasi. Penautan Google dimulai dari akun yang sudah masuk melalui API `linkSocial` Better Auth; penautan otomatis ke akun lokal yang belum diverifikasi tetap ditolak. Pengaturan ini tidak dapat diakses admin saat mengelola undangan pengguna.
+
 ## Format file Excel atau CSV untuk impor tamu
 
 File boleh .xlsx (lembar pertama) atau .csv. Baris pertama berisi judul kolom. Kolom wajib: `nama` dan `whatsapp`. Kolom opsional: `grup`, `acara`, `maks_dewasa`, `maks_anak`. Contoh Excel dan CSV bisa diunduh dari halaman impor. Semua unduhan data (RSVP, ucapan, daftar undangan, log audit) tersedia sebagai Excel dan CSV.

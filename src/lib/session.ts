@@ -77,6 +77,14 @@ export async function requireUser() {
   return session.user;
 }
 
+export async function requireOwnAccount() {
+  const session = await getSession();
+  if (!session) redirect("/masuk");
+  if (session.user.status === "diblokir") redirect("/masuk?galat=diblokir");
+  if (session.user.adminRole) redirect("/admin");
+  return session;
+}
+
 export const loadInvitation = cache(async (ownerId: string) => {
   const acting = await getActing();
   if (acting && acting.owner.id === ownerId) return acting.invitation;
