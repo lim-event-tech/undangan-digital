@@ -6,6 +6,7 @@ import {
   MAX_REKENING,
   normalizeSusunan,
   type Susunan,
+  type CheckinSettings,
   type HitungMundurSettings,
   type Momen,
   type MusikSettings,
@@ -132,6 +133,10 @@ export function parseHitungMundurForm(
 
 export function parseMusikForm(formData: FormData): Parsed<{ musik: MusikSettings }> {
   return { ok: true, input: { musik: { aktif: flag(formData, "aktif") } } };
+}
+
+export function parseCheckinForm(formData: FormData): Parsed<{ checkin: CheckinSettings }> {
+  return { ok: true, input: { checkin: { aktif: flag(formData, "aktif") } } };
 }
 
 export function parseSusunanForm(formData: FormData): Parsed<{ susunan: Susunan }> {

@@ -452,7 +452,7 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
       setTerkirim(false);
       setPesanRsvp(null);
     },
-    ringkasan,
+    ringkasan: `Jawaban Anda sudah kami terima. ${ringkasan}`,
     pesanRsvp,
     qrTampil:
       data.qr && terkirim && hadirTersimpan ? `${data.qr}?v=${versiQr}` : null,

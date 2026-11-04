@@ -95,6 +95,23 @@ describe("kunci petugas", () => {
     expect(await findInvitationByKey(db, "slug-lain", next!)).toBeNull();
     expect(await getOrCreateCheckinKey(db, "00000000-0000-4000-8000-000000000000")).toBeNull();
   });
+
+  it("tidak berlaku selama check-in dimatikan dan berlaku lagi saat dinyalakan", async () => {
+    const ctx = await setup();
+    const key = (await getOrCreateCheckinKey(db, ctx.invitation.id))!;
+
+    await db
+      .update(invitation)
+      .set({ content: { checkin: { aktif: false } } })
+      .where(eq(invitation.id, ctx.invitation.id));
+    expect(await findInvitationByKey(db, ctx.invitation.slug, key)).toBeNull();
+
+    await db
+      .update(invitation)
+      .set({ content: { checkin: { aktif: true } } })
+      .where(eq(invitation.id, ctx.invitation.id));
+    expect((await findInvitationByKey(db, ctx.invitation.slug, key))?.id).toBe(ctx.invitation.id);
+  });
 });
 
 describe("pemindaian", () => {

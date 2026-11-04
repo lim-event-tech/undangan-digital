@@ -20,7 +20,7 @@ export const ASSIGNABLE_PERMISSIONS: readonly Permission[] = PERMISSIONS.filter(
 export const PERMISSION_INFO: Record<Permission, { label: string; ket: string }> = {
   lihat: {
     label: "Melihat ringkasan, undangan, dan akun",
-    ket: "Membuka daftar dan detail undangan serta akun pasangan. Selalu aktif untuk semua peran.",
+    ket: "Membuka daftar dan detail undangan serta akun pengguna. Selalu aktif untuk semua peran.",
   },
   "lihat-tamu": {
     label: "Melihat nama dan nomor tamu",
@@ -28,15 +28,15 @@ export const PERMISSION_INFO: Record<Permission, { label: string; ket: string }>
   },
   "kelola-undangan": {
     label: "Mengelola seluruh isi undangan",
-    ket: "Membuka undangan sebagai pasangan: isi, tamu, RSVP, ucapan, foto, musik, dan pengiriman.",
+    ket: "Membuka undangan sebagai pengguna: isi, tamu, RSVP, ucapan, foto, musik, dan pengiriman.",
   },
   "ubah-undangan": {
     label: "Mengubah slug dan batas RSVP",
     ket: "Termasuk membuka slug yang terkunci setelah link terkirim.",
   },
   "kelola-akun": {
-    label: "Mengubah akun pasangan",
-    ket: "Mengubah nama dan email, serta mengganti kata sandi akun pasangan.",
+    label: "Mengubah akun pengguna",
+    ket: "Mengubah nama dan email, serta mengganti kata sandi akun pengguna.",
   },
   tangguhkan: {
     label: "Menangguhkan undangan dan memblokir akun",

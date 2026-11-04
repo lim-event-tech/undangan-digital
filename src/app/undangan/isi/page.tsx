@@ -18,7 +18,7 @@ import {
   FormSambutan,
 } from "./form-bagian";
 import { FormSusunan } from "./form-susunan";
-import { FormAmplop, FormCerita, FormHitungMundur, FormUcapan } from "./form-tambahan";
+import { FormAmplop, FormCerita, FormCheckin, FormHitungMundur, FormUcapan } from "./form-tambahan";
 import { HapusUndangan } from "./hapus-undangan";
 import { PanelTerbit } from "./panel-terbit";
 import { templateInfo } from "@/templates/registry";
@@ -109,6 +109,7 @@ export default async function IsiUndanganPage() {
         maksDewasa={invitation.defaultMaxAdults}
         maksAnak={invitation.defaultMaxChildren}
       />
+      <FormCheckin pengaturan={content.checkin} />
       <FormUcapan pengaturan={content.ucapan} />
       <FormAmplop amplop={content.amplop} qris={<UnggahQris qris={qris} />} />
       <BagianMusik aktif={content.musik.aktif} musik={musik} />

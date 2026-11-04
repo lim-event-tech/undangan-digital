@@ -49,7 +49,7 @@ export default async function MasukPage({ searchParams }: PageProps<"/masuk">) {
       <TombolGoogle siap={googleConfigured()} />
 
       <p className="m-0 text-[13px] text-redup">
-        Tamu undangan tidak perlu masuk. Halaman ini hanya untuk pasangan.
+        Tamu undangan tidak perlu masuk. Halaman ini hanya untuk pengguna.
       </p>
     </LayoutAuth>
   );

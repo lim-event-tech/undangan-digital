@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { checkinCode } from "@/lib/checkin/code";
 import { qrSvg } from "@/lib/checkin/qr";
 import { isGuestAttending } from "@/lib/checkin/service";
+import { readContent } from "@/lib/invitations/content";
 import { findGuestRow } from "@/lib/rsvp/service";
 import { looksLikeGuestToken, looksLikeSlug } from "@/lib/token";
 import { currentClientKey, tokenGuard } from "@/lib/token-guard-instance";
@@ -22,7 +23,8 @@ export async function GET(_request: Request, ctx: RouteContext<"/[slug]/[token]/
     tokenGuard.recordFailure(key);
     return NOT_FOUND();
   }
-  if (row.status !== "terbit" || !(await isGuestAttending(db, row.guestId))) return NOT_FOUND();
+  if (row.status !== "terbit" || !readContent(row.content).checkin.aktif) return NOT_FOUND();
+  if (!(await isGuestAttending(db, row.guestId))) return NOT_FOUND();
 
   const svg = await qrSvg(checkinCode(slug, token));
   return new Response(svg, {

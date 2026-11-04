@@ -207,7 +207,7 @@ export default async function DetailUndanganAdminPage({ params }: PageProps<"/ad
               </dd>
             </dl>
             <Link href={`/admin/pengguna?q=${encodeURIComponent(detail.ownerEmail)}`} className="text-sm font-medium text-emas">
-              Buka di akun pasangan
+              Buka di akun pengguna
             </Link>
           </section>
 
@@ -217,7 +217,7 @@ export default async function DetailUndanganAdminPage({ params }: PageProps<"/ad
                 Kelola isi undangan
               </h2>
               <p className="m-0 text-sm leading-relaxed text-redup-2">
-                Buka undangan ini seperti pasangan: isi, tamu, RSVP, ucapan, foto, musik, dan pengiriman. Setiap sesi
+                Buka undangan ini seperti pengguna: isi, tamu, RSVP, ucapan, foto, musik, dan pengiriman. Setiap sesi
                 kelola tercatat di log audit.
               </p>
               <form action={mulaiKelolaAction}>

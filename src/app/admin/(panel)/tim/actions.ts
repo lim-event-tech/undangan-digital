@@ -36,7 +36,7 @@ export async function tambahAdminAction(
     if (result.error === "email-tidak-valid") return { ok: false, errors: { email: "Format email tidak valid" } };
     if (result.error === "email-dipakai") return { ok: false, errors: { email: "Email ini sudah terdaftar sebagai admin" } };
     if (result.error === "email-pasangan") {
-      return { ok: false, errors: { email: "Email ini sudah dipakai akun pasangan. Pakai email lain untuk admin." } };
+      return { ok: false, errors: { email: "Email ini sudah dipakai akun pengguna. Pakai email lain untuk admin." } };
     }
     if (result.error === "peran") return { ok: false, errors: { peran: "Pilih peran" } };
     return { ok: false, errors: { kataSandi: result.message ?? "Kata sandi tidak valid" } };

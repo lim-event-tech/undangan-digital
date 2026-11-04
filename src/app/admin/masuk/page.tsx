@@ -30,7 +30,7 @@ export default async function MasukAdminPage({ searchParams }: PageProps<"/admin
           <div className="flex flex-col gap-1.5">
             <h1 className="m-0 font-judul text-[34px] leading-tight font-semibold">Masuk admin</h1>
             <p className="m-0 text-sm text-redup">
-              Halaman ini hanya untuk tim admin. Akun pasangan masuk lewat halaman Masuk biasa.
+              Halaman ini hanya untuk tim admin. Akun pengguna masuk lewat halaman Masuk biasa.
             </p>
           </div>
           {pesan ? (

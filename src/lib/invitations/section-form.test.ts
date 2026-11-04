@@ -5,6 +5,7 @@ import {
   parseAmplopForm,
   parseCeritaForm,
   parseHitungMundurForm,
+  parseCheckinForm,
   parseMusikForm,
   parseSusunanForm,
   parseUcapanForm,
@@ -134,6 +135,11 @@ describe("pengaturan saklar", () => {
       input: { hitungMundur: { aktif: true, detik: true } },
     });
     expect(parseMusikForm(form([]))).toEqual({ ok: true, input: { musik: { aktif: false } } });
+    expect(parseCheckinForm(form([["aktif", "on"]]))).toEqual({
+      ok: true,
+      input: { checkin: { aktif: true } },
+    });
+    expect(parseCheckinForm(form([]))).toEqual({ ok: true, input: { checkin: { aktif: false } } });
   });
 });
 
@@ -151,6 +157,8 @@ describe("readContent untuk bagian tambahan", () => {
     expect(content.ucapan).toEqual({ tampil: true, tahan: false });
     expect(content.hitungMundur).toEqual({ aktif: true, detik: true });
     expect(content.musik).toEqual({ aktif: true });
+    expect(content.checkin).toEqual({ aktif: true });
+    expect(readContent({ checkin: { aktif: false } }).checkin).toEqual({ aktif: false });
   });
 
   it("memotong daftar yang melebihi batas", () => {

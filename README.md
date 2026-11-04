@@ -1,6 +1,6 @@
 # UndanganDigital
 
-Aplikasi undangan pernikahan digital. Setiap tamu mendapat link pribadi, dan pasangan memantau semuanya dari satu dashboard.
+Aplikasi undangan pernikahan digital. Setiap tamu mendapat link pribadi, dan pengguna memantau semuanya dari satu dashboard.
 
 Status: Sprint 1 berjalan di localhost dan Docker. Sudah ada daftar dan masuk dengan Google atau email dan kata sandi (R0, R19 tanpa verifikasi email dan tanpa lupa kata sandi karena belum ada layanan email), daftar tamu (R4: tambah manual, impor CSV, cari dan saring), editor undangan (R2 form konten dengan simpan otomatis dan unggah foto, R3 multi-acara dengan validasi link Maps, R10 privasi dasar), halaman tamu bertema Melati dengan RSVP per acara (R1, R5, R6), pratinjau link WhatsApp (R9), kirim undangan lewat WhatsApp per klik (R8), dan dashboard RSVP (R7). Hosting belum disiapkan.
 

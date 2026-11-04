@@ -59,7 +59,13 @@ export async function findInvitationByKey(
       brideName: invitation.brideName,
     })
     .from(invitation)
-    .where(and(eq(invitation.slug, slug), eq(invitation.checkinKey, key)))
+    .where(
+      and(
+        eq(invitation.slug, slug),
+        eq(invitation.checkinKey, key),
+        sql`coalesce((${invitation.content} -> 'checkin' ->> 'aktif')::boolean, true)`,
+      ),
+    )
     .limit(1);
   return row ?? null;
 }

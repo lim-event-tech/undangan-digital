@@ -14,7 +14,7 @@ export function AdminShell({
   const nav: ItemNav[] = [
     { label: "Ringkasan", ikon: "dasbor", href: "/admin", tepat: true },
     { label: "Undangan", ikon: "surat", href: "/admin/undangan" },
-    { label: "Akun pasangan", ikon: "tamu", href: "/admin/pengguna" },
+    { label: "Akun pengguna", ikon: "tamu", href: "/admin/pengguna" },
     { label: "Template", ikon: "templat", href: "/admin/template" },
     { label: "Pengaturan", ikon: "kunci", href: "/admin/pengaturan" },
     { label: "WhatsApp", ikon: "kirim", href: "/admin/whatsapp" },

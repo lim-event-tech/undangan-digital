@@ -95,8 +95,8 @@ describe("describeWaChanges", () => {
   it("mencatat hanya yang berubah", () => {
     const after = { ...DEFAULT_WA_CONFIG, aktif: true, batasHarian: 80 };
     expect(describeWaChanges(DEFAULT_WA_CONFIG, after)).toEqual([
-      "Kirim otomatis untuk pasangan diaktifkan",
-      "Batas harian 150 menjadi 80 pesan",
+      "Kirim otomatis untuk pengguna diaktifkan",
+      "Batas per pengguna per 24 jam 150 menjadi 80 pesan",
     ]);
     expect(describeWaChanges(DEFAULT_WA_CONFIG, DEFAULT_WA_CONFIG)).toEqual([]);
   });

@@ -30,6 +30,8 @@ export type HitungMundurSettings = { aktif: boolean; detik: boolean };
 
 export type MusikSettings = { aktif: boolean };
 
+export type CheckinSettings = { aktif: boolean };
+
 export type BagianId =
   | "sampul"
   | "pembuka"
@@ -100,12 +102,14 @@ export type InvitationContent = {
   ucapan: UcapanSettings;
   hitungMundur: HitungMundurSettings;
   musik: MusikSettings;
+  checkin: CheckinSettings;
   susunan: Susunan;
 };
 
 export const DEFAULT_UCAPAN: UcapanSettings = { tampil: true, tahan: false };
 export const DEFAULT_HITUNG_MUNDUR: HitungMundurSettings = { aktif: true, detik: true };
 export const DEFAULT_MUSIK: MusikSettings = { aktif: false };
+export const DEFAULT_CHECKIN: CheckinSettings = { aktif: true };
 
 function text(value: unknown, max: number): string {
   return typeof value === "string" ? value.slice(0, max) : "";
@@ -141,6 +145,7 @@ export function readContent(raw: unknown): InvitationContent {
   const ucapan = record(source.ucapan);
   const hitung = record(source.hitungMundur);
   const musik = record(source.musik);
+  const checkin = record(source.checkin);
   const susunan = record(source.susunan);
   return {
     kutipan: text(source.kutipan, CONTENT_LIMITS.kutipan),
@@ -169,6 +174,7 @@ export function readContent(raw: unknown): InvitationContent {
       detik: flag(hitung.detik, DEFAULT_HITUNG_MUNDUR.detik),
     },
     musik: { aktif: flag(musik.aktif, DEFAULT_MUSIK.aktif) },
+    checkin: { aktif: flag(checkin.aktif, DEFAULT_CHECKIN.aktif) },
     susunan: normalizeSusunan(susunan),
   };
 }

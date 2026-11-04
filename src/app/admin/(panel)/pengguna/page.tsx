@@ -20,7 +20,7 @@ import { formatStamp } from "@/lib/datetime";
 import { ubahStatusAkunAction } from "./actions";
 import { FormAkun } from "./form-akun";
 
-export const metadata: Metadata = { title: "Akun pasangan" };
+export const metadata: Metadata = { title: "Akun pengguna" };
 
 const KOLOM = "min-h-11 rounded-md border border-garis-input bg-white px-2.5 text-sm font-medium text-tinta";
 
@@ -53,7 +53,7 @@ export default async function PenggunaAdminPage({ searchParams }: PageProps<"/ad
     <Halaman>
       <JudulAdmin
         bagian="Operasional"
-        judul="Akun pasangan"
+        judul="Akun pengguna"
         keterangan="Blokir akun yang melanggar, ubah data akun, atau atur kata sandi baru bila peran Anda mengizinkan. Setiap tindakan tercatat di log audit."
       />
 

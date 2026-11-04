@@ -105,13 +105,13 @@ export function parseWaForm(
 export function describeWaChanges(before: WaConfig, after: WaConfig): string[] {
   const changes: string[] = [];
   if (before.aktif !== after.aktif) {
-    changes.push(`Kirim otomatis untuk pasangan ${after.aktif ? "diaktifkan" : "dimatikan"}`);
+    changes.push(`Kirim otomatis untuk pengguna ${after.aktif ? "diaktifkan" : "dimatikan"}`);
   }
   if (before.jedaMin !== after.jedaMin || before.jedaMaks !== after.jedaMaks) {
     changes.push(`Jeda antar pesan ${after.jedaMin} sampai ${after.jedaMaks} detik`);
   }
   if (before.batasHarian !== after.batasHarian) {
-    changes.push(`Batas per pasangan per 24 jam ${before.batasHarian} menjadi ${after.batasHarian} pesan`);
+    changes.push(`Batas per pengguna per 24 jam ${before.batasHarian} menjadi ${after.batasHarian} pesan`);
   }
   return changes;
 }

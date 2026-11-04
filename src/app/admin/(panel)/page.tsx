@@ -31,7 +31,7 @@ export default async function RingkasanAdminPage({ searchParams }: PageProps<"/a
   const pertama = stats.funnel[0]?.count ?? 0;
 
   const kpi = [
-    { label: "Akun pasangan", nilai: stats.accounts, catatan: `+${stats.newAccounts} dalam ${hari} hari` },
+    { label: "Akun pengguna", nilai: stats.accounts, catatan: `+${stats.newAccounts} dalam ${hari} hari` },
     { label: "Undangan terbit", nilai: stats.published, catatan: `dari ${stats.invitations} undangan dibuat` },
     { label: "Link tamu dibuka", nilai: stats.opened, catatan: `${hari} hari terakhir` },
     { label: "Tamu menjawab RSVP", nilai: stats.rsvps, catatan: `${hari} hari terakhir` },
@@ -55,7 +55,7 @@ export default async function RingkasanAdminPage({ searchParams }: PageProps<"/a
       <JudulAdmin
         bagian="Ikhtisar"
         judul="Ringkasan platform"
-        keterangan="Kesehatan UndanganDigital dalam satu layar: pertumbuhan, corong pasangan, dan hal yang perlu ditangani."
+        keterangan="Kesehatan UndanganDigital dalam satu layar: pertumbuhan, corong pengguna, dan hal yang perlu ditangani."
         aksi={
           <nav aria-label="Rentang waktu" className="flex gap-2">
             {RENTANG.map((r) => (
@@ -133,7 +133,7 @@ export default async function RingkasanAdminPage({ searchParams }: PageProps<"/a
         <section aria-labelledby="judul-corong" className={`${kartu} flex flex-col gap-4 p-5 lg:col-span-2`}>
           <div>
             <h2 id="judul-corong" className="m-0 font-judul text-2xl font-medium">
-              Corong pasangan
+              Corong pengguna
             </h2>
             <p className="mt-1 mb-0 text-xs text-redup">Dari daftar sampai menerima RSVP pertama</p>
           </div>

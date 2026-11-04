@@ -21,7 +21,7 @@ export default async function TemplateAdminPage() {
       <JudulAdmin
         bagian="Platform"
         judul="Template"
-        keterangan="Atur template mana yang tampil di katalog pasangan, urutannya, dan labelnya. Desain dan isi template selalu dibuat lewat kode."
+        keterangan="Atur template mana yang tampil di katalog pengguna, urutannya, dan labelnya. Desain dan isi template selalu dibuat lewat kode."
       />
 
       <Notifikasi jenis="info">
@@ -117,7 +117,7 @@ export default async function TemplateAdminPage() {
       )}
 
       <p className="m-0 max-w-2xl text-xs leading-relaxed text-redup">
-        Template tersembunyi tidak muncul untuk pasangan baru. Undangan yang sudah memakainya tetap tampil
+        Template tersembunyi tidak muncul untuk pengguna baru. Undangan yang sudah memakainya tetap tampil
         normal. Pita Baru, Populer, dan Unggulan tampil sebagai pita kecil di halaman pilih template.
       </p>
     </Halaman>

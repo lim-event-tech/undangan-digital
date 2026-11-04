@@ -51,7 +51,7 @@ export function FormPengaturan({ pengaturan }: { pengaturan: PlatformSettings })
       <Bagian
         id="slug"
         judul="Slug yang dicadangkan"
-        keterangan="Pasangan tidak bisa memakai kata ini sebagai nama link. Kata bawaan sistem (admin, api, u, masuk, daftar, dan lainnya) selalu dicadangkan."
+        keterangan="Pengguna tidak bisa memakai kata ini sebagai nama link. Kata bawaan sistem (admin, api, u, masuk, daftar, dan lainnya) selalu dicadangkan."
       >
         <label className={labelKolom}>
           Kata tambahan
@@ -70,7 +70,7 @@ export function FormPengaturan({ pengaturan }: { pengaturan: PlatformSettings })
       <Bagian
         id="pesan-wa"
         judul="Pesan WhatsApp bawaan"
-        keterangan="Isi awal pesan saat pasangan belum menulis sendiri. Sisipan: {nama}, {link}, {batas_rsvp}, {mempelai}. Kosongkan untuk memakai pesan sistem."
+        keterangan="Isi awal pesan saat pengguna belum menulis sendiri. Sisipan: {nama}, {link}, {batas_rsvp}, {mempelai}. Kosongkan untuk memakai pesan sistem."
       >
         <label className={labelKolom}>
           Teks pesan
@@ -88,8 +88,8 @@ export function FormPengaturan({ pengaturan }: { pengaturan: PlatformSettings })
 
       <Bagian
         id="pengumuman"
-        judul="Pengumuman ke pasangan"
-        keterangan="Pita di atas dashboard semua pasangan. Kosongkan teks untuk menyembunyikannya."
+        judul="Pengumuman ke pengguna"
+        keterangan="Pita di atas dashboard semua pengguna. Kosongkan teks untuk menyembunyikannya."
       >
         <label className={labelKolom}>
           Isi pengumuman
@@ -131,11 +131,11 @@ export function FormPengaturan({ pengaturan }: { pengaturan: PlatformSettings })
       <Bagian
         id="pemeliharaan"
         judul="Mode pemeliharaan"
-        keterangan="Menutup dashboard pasangan sementara. Halaman undangan dan RSVP untuk tamu tetap terbuka. Panel admin tidak terpengaruh."
+        keterangan="Menutup dashboard pengguna sementara. Halaman undangan dan RSVP untuk tamu tetap terbuka. Panel admin tidak terpengaruh."
       >
         <Saklar label="Aktifkan mode pemeliharaan" name="pemeliharaanAktif" defaultChecked={pengaturan.pemeliharaan.aktif} />
         <label className={labelKolom}>
-          Pesan untuk pasangan
+          Pesan untuk pengguna
           <textarea
             name="pemeliharaanPesan"
             rows={3}

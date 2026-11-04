@@ -149,7 +149,7 @@ export function siapkanData(view: InvitationView): DataUndangan {
     ucapan,
     musik: content.musik.aktif && view.musicId ? `/musik/${view.musicId}` : null,
     urutan,
-    qr: tamu ? `${dasar}/qr` : null,
+    qr: tamu && content.checkin.aktif ? `${dasar}/qr` : null,
   };
 }
 

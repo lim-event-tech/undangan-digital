@@ -46,7 +46,7 @@ export default async function WhatsappAdminPage() {
       <JudulAdmin
         bagian="Platform"
         judul="WhatsApp"
-        keterangan="Satu nomor pengirim untuk semua pasangan. Pesan masuk antrean dan dikirim satu per satu dengan jeda."
+        keterangan="Satu nomor pengirim untuk semua pengguna. Pesan masuk antrean dan dikirim satu per satu dengan jeda."
       />
       {can(admin, "pengaturan") ? <Isi /> : (
         <Notifikasi jenis="info">Hanya Super admin yang bisa mengatur WhatsApp.</Notifikasi>
@@ -92,7 +92,7 @@ async function Isi() {
 
       <Bagian
         judul="Pengaturan pengiriman"
-        keterangan="Jeda antar pesan dan batas harian per pasangan melindungi nomor pengirim. Antrean memproses satu pesan sekali jalan, dan pasangan yang sudah mencapai batas dilewati sampai kuotanya pulih."
+        keterangan="Jeda antar pesan dan batas harian per pengguna melindungi nomor pengirim. Antrean memproses satu pesan sekali jalan, dan pengguna yang sudah mencapai batas dilewati sampai kuotanya pulih."
       >
         <FormPengaturanWa config={config} />
       </Bagian>
@@ -101,7 +101,7 @@ async function Isi() {
         <FormUji terhubung={snapshot.status === "terhubung"} />
       </Bagian>
 
-      <Bagian judul="Gagal terkirim terbaru" keterangan="Sepuluh kegagalan terakhir dari semua pasangan.">
+      <Bagian judul="Gagal terkirim terbaru" keterangan="Sepuluh kegagalan terakhir dari semua pengguna.">
         {failures.length === 0 ? (
           <p className="m-0 text-sm text-redup-2">Belum ada pesan yang gagal.</p>
         ) : (

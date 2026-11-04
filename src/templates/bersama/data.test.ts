@@ -44,6 +44,12 @@ describe("siapkanData", () => {
     expect(contoh.qr).toBeNull();
   });
 
+  it("tidak memberi QR bila check-in dimatikan", () => {
+    const view = tamu();
+    const content = readContent({ ...view.content, checkin: { aktif: false } });
+    expect(siapkanData({ ...view, content }).qr).toBeNull();
+  });
+
   it("menyusun bagian sesuai urutan pasangan dan menyembunyikan bagian tanpa isi", () => {
     const view = tamu();
     const content = readContent({

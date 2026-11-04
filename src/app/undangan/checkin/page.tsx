@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { appBaseUrl } from "@/lib/app-url";
 import { checkinCounts, getOrCreateCheckinKey, listCheckinGuests } from "@/lib/checkin/service";
 import { formatStamp } from "@/lib/datetime";
+import { readContent } from "@/lib/invitations/content";
 import { requireInvitation } from "@/lib/session";
 import { TombolSalin } from "../tamu/tombol-salin";
 import { batalkanMasukAction, gantiKunciAction, masukkanTamuAction } from "./actions";
@@ -24,6 +25,24 @@ export default async function CheckinPage({ searchParams }: PageProps<"/undangan
   const sp = await searchParams;
   const q = satu(sp.q)?.slice(0, 100);
   const semua = satu(sp.tampil) === "semua";
+
+  if (!readContent(invitation.content).checkin.aktif) {
+    return (
+      <div className="mx-auto flex max-w-4xl flex-col gap-5">
+        <h1 className={`m-0 ${judulHalaman}`}>Check-in tamu</h1>
+        <section className={`${kartu} flex flex-col items-start gap-3 p-5`}>
+          <p className="m-0 text-sm leading-relaxed text-redup">
+            Check-in dengan kode QR sedang nonaktif. Tamu yang konfirmasi hadir tidak mendapat kode QR dan link
+            petugas tidak berlaku. Aktifkan di bagian Check-in di lokasi pada halaman Isi undangan bila Anda
+            membutuhkannya.
+          </p>
+          <Link href="/undangan/isi#checkin" className={`${tombolGelap} no-underline`}>
+            Buka pengaturan
+          </Link>
+        </section>
+      </div>
+    );
+  }
 
   const [key, counts, guests] = await Promise.all([
     getOrCreateCheckinKey(db, invitation.id),

@@ -23,6 +23,7 @@ import {
 import {
   parseAmplopForm,
   parseCeritaForm,
+  parseCheckinForm,
   parseHitungMundurForm,
   parseMusikForm,
   parseSusunanForm,
@@ -115,6 +116,15 @@ export async function simpanMusikAction(formData: FormData): Promise<SaveResult>
   const parsed = parseMusikForm(formData);
   if (!parsed.ok) return { ok: false, errors: parsed.errors };
   if (!(await saveContentText(db, invitation.id, parsed.input))) return NOT_FOUND;
+  return SAVED;
+}
+
+export async function simpanCheckinAction(formData: FormData): Promise<SaveResult> {
+  const { invitation } = await requireInvitation();
+  const parsed = parseCheckinForm(formData);
+  if (!parsed.ok) return { ok: false, errors: parsed.errors };
+  if (!(await saveContentText(db, invitation.id, parsed.input))) return NOT_FOUND;
+  revalidatePath("/undangan/checkin");
   return SAVED;
 }
 

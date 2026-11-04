@@ -64,7 +64,7 @@ async function authorize(
   const invitation = await findInvitationByKey(db, slug, key);
   if (!invitation) {
     tokenGuard.recordFailure(client);
-    return { ditolak: { status: "ditolak", pesan: "Link petugas tidak berlaku lagi. Minta link baru ke pasangan." } };
+    return { ditolak: { status: "ditolak", pesan: "Link petugas tidak berlaku lagi. Minta link baru ke pemilik undangan." } };
   }
   return { invitation };
 }

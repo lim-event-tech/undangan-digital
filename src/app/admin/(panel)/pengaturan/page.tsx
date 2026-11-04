@@ -17,7 +17,7 @@ export default async function PengaturanAdminPage() {
       <JudulAdmin
         bagian="Platform"
         judul="Pengaturan platform"
-        keterangan="Berlaku untuk semua pasangan dan tamu. Setiap perubahan tercatat di log audit."
+        keterangan="Berlaku untuk semua pengguna dan tamu. Setiap perubahan tercatat di log audit."
       />
       {can(admin, "pengaturan") ? (
         <FormPengaturan pengaturan={pengaturan} />

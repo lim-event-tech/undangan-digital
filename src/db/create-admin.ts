@@ -22,7 +22,7 @@ async function main(): Promise<number> {
 
   if (existing) {
     if (!existing.role) {
-      console.error("Email ini sudah dipakai akun pasangan. Pakai email lain untuk admin.");
+      console.error("Email ini sudah dipakai akun pengguna. Pakai email lain untuk admin.");
       return 1;
     }
     if (!reset) {

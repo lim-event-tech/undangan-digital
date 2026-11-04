@@ -73,7 +73,7 @@ export default async function UndanganAdminPage({ searchParams }: PageProps<"/ad
             type="search"
             name="q"
             defaultValue={q ?? ""}
-            placeholder="Nama pasangan, slug, atau email pemilik"
+            placeholder="Nama mempelai, slug, atau email pemilik"
             className="min-h-11 rounded-md border border-garis-input bg-white px-3 text-sm font-normal text-tinta focus:border-emas-muda focus:ring-3 focus:ring-emas-muda/20 focus:outline-none"
           />
         </label>

@@ -29,8 +29,8 @@ function sender(outcome: SendOutcome | Error, ready = true) {
   return { fake, sent };
 }
 
-async function seedJob(name: string, phone: string) {
-  const { invitation } = await seedInvitation(db);
+async function seedJob(name: string, phone: string, existing?: { id: string }) {
+  const invitation = existing ?? (await seedInvitation(db)).invitation;
   const events = await listEventDetails(db, invitation.id);
   const g = await createGuest(db, invitation.id, {
     name,
@@ -117,13 +117,13 @@ describe("processNext", () => {
 
   it("berhenti saat batas harian tercapai", async () => {
     await drain();
-    await seedJob("Tamu G", "+6281600000051");
+    const first = await seedJob("Tamu G", "+6281600000051");
     const { fake, sent } = sender({ ok: true });
 
-    const limited = { ...config, batasHarian: (await sentLastDay(db)) + 1 };
+    const limited = { ...config, batasHarian: (await sentLastDay(db, first.invitation.id)) + 1 };
 
     expect(await processNext(db, fake, limited)).toBe("terkirim");
-    await seedJob("Tamu H", "+6281600000052");
+    await seedJob("Tamu H", "+6281600000052", first.invitation);
     expect(await processNext(db, fake, limited)).toBe("ditunda");
     expect(sent).toHaveLength(1);
     await drain();

@@ -6,6 +6,7 @@ import {
   CONTENT_LIMITS,
   MAX_MOMEN,
   MAX_REKENING,
+  type CheckinSettings,
   type HitungMundurSettings,
   type Momen,
   type Rekening,
@@ -14,6 +15,7 @@ import {
 import {
   simpanAmplopAction,
   simpanCeritaAction,
+  simpanCheckinAction,
   simpanHitungMundurAction,
   simpanUcapanAction,
 } from "./actions";
@@ -43,6 +45,24 @@ export function FormHitungMundur({ pengaturan }: { pengaturan: HitungMundurSetti
       <form ref={formRef} {...formProps} className="flex flex-col divide-y divide-garis-halus">
         <Saklar label="Tampilkan hitung mundur" name="aktif" defaultChecked={pengaturan.aktif} />
         <Saklar label="Tampilkan detik" name="detik" defaultChecked={pengaturan.detik} />
+        <GalatForm pesan={formError} />
+      </form>
+    </KartuBagian>
+  );
+}
+
+export function FormCheckin({ pengaturan }: { pengaturan: CheckinSettings }) {
+  const { formRef, status, formError, formProps } = useAutoSave(simpanCheckinAction);
+
+  return (
+    <KartuBagian
+      id="checkin"
+      judul="Check-in di lokasi"
+      deskripsi="Bila aktif, tamu yang konfirmasi hadir mendapat kode QR untuk dipindai petugas penerima tamu. Bila nonaktif, tamu hanya melihat ucapan terima kasih dan kabar bahwa jawabannya sudah masuk."
+      aksi={<StatusSimpan status={status} />}
+    >
+      <form ref={formRef} {...formProps} className="flex flex-col divide-y divide-garis-halus">
+        <Saklar label="Aktifkan check-in dengan kode QR" name="aktif" defaultChecked={pengaturan.aktif} />
         <GalatForm pesan={formError} />
       </form>
     </KartuBagian>

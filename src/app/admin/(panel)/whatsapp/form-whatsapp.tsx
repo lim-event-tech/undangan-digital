@@ -23,7 +23,7 @@ export function FormPengaturanWa({ config }: { config: WaConfig }) {
   return (
     <form action={aksi} className="flex flex-col gap-4">
       <Saklar
-        label="Izinkan pasangan memakai kirim otomatis"
+        label="Izinkan pengguna memakai kirim otomatis"
         hint="Bila mati, antrean berhenti dan tombol kirim otomatis disembunyikan. Tombol kirim manual lewat wa.me tetap ada."
         name="aktif"
         defaultChecked={config.aktif}
@@ -60,7 +60,7 @@ export function FormPengaturanWa({ config }: { config: WaConfig }) {
           <Galat pesan={galat.jedaMaks} />
         </label>
         <label className={labelKolom}>
-          Batas pesan per pasangan per 24 jam
+          Batas pesan per pengguna per 24 jam
           <input
             type="number"
             name="batasHarian"
@@ -71,7 +71,7 @@ export function FormPengaturanWa({ config }: { config: WaConfig }) {
             aria-invalid={galat.batasHarian ? true : undefined}
             className={kolom}
           />
-          <span className="text-xs font-normal text-redup">Berlaku untuk setiap pasangan sendiri-sendiri.</span>
+          <span className="text-xs font-normal text-redup">Berlaku untuk setiap pengguna sendiri-sendiri.</span>
           <Galat pesan={galat.batasHarian} />
         </label>
       </div>

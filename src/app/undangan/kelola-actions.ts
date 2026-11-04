@@ -29,7 +29,7 @@ export async function mulaiKelolaAction(formData: FormData): Promise<void> {
   await recordAudit(db, {
     actor: admin,
     category: "undangan",
-    action: "Mulai mengelola undangan sebagai pasangan",
+    action: "Mulai mengelola undangan sebagai pengguna",
     target: `/u/${detail.slug}`,
     detail: `Pemilik ${detail.ownerEmail}`,
   });
@@ -44,7 +44,7 @@ export async function akhiriKelolaAction(): Promise<void> {
   await recordAudit(db, {
     actor: acting.admin,
     category: "undangan",
-    action: "Selesai mengelola undangan sebagai pasangan",
+    action: "Selesai mengelola undangan sebagai pengguna",
     target: `/u/${acting.invitation.slug}`,
   });
   redirect(`/admin/undangan/${acting.invitation.id}`);
