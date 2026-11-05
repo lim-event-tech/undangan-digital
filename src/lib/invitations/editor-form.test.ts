@@ -25,15 +25,15 @@ describe("parseTitleForm", () => {
 
 describe("parseSambutanForm dan parsePenutupForm", () => {
   it("menerima teks kosong dan membatasi panjang", () => {
-    expect(parseSambutanForm(formOf({}))).toEqual({ ok: true, input: { kutipan: "", sambutan: "" } });
+    expect(parseSambutanForm(formOf({}))).toEqual({ ok: true, input: { sambutan: "" } });
     expect(parsePenutupForm(formOf({ penutup: "Terima kasih" }))).toEqual({
       ok: true,
       input: { penutup: "Terima kasih" },
     });
 
-    const tooLong = parseSambutanForm(formOf({ kutipan: "K".repeat(301), sambutan: "S".repeat(1201) }));
+    const tooLong = parseSambutanForm(formOf({ sambutan: "S".repeat(1201) }));
     expect(tooLong.ok).toBe(false);
-    if (!tooLong.ok) expect(Object.keys(tooLong.errors).sort()).toEqual(["kutipan", "sambutan"]);
+    if (!tooLong.ok) expect(Object.keys(tooLong.errors).sort()).toEqual(["sambutan"]);
 
     expect(parsePenutupForm(formOf({ penutup: "P".repeat(601) })).ok).toBe(false);
   });
@@ -50,7 +50,7 @@ describe("parseRsvpForm", () => {
   });
 
   it("menolak batas RSVP baru sebelum hari ini", () => {
-    expect(parseRsvpForm(formOf({ batas: "2026-11-03", maksDewasa: "2", maksAnak: "0" }))).toEqual({
+    expect(parseRsvpForm(formOf({ batas: "2026-11-03", maksPeserta: "2",  }))).toEqual({
       ok: false,
       errors: { batas: "Batas waktu RSVP tidak boleh sebelum hari ini" },
     });
@@ -58,37 +58,36 @@ describe("parseRsvpForm", () => {
 
   it("tetap menyimpan jumlah tamu ketika batas lama yang sudah lewat tidak diubah", () => {
     const deadline = new Date("2026-11-03T16:59:59.000Z");
-    const parsed = parseRsvpForm(formOf({ batas: "2026-11-03", maksDewasa: "3", maksAnak: "1" }), deadline);
-    expect(parsed).toEqual({ ok: true, input: { deadline, maxAdults: 3, maxChildren: 1 } });
+    const parsed = parseRsvpForm(formOf({ batas: "2026-11-03", maksPeserta: "4",  }), deadline);
+    expect(parsed).toEqual({ ok: true, input: { deadline, maxAttendees: 4,  } });
   });
 
   it("tetap menolak tanggal lampau lain meskipun undangan sudah punya batas lama", () => {
     const deadline = new Date("2026-11-03T16:59:59.000Z");
-    const parsed = parseRsvpForm(formOf({ batas: "2026-11-02", maksDewasa: "2", maksAnak: "0" }), deadline);
+    const parsed = parseRsvpForm(formOf({ batas: "2026-11-02", maksPeserta: "2",  }), deadline);
     expect(parsed).toEqual({ ok: false, errors: { batas: "Batas waktu RSVP tidak boleh sebelum hari ini" } });
   });
 
   it("mengubah tanggal batas menjadi akhir hari WIB", () => {
-    const parsed = parseRsvpForm(formOf({ batas: "2026-12-10", maksDewasa: "2", maksAnak: "1" }));
+    const parsed = parseRsvpForm(formOf({ batas: "2026-12-10", maksPeserta: "3",  }));
     expect(parsed.ok).toBe(true);
     if (parsed.ok) {
       expect(parsed.input.deadline?.toISOString()).toBe("2026-12-10T16:59:59.000Z");
-      expect(parsed.input.maxAdults).toBe(2);
-      expect(parsed.input.maxChildren).toBe(1);
+      expect(parsed.input.maxAttendees).toBe(3);
     }
   });
 
   it("membolehkan batas waktu kosong", () => {
-    const parsed = parseRsvpForm(formOf({ batas: "", maksDewasa: "2", maksAnak: "0" }));
+    const parsed = parseRsvpForm(formOf({ batas: "", maksPeserta: "2",  }));
     expect(parsed.ok && parsed.input.deadline).toBeNull();
   });
 
   it("menolak tanggal salah dan jumlah di luar rentang", () => {
-    const parsed = parseRsvpForm(formOf({ batas: "2026-02-30", maksDewasa: "0", maksAnak: "21" }));
+    const parsed = parseRsvpForm(formOf({ batas: "2026-02-30", maksPeserta: "0",  }));
     expect(parsed.ok).toBe(false);
     if (!parsed.ok) {
-      expect(Object.keys(parsed.errors).sort()).toEqual(["batas", "maksAnak", "maksDewasa"]);
+      expect(Object.keys(parsed.errors).sort()).toEqual(["batas", "maksPeserta"]);
     }
-    expect(parseRsvpForm(formOf({ maksDewasa: "dua", maksAnak: "0" })).ok).toBe(false);
+    expect(parseRsvpForm(formOf({ maksPeserta: "dua",  })).ok).toBe(false);
   });
 });

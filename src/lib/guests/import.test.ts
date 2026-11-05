@@ -17,7 +17,7 @@ const context: ImportContext = {
   ],
   groups: ["Keluarga pria"],
   existing: [{ name: "Ibu Sari", phone: "+6281200000101" }],
-  defaults: { maxAdults: 2, maxChildren: 0 },
+  defaults: { maxAttendees: 2,  },
 };
 
 function raw(row: number, nama: string, whatsapp: string, extra: Partial<RawRow> = {}): RawRow {
@@ -27,16 +27,24 @@ function raw(row: number, nama: string, whatsapp: string, extra: Partial<RawRow>
     whatsapp,
     grup: "",
     acara: "",
-    maks_dewasa: "",
-    maks_anak: "",
+    maks_peserta: "",
     ...extra,
   };
 }
 
 describe("parseGuestCsv", () => {
+  it.each(["maks_dewasa", "maks_anak", "Dewasa", "Anak", "max_children"])("menolak kolom lama %s dengan petunjuk format peserta", (header) => {
+    expect(parseGuestCsv(`nama,whatsapp,${header}\nTamu,081234567890,2`)).toMatchObject({ ok: false, error: expect.stringContaining("maks_peserta") });
+  });
+  it("memvalidasi batas peserta dan menolak payload baris yang masih menyertakan data lama", () => {
+    const old = { ...raw(2, "Tamu", "081234567890"), maks_dewasa: "2", maks_anak: "1" };
+    expect(validateImportRows([old], context)[0]).toMatchObject({ status: "perlu_diperbaiki", issues: [expect.stringContaining("maks_peserta")] });
+    expect(validateImportRows([raw(2, "Tamu", "081234567890", { maks_peserta: "40" })], context)[0]).toMatchObject({ status: "siap", maxAttendees: 40 });
+    expect(validateImportRows([raw(2, "Tamu", "081234567890", { maks_peserta: "41" })], context)[0].status).toBe("perlu_diperbaiki");
+  });
   it("membaca judul kolom dengan alias dan nomor baris seperti di spreadsheet", () => {
     const result = parseGuestCsv(
-      "Nama Tamu,No WA,Kelompok,Event,Dewasa,Anak\r\nIbu Sari,0812-0000-0101,Keluarga,utama,2,1\r\n\r\nPak Budi,0813-0000-0102,,,,\r\n",
+      "Nama Tamu,No WA,Kelompok,Event,Maks Peserta\r\nIbu Sari,0812-0000-0101,Keluarga,utama,3\r\n\r\nPak Budi,0813-0000-0102,,,\r\n",
     );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -47,8 +55,7 @@ describe("parseGuestCsv", () => {
         whatsapp: "0812-0000-0101",
         grup: "Keluarga",
         acara: "utama",
-        maks_dewasa: "2",
-        maks_anak: "1",
+        maks_peserta: "3",
       },
       {
         row: 4,
@@ -56,8 +63,7 @@ describe("parseGuestCsv", () => {
         whatsapp: "0813-0000-0102",
         grup: "",
         acara: "",
-        maks_dewasa: "",
-        maks_anak: "",
+        maks_peserta: "",
       },
     ]);
   });
@@ -113,10 +119,8 @@ describe("validateImportRows", () => {
       status: "siap",
       phone: "+6281300000102",
       eventIds: ["e-utama", "e-lanjutan"],
-      maxAdults: 2,
-      maxChildren: 0,
-      adultsFromDefault: true,
-      childrenFromDefault: true,
+      maxAttendees: 2,
+      attendeesFromDefault: (true && true),
       groupName: null,
     });
   });
@@ -152,15 +156,14 @@ describe("validateImportRows", () => {
 
   it("melaporkan semua masalah pada satu baris", () => {
     const [row] = validateImportRows(
-      [raw(2, "", "0812", { maks_dewasa: "0", maks_anak: "abc" })],
+      [raw(2, "", "0812", { maks_peserta: "abc",  })],
       context,
     );
     expect(row.status).toBe("perlu_diperbaiki");
     expect(row.issues).toEqual([
       "Nama kosong",
       "Nomor terlalu pendek",
-      "Maks. dewasa harus 1 sampai 20",
-      "Maks. anak harus berupa angka 0 sampai 20",
+      "Maks. peserta harus berupa angka 1 sampai 40",
     ]);
   });
 

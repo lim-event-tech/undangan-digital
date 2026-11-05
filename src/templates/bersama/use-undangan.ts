@@ -14,13 +14,13 @@ import type {
   UcapanData,
   Vals,
 } from "./jenis";
-import { inisialNama, kutipanBerpetik } from "./teks";
+import { inisialNama } from "./teks";
 
 type Pilihan = "ya" | "tidak";
-type Jumlah = { d: number; a: number };
+type Jumlah = number;
 
 const PESAN_PRATINJAU = "Mode pratinjau: jawaban tidak disimpan.";
-const PESAN_PRATINJAU_UCAPAN = "Mode pratinjau: ucapan tidak disimpan.";
+const PESAN_PRATINJAU_UCAPAN = "Mode pratinjau: pesan tamu tidak disimpan.";
 
 const dua = (n: number) => String(n).padStart(2, "0");
 const redup = (b: boolean) => (b ? "0.35" : "1");
@@ -40,30 +40,10 @@ function awalJumlah(data: DataUndangan): Record<string, Jumlah> {
   for (const a of data.acara) {
     const j = data.jawaban[a.id];
     if (j?.hadir) {
-      hasil[a.id] = {
-        d: batasi(j.dewasa, 1, data.maksDewasa),
-        a: batasi(j.anak, 0, data.maksAnak),
-      };
+      hasil[a.id] = batasi(j.peserta, 1, data.maksPeserta);
     }
   }
   return hasil;
-}
-
-function salinTeks(teks: string): Promise<void> {
-  if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(teks);
-  return new Promise((resolve, reject) => {
-    const area = document.createElement("textarea");
-    area.value = teks;
-    area.setAttribute("readonly", "");
-    area.style.position = "fixed";
-    area.style.opacity = "0";
-    document.body.appendChild(area);
-    area.select();
-    const berhasil = document.execCommand("copy");
-    area.remove();
-    if (berhasil) resolve();
-    else reject(new Error("salin gagal"));
-  });
 }
 
 export function useGerak(akar: RefObject<HTMLElement | null>, aktif = true) {
@@ -147,55 +127,25 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
   const [versiQr, setVersiQr] = useState(0);
   const [mengirimRsvp, mulaiRsvp] = useTransition();
 
-  const maksD = Math.max(1, data.maksDewasa);
-  const maksA = Math.max(0, data.maksAnak);
+  const maks = Math.max(1, data.maksPeserta);
   const tutup = data.rsvpTutup;
-
   const rsvpAcara: RsvpAcara[] = data.acara.map((a) => {
     const pil = pilihan[a.id];
-    const j = jumlah[a.id] ?? { d: 1, a: 0 };
-    const dw = batasi(j.d, 1, maksD);
-    const an = batasi(j.a, 0, maksA);
-    const atur = (nd: number, na: number) =>
-      setJumlah((lama) => ({ ...lama, [a.id]: { d: nd, a: na } }));
+    const peserta = batasi(jumlah[a.id] ?? 1, 1, maks);
+    const atur = (value: number) => setJumlah((lama) => ({ ...lama, [a.id]: value }));
     const y = pil === "ya" ? palet.on : palet.off;
     const t = pil === "tidak" ? palet.on : palet.off;
     return {
-      ...a,
-      ya: pil === "ya",
-      tidak: pil === "tidak",
-      yaBg: y.bg,
-      yaFg: y.fg,
-      yaBd: y.bd,
-      tdBg: t.bg,
-      tdFg: t.fg,
-      tdBd: t.bd,
-      tampilJumlah: pil === "ya",
-      showAnak: maksA > 0,
-      maksD,
-      maksA,
-      dewasa: dw,
-      anak: an,
-      dMinOp: redup(dw <= 1),
-      dMaxOp: redup(dw >= maksD),
-      aMinOp: redup(an <= 0),
-      aMaxOp: redup(an >= maksA),
+      ...a, ya: pil === "ya", tidak: pil === "tidak", yaBg: y.bg, yaFg: y.fg, yaBd: y.bd,
+      tdBg: t.bg, tdFg: t.fg, tdBd: t.bd, tampilJumlah: pil === "ya", maksPeserta: maks, peserta,
       pilihYa: () => setPilihan((lama) => ({ ...lama, [a.id]: "ya" })),
       pilihTidak: () => setPilihan((lama) => ({ ...lama, [a.id]: "tidak" })),
-      tambahD: () => atur(Math.min(maksD, dw + 1), an),
-      kurangD: () => atur(Math.max(1, dw - 1), an),
-      tambahA: () => atur(dw, Math.min(maksA, an + 1)),
-      kurangA: () => atur(dw, Math.max(0, an - 1)),
+      tambah: () => atur(Math.min(maks, peserta + 1)), kurang: () => atur(Math.max(1, peserta - 1)),
     };
   });
   const lengkap = data.acara.length > 0 && data.acara.every((a) => pilihan[a.id]);
   const adaYa = rsvpAcara.some((r) => r.ya);
-  const ringkasan = rsvpAcara
-    .map(
-      (r) =>
-        `${r.nama}: ${r.ya ? `${r.dewasa} dewasa${r.anak ? `, ${r.anak} anak` : ""}` : "tidak hadir"}`,
-    )
-    .join(" · ");
+  const ringkasan = rsvpAcara.map((r) => `${r.nama}: ${r.ya ? `${r.peserta} peserta` : "tidak hadir"}`).join(" \u00b7 ");
 
   const kirimRsvp = () => {
     if (!lengkap || mengirimRsvp || tutup) return;
@@ -210,8 +160,7 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
     form.set("token", data.token);
     for (const r of rsvpAcara) {
       form.set(`hadir-${r.id}`, r.ya ? "ya" : "tidak");
-      form.set(`dewasa-${r.id}`, r.ya ? String(r.dewasa) : "0");
-      form.set(`anak-${r.id}`, r.ya ? String(r.anak) : "0");
+      form.set(`peserta-${r.id}`, r.ya ? String(r.peserta) : "0");
       form.set(`pesan-${r.id}`, data.jawaban[r.id]?.pesan ?? "");
     }
     mulaiRsvp(async () => {
@@ -262,7 +211,7 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
         const hasil = await muatUcapanAction({ slug: data.slug, token: data.token, halaman: tujuan });
         if (hasil) setHalaman(hasil);
       } catch {
-        setPesanUcapan("Ucapan belum bisa dimuat. Coba lagi.");
+        setPesanUcapan("Pesan tamu belum bisa dimuat. Coba lagi.");
       }
     });
   };
@@ -293,11 +242,11 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
         }
         setTeks("");
         if (hasil.status === "ditahan") {
-          setPesanUcapan("Terima kasih. Ucapan Anda akan tampil setelah disetujui pengelola.");
+          setPesanUcapan("Terima kasih. Pesan tamu Anda akan tampil setelah disetujui pengelola.");
           return;
         }
         if (hasil.halaman) setHalaman(hasil.halaman);
-        setPesanUcapan("Terima kasih, ucapan Anda sudah terkirim.");
+        setPesanUcapan("Terima kasih, pesan tamu Anda sudah terkirim.");
       } catch {
         setPesanUcapan("Koneksi terputus. Periksa internet Anda lalu coba lagi.");
       }
@@ -344,24 +293,6 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
     };
   }, [fotoTerbuka, jumlahFoto]);
 
-  const [tersalin, setTersalin] = useState<Record<number, boolean>>({});
-  const salin = (i: number, nomor: string) => {
-    salinTeks(nomor.replace(/\s+/g, ""))
-      .then(() => {
-        setTersalin((lama) => ({ ...lama, [i]: true }));
-        window.setTimeout(() => setTersalin((lama) => ({ ...lama, [i]: false })), 2500);
-      })
-      .catch(() => undefined);
-  };
-  const rekening = data.rekening.map((r, i) => ({
-    ...r,
-    kunci: `rekening-${i}`,
-    label: tersalin[i] ? "TERSALIN" : "SALIN NOMOR",
-    salin: () => salin(i, r.nomor),
-    arah: i % 2 === 0 ? ("kiri" as const) : ("kanan" as const),
-    tunda: `${(0.2 + i * 0.1).toFixed(1)}s`,
-  }));
-
   const audio = useRef<HTMLAudioElement | null>(null);
   const [musikMain, setMusikMain] = useState(false);
   const adaMusik = data.musik !== null;
@@ -405,7 +336,6 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
   }
   const tampilDetik = data.hitung?.detik ?? true;
 
-  const kutipanTampil = kutipanBerpetik(data.kutipan);
   const sisaKarakter = WISH_MAX_LENGTH - teks.length;
   const bisaKirimUcapan = teks.trim().length > 0 && !memuatUcapan;
 
@@ -414,12 +344,8 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
     judulBesar: data.judul.toUpperCase(),
     ukuranJudul: data.judul.length > 80 ? 20 : data.judul.length > 50 ? 24 : data.judul.length > 30 ? 30 : 40,
     inisialEvent: inisialNama(data.judul),
-    kutipanTampil,
     inisialTamu: inisialNama(data.namaTamu),
-    keteranganMaks:
-      maksA > 0
-        ? `Jumlah undangan: ${maksD} dewasa dan ${maksA} anak per acara`
-        : `Jumlah undangan: ${maksD} orang dewasa per acara`,
+    keteranganMaks: `Maksimal ${maks} peserta per sesi, termasuk Anda dan pendamping.`,
     teksBatas: tutup
       ? "Batas waktu konfirmasi sudah lewat."
       : data.batasRsvp
@@ -455,7 +381,7 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
     teksUcapan: teks,
     sisaKarakter,
     maksUcapan: WISH_MAX_LENGTH,
-    placeholderUcapan: `Tulis ucapan untuk ${data.judul}`,
+    placeholderUcapan: `Tulis pesan tamu untuk ${data.judul}`,
     ucapanOpacity: bisaKirimUcapan ? "1" : "0.45",
     ucapanNonaktif: !bisaKirimUcapan,
     ketikUcapan: (e) => {
@@ -484,18 +410,6 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
     fotoTutup: () => setFoto(-1),
     fotoSebelum: () => setFoto((f) => (f + jumlahFoto - 1) % jumlahFoto),
     fotoBerikut: () => setFoto((f) => (f + 1) % jumlahFoto),
-    cerita: data.cerita.map((m, i) => ({
-      ...m,
-      kunci: `momen-${i}`,
-      akhir: i === data.cerita.length - 1,
-      tunda: `${(i * 0.12).toFixed(2)}s`,
-      tundaGaris: `${(0.3 + i * 0.12).toFixed(2)}s`,
-    })),
-    rekening,
-    label1: rekening[0]?.label ?? "SALIN NOMOR",
-    label2: rekening[1]?.label ?? "SALIN NOMOR",
-    salin1: () => rekening[0]?.salin(),
-    salin2: () => rekening[1]?.salin(),
     undanganTerbuka,
     bukaUndangan: (event) => {
       event.preventDefault();

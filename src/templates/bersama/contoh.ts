@@ -52,125 +52,44 @@ const ALAMAT = "Jl. Dago Atas No. 88, Coblong, Bandung";
 const PETA = "https://www.google.com/maps/search/?api=1&query=Coblong%2C+Bandung";
 
 export function contohView(now: number): InvitationView {
-  const content = readContent({
-    kutipan:
-      "Pertemuan menjadi awal untuk berbagi inspirasi dan membangun kebersamaan.",
-    sambutan:
-      "Kami mengundang Bapak, Ibu, dan Saudara untuk hadir pada Gathering Komunitas. Mari bertemu dan berbagi inspirasi bersama.",
-    cerita: [
-      {
-        tahun: "2019",
-        judul: "Awal komunitas",
-        teks: "Komunitas dimulai dari pertemuan kecil untuk berbagi ide dan pengalaman.",
-      },
-      {
-        tahun: "2022",
-        judul: "Tumbuh bersama",
-        teks: "Anggota berkolaborasi dalam berbagai kegiatan kreatif dan sosial.",
-      },
-      {
-        tahun: "2026",
-        judul: "Gathering tahunan",
-        teks: "Kami kembali berkumpul untuk merayakan perjalanan dan merencanakan kegiatan berikutnya.",
-      },
-    ],
-    amplop: [
-      { bank: "[Nama bank]", nomor: "[Nomor rekening]", atasNama: "Komunitas Kreatif" },
-      { bank: "[Nama bank]", nomor: "[Nomor rekening]", atasNama: "Panitia Acara" },
-    ],
-  });
-
   return {
-    mode: "contoh",
-    slug: "contoh",
-    token: "",
-    title: "Gathering Komunitas",
-    guest: { name: "Nama Tamu", maxAdults: 2, maxChildren: 2 },
-    content,
+    mode: "contoh", slug: "contoh", token: "", title: "Seminar Kepemimpinan Organisasi",
+    guest: { name: "Nama Tamu", maxAttendees: 2 },
+    content: readContent({
+      identitas: { jenis: "Seminar", subjudul: "Membangun organisasi yang adaptif dan berdampak", deskripsi: "Forum berbagi pengetahuan dan praktik kepemimpinan bagi para profesional dan pengelola organisasi." },
+      penyelenggara: { nama: "[Nama instansi penyelenggara]", namaEo: "[Nama event organizer]" },
+      sambutan: "Dengan hormat, kami mengundang Bapak/Ibu untuk menghadiri kegiatan ini. Kami berharap pertemuan ini dapat membuka ruang diskusi dan kerja sama yang bermanfaat.",
+      pengisiAcara: [{ id: "10000000-0000-4000-8000-000000000001", nama: "[Nama narasumber]", peran: "Narasumber", instansi: "[Nama instansi]", profil: "Paparan dan diskusi mengenai pengembangan organisasi." }],
+      informasiPeserta: { dressCode: "Busana formal atau batik", ketentuan: "Mohon hadir 30 menit sebelum sesi dimulai dan menyiapkan kode undangan.", petunjukLokasi: "Registrasi peserta berada di lobi utama gedung." },
+      penutup: "Terima kasih atas perhatian dan kesediaan Bapak/Ibu untuk hadir. Sampai bertemu pada kegiatan kami.",
+      ucapan: { tampil: true, tahan: false },
+    }),
     events: [
-      {
-        id: "contoh-utama",
-        key: "utama",
-        name: "Acara utama",
-        sortOrder: 0,
-        date: "2026-12-12",
-        time: "08:00",
-        timezone: "WIB",
-        venueName: "Aula Graha Puspa",
-        address: ALAMAT,
-        mapsUrl: PETA,
-        response: null,
+      { id: "contoh-utama", key: "utama", name: "Sesi utama", sortOrder: 0, date: "2027-02-20", time: "09:00", endTime: "11:00", timezone: "WIB", venueName: "Aula Graha Puspa", address: ALAMAT, mapsUrl: PETA, response: null,
+        agenda: [
+          { id: "20000000-0000-4000-8000-000000000001", jam: "09:00", judul: "Pembukaan", keterangan: "Sambutan penyelenggara dan pengantar kegiatan." },
+          { id: "20000000-0000-4000-8000-000000000002", jam: "09:30", judul: "Paparan utama", keterangan: "Pemaparan narasumber dan diskusi peserta." },
+        ],
       },
-      {
-        id: "contoh-lanjutan",
-        key: "lanjutan",
-        name: "Sesi lanjutan",
-        sortOrder: 1,
-        date: "2026-12-12",
-        time: "11:00",
-        timezone: "WIB",
-        venueName: "Aula Graha Puspa",
-        address: ALAMAT,
-        mapsUrl: PETA,
-        response: null,
-      },
+      { id: "contoh-lanjutan", key: "lanjutan", name: "Diskusi dan jejaring", sortOrder: 1, date: "2027-02-20", time: "13:00", endTime: "15:00", timezone: "WIB", venueName: "Aula Graha Puspa", address: ALAMAT, mapsUrl: PETA, response: null, agenda: [] },
     ],
-    photos: [],
-    rsvp: { closed: false, deadline: "2026-12-05" },
-    wishes: {
-      items: UCAPAN_CONTOH.slice(0, 4),
-      page: 1,
-      totalPages: Math.ceil(UCAPAN_CONTOH.length / 4),
-      total: UCAPAN_CONTOH.length,
-      lokal: UCAPAN_CONTOH,
-    },
-    musicId: null,
-    now,
+    photos: [], rsvp: { closed: false, deadline: "2027-02-15" },
+    wishes: { items: [], page: 1, totalPages: 1, total: UCAPAN_CONTOH.length, lokal: UCAPAN_CONTOH },
+    musicId: null, now,
   };
 }
 
 export function contohTemplateView(template: TemplateKey, now: number): InvitationView {
   const view = contohView(now);
-  if (template === "melati") return view;
   const contoh = {
-    keraton: {
-      title: "Forum Kolaborasi",
-      kutipan: "Gagasan bertemu, pengetahuan bertumbuh, peluang baru terbuka.",
-      sambutan: "Kami mengundang Anda untuk bertukar gagasan dalam Forum Kolaborasi. Mari berbagi pengetahuan, mendengar perspektif baru, dan membangun kerja sama yang bermakna.",
-      sesi: ["Seminar & diskusi", "Ruang jejaring"],
-      tempat: "Auditorium Graha Puspa",
-      cerita: [
-        { tahun: "Gagasan", judul: "Berangkat dari percakapan", teks: "Ruang ini hadir untuk mempertemukan orang dengan pengalaman dan sudut pandang yang beragam." },
-        { tahun: "Kolaborasi", judul: "Membuka kemungkinan", teks: "Melalui diskusi dan pertemuan, kita merangkai gagasan menjadi langkah bersama." },
-      ],
-    },
-    bintang: {
-      title: "Malam Apresiasi",
-      kutipan: "Setiap kontribusi membawa cahaya bagi perjalanan bersama.",
-      sambutan: "Dengan hangat kami mengundang Anda ke Malam Apresiasi. Mari merayakan karya, menghargai kontribusi, dan menikmati kebersamaan dalam sebuah malam yang berkesan.",
-      sesi: ["Apresiasi & penghargaan", "Ramah tamah"],
-      tempat: "Ruang Serbaguna Graha Puspa",
-      cerita: [
-        { tahun: "Perjalanan", judul: "Karya yang terus tumbuh", teks: "Banyak gagasan dan kerja bersama yang telah memberi warna pada perjalanan tahun ini." },
-        { tahun: "Apresiasi", judul: "Untuk setiap kontribusi", teks: "Malam ini menjadi kesempatan untuk mengucapkan terima kasih kepada semua yang terlibat." },
-      ],
-    },
-    pasundan: {
-      title: "Temu Keluarga",
-      kutipan: "Ada cerita yang selalu terasa hangat saat dibagikan bersama keluarga.",
-      sambutan: "Kami mengundang keluarga dan kerabat untuk berkumpul dalam Temu Keluarga. Mari meluangkan waktu, berbagi cerita, dan mempererat kebersamaan.",
-      sesi: ["Kumpul keluarga", "Makan & cerita bersama"],
-      tempat: "Pendopo Graha Puspa",
-      cerita: [
-        { tahun: "Kenangan", judul: "Cerita lintas generasi", teks: "Setiap pertemuan menyimpan kisah dan kenangan yang menghubungkan kita." },
-        { tahun: "Pertemuan", judul: "Kembali berkumpul", teks: "Sebuah waktu untuk bertemu kembali dan menciptakan kenangan bersama keluarga." },
-      ],
-    },
+    melati: { title: "Seminar Kepemimpinan Organisasi", jenis: "Seminar", subjudul: "Membangun organisasi yang adaptif dan berdampak", sesi: ["Seminar utama", "Diskusi dan jejaring"], tempat: "Aula Graha Puspa" },
+    keraton: { title: "Rapat Kerja Nasional", jenis: "Rapat Kerja", subjudul: "Menyelaraskan arah dan prioritas organisasi", sesi: ["Sidang pembukaan", "Perumusan program kerja"], tempat: "Balai Pertemuan Puspa" },
+    bintang: { title: "Malam Apresiasi Mitra", jenis: "Apresiasi", subjudul: "Mengapresiasi kontribusi, memperkuat kemitraan", sesi: ["Penyambutan mitra", "Penganugerahan apresiasi"], tempat: "Ballroom Graha Puspa" },
+    pasundan: { title: "Forum Kolaborasi Daerah", jenis: "Forum", subjudul: "Merangkai gagasan untuk kemajuan bersama", sesi: ["Forum utama", "Diskusi kolaborasi"], tempat: "Pendopo Graha Puspa" },
   }[template];
   return {
-    ...view,
-    title: contoh.title,
-    content: readContent({ ...view.content, kutipan: contoh.kutipan, sambutan: contoh.sambutan, cerita: contoh.cerita, amplop: [{ bank: "[Nama bank]", nomor: "[Nomor rekening]", atasNama: "Penyelenggara Acara" }] }),
-    events: view.events.map((event, i) => ({ ...event, name: contoh.sesi[i], venueName: contoh.tempat, ...(template === "bintang" ? { time: i === 0 ? "18:30" : "20:00" } : {}) })),
+    ...view, title: contoh.title,
+    content: readContent({ ...view.content, identitas: { ...view.content.identitas, jenis: contoh.jenis, subjudul: contoh.subjudul, deskripsi: `Kegiatan ${contoh.title} mempertemukan peserta untuk berbagi gagasan, menyelaraskan tujuan, dan membangun kerja sama.` } }),
+    events: view.events.map((event, i) => ({ ...event, name: contoh.sesi[i], venueName: contoh.tempat })),
   };
 }

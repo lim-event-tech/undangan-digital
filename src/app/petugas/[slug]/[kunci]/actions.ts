@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { looksLikeCheckinKey } from "@/lib/checkin/code";
 import {
@@ -21,8 +22,7 @@ export type GuestInfo = {
   name: string;
   groupName: string | null;
   attending: boolean;
-  adults: number;
-  children: number;
+  attendeeCount: number;
   checkedInAt: string | null;
 };
 
@@ -36,8 +36,7 @@ function toInfo(guest: CheckinGuest): GuestInfo {
     name: guest.name,
     groupName: guest.groupName,
     attending: guest.attending,
-    adults: guest.adults,
-    children: guest.children,
+    attendeeCount: guest.attendeeCount,
     checkedInAt: guest.checkedInAt ? guest.checkedInAt.toISOString() : null,
   };
 }
@@ -72,21 +71,36 @@ async function authorize(
 export async function pindaiAction(slug: string, key: string, code: string): Promise<UsherResult> {
   const auth = await authorize(slug, key);
   if ("ditolak" in auth) return auth.ditolak;
-  return toResult(await scanCheckin(db, auth.invitation, String(code).slice(0, 200)));
+  const result = await scanCheckin(db, auth.invitation, String(code).slice(0, 200));
+  if (result.result === "masuk" || result.result === "sudah-masuk") {
+    refreshCheckin(auth.invitation, key);
+  }
+  return toResult(result);
 }
 
 export async function masukkanAction(slug: string, key: string, guestId: string): Promise<UsherResult> {
   const auth = await authorize(slug, key);
   if ("ditolak" in auth) return auth.ditolak;
   if (!isUuid(guestId)) return { status: "tidak-dikenal", guest: null };
-  return toResult(await forceCheckIn(db, auth.invitation.id, guestId));
+  const result = await forceCheckIn(db, auth.invitation.id, guestId);
+  if (result.result === "masuk" || result.result === "sudah-masuk") {
+    refreshCheckin(auth.invitation, key);
+  }
+  return toResult(result);
 }
 
 export async function batalkanAction(slug: string, key: string, guestId: string): Promise<UsherResult> {
   const auth = await authorize(slug, key);
   if ("ditolak" in auth) return auth.ditolak;
-  if (isUuid(guestId)) await undoCheckIn(db, auth.invitation.id, guestId);
+  if (isUuid(guestId) && await undoCheckIn(db, auth.invitation.id, guestId)) {
+    refreshCheckin(auth.invitation, key);
+  }
   return { status: "tidak-dikenal", guest: null };
+}
+
+function refreshCheckin(invitation: UsherInvitation, key: string) {
+  revalidatePath(`/petugas/${invitation.slug}/${key}`);
+  revalidatePath(`/undangan/${invitation.id}/checkin`);
 }
 
 export async function cariAction(

@@ -1,3 +1,4 @@
+import { RSVP_MAX_ATTENDEES } from "@/lib/rsvp/shared";
 import { normalizePhone } from "@/lib/phone";
 import type { GuestInput } from "./service";
 
@@ -9,13 +10,12 @@ export type GuestFormValues = {
   grup: string;
   grupBaru: string;
   acara: string[];
-  maksDewasa: string;
-  maksAnak: string;
+  maksPeserta: string;
 };
 
 export type GuestFieldErrors = Partial<
   Record<
-    "nama" | "whatsapp" | "grup" | "acara" | "maksDewasa" | "maksAnak",
+    "nama" | "whatsapp" | "grup" | "acara" | "maksPeserta",
     string
   >
 >;
@@ -56,8 +56,7 @@ export function parseGuestForm(formData: FormData): ParsedGuestForm {
     grup: text(formData.get("grup")),
     grupBaru: text(formData.get("grupBaru")).replace(/\s+/g, " ").trim(),
     acara: formData.getAll("acara").filter((v): v is string => typeof v === "string"),
-    maksDewasa: text(formData.get("maksDewasa")).trim(),
-    maksAnak: text(formData.get("maksAnak")).trim(),
+    maksPeserta: text(formData.get("maksPeserta")).trim(),
   };
 
   const errors: GuestFieldErrors = {};
@@ -81,19 +80,9 @@ export function parseGuestForm(formData: FormData): ParsedGuestForm {
 
   if (values.acara.length === 0) errors.acara = "Pilih minimal satu acara";
 
-  const adults = parseCount(values.maksDewasa, "Maks. dewasa", 1, 20);
-  if ("error" in adults) errors.maksDewasa = adults.error;
-  const children = parseCount(values.maksAnak, "Maks. anak", 0, 20);
-  if ("error" in children) errors.maksAnak = children.error;
-
-  if (
-    Object.keys(errors).length > 0 ||
-    !phone.ok ||
-    "error" in adults ||
-    "error" in children
-  ) {
-    return { ok: false, errors, values };
-  }
+  const attendees = parseCount(values.maksPeserta, "Maks. peserta", 1, RSVP_MAX_ATTENDEES);
+  if ("error" in attendees) errors.maksPeserta = attendees.error;
+  if (Object.keys(errors).length > 0 || !phone.ok || "error" in attendees) return { ok: false, errors, values };
 
   return {
     ok: true,
@@ -103,8 +92,7 @@ export function parseGuestForm(formData: FormData): ParsedGuestForm {
       phone: phone.value,
       groupName,
       eventIds: values.acara,
-      maxAdults: adults.value,
-      maxChildren: children.value,
+      maxAttendees: attendees.value,
     },
   };
 }

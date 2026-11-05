@@ -21,9 +21,7 @@ function jam(iso: string): string {
 }
 
 function orang(guest: GuestInfo): string {
-  const bagian = [`${guest.adults} dewasa`];
-  if (guest.children > 0) bagian.push(`${guest.children} anak`);
-  return bagian.join(", ");
+  return `${guest.attendeeCount} peserta`;
 }
 
 const TAMPILAN: Record<string, { judul: string; kelas: string }> = {

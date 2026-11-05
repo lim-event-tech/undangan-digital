@@ -35,8 +35,7 @@ async function setup() {
       phone,
       groupName: null,
       eventIds: events.map((e) => e.id),
-      maxAdults: 3,
-      maxChildren: 2,
+      maxAttendees: 5,
     });
   const hadir = await make("Bapak Hendra", "+6282000000001");
   const tidak = await make("Ibu Sari", "+6282000000002");
@@ -46,7 +45,7 @@ async function setup() {
     submitRsvp(db, {
       slug: seeded.invitation.slug,
       token,
-      read: () => ({ attending, adults, children, note: "" }),
+      read: () => ({ attending, attendeeCount: String(Number(adults) + Number(children)),  note: "" }),
     });
   await answer(hadir.token, "ya");
   await answer(tidak.token, "tidak");
@@ -121,7 +120,7 @@ describe("pemindaian", () => {
     const first = await scanCheckin(db, ctx.invitation, code, new Date("2026-12-12T01:00:00.000Z"));
     expect(first.result).toBe("masuk");
     if (first.result === "masuk") {
-      expect(first.guest).toMatchObject({ name: "Bapak Hendra", adults: 2, children: 1 });
+      expect(first.guest).toMatchObject({ name: "Bapak Hendra", attendeeCount: 3,  });
     }
 
     const second = await scanCheckin(db, ctx.invitation, code, new Date("2026-12-12T02:00:00.000Z"));
@@ -177,7 +176,7 @@ describe("daftar dan hitungan", () => {
 
     const all = await listCheckinGuests(db, ctx.invitation.id);
     expect(all.map((g) => g.name)).toEqual(["Bapak Hendra", "Dewi", "Ibu Sari"]);
-    expect(all[0]).toMatchObject({ attending: true, adults: 2, children: 1 });
+    expect(all[0]).toMatchObject({ attending: true, attendeeCount: 3,  });
     expect(all[0].checkedInAt).not.toBeNull();
     expect((await listCheckinGuests(db, ctx.invitation.id, { onlyAttending: true })).map((g) => g.name)).toEqual([
       "Bapak Hendra",

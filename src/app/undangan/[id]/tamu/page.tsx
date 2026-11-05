@@ -206,8 +206,7 @@ export default async function TamuPage({
                     <th scope="col" className="px-2.5 py-3 font-medium">WhatsApp</th>
                     <th scope="col" className="px-2.5 py-3 font-medium">Grup</th>
                     <th scope="col" className="px-2.5 py-3 font-medium">Acara</th>
-                    <th scope="col" className="px-2.5 py-3 text-center font-medium">Maks. dewasa</th>
-                    <th scope="col" className="px-2.5 py-3 text-center font-medium">Maks. anak</th>
+                    <th scope="col" className="px-2.5 py-3 text-center font-medium">Maks. peserta</th>
                     <th scope="col" className="px-2.5 py-3 font-medium">
                       <span className="sr-only">Aksi</span>
                     </th>
@@ -252,8 +251,7 @@ export default async function TamuPage({
                             ))}
                         </div>
                       </td>
-                      <td className="px-2.5 py-3 text-center font-medium">{g.maxAdults}</td>
-                      <td className="px-2.5 py-3 text-center font-medium">{g.maxChildren}</td>
+                      <td className="px-2.5 py-3 text-center font-medium">{g.maxAttendees}</td>
                       <td className="px-2.5 py-1.5 whitespace-nowrap">
                         <div className="flex gap-1.5">
                           <TombolSalin
@@ -290,8 +288,7 @@ export default async function TamuPage({
             events={events.map((e) => ({ id: e.id, name: e.name }))}
             groups={groups.map((g) => g.name)}
             defaults={{
-              maxAdults: invitation.defaultMaxAdults,
-              maxChildren: invitation.defaultMaxChildren,
+              maxAttendees: invitation.defaultMaxAttendees,
             }}
             guest={
               editing
@@ -301,8 +298,7 @@ export default async function TamuPage({
                     phone: editing.phone,
                     groupName: editing.groupName,
                     eventIds: editing.eventIds,
-                    maxAdults: editing.maxAdults,
-                    maxChildren: editing.maxChildren,
+                    maxAttendees: editing.maxAttendees,
                   }
                 : null
             }

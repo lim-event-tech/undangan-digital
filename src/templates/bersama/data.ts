@@ -1,3 +1,4 @@
+import { normalizePhone } from "@/lib/phone";
 import { buildIcs, calendarSlots, googleCalendarUrl } from "@/lib/calendar";
 import { countdownTarget } from "@/lib/countdown";
 import { formatDate, formatDots, formatLongDate, formatTime } from "@/lib/datetime";
@@ -26,6 +27,7 @@ export function siapkanData(view: InvitationView): DataUndangan {
         name: e.name,
         date: e.date,
         time: e.time,
+        endTime: e.endTime,
         timezone: e.timezone,
         venueName: e.venueName,
         address: e.address,
@@ -51,7 +53,8 @@ export function siapkanData(view: InvitationView): DataUndangan {
       nama: e.name,
       tgl,
       tglBesar: tgl.toUpperCase(),
-      jam: e.time ? formatTime(e.time, e.timezone) : "Waktu menyusul",
+      jam: e.time ? `${e.time.slice(0, 5)}${e.endTime ? `–${e.endTime.slice(0, 5)}` : ""} ${e.timezone}` : "Waktu menyusul",
+      agenda: e.agenda.map((item) => ({ ...item, jam: formatTime(item.jam, e.timezone) })),
       tempat: e.venueName ?? "",
       alamat: e.address ?? "",
       peta: e.mapsUrl,
@@ -64,8 +67,7 @@ export function siapkanData(view: InvitationView): DataUndangan {
     if (!e.response) continue;
     jawaban[e.id] = {
       hadir: e.response.attending,
-      dewasa: e.response.adults,
-      anak: e.response.children,
+      peserta: e.response.attendeeCount,
       pesan: e.response.note,
     };
   }
@@ -84,23 +86,29 @@ export function siapkanData(view: InvitationView): DataUndangan {
     rasio: `${p.rasio.lebar} / ${p.rasio.tinggi}`,
     sizes,
   }));
-  const rekening = content.amplop.filter((r) => r.nomor.trim());
-  const qrisFoto = photos.find((p) => p.kind === "qris");
-  const cerita = content.cerita.filter((m) => m.judul.trim() || m.teks.trim());
   const ucapan: DataUndangan["ucapan"] =
     content.ucapan.tampil && view.wishes ? view.wishes : null;
 
+  const phone = normalizePhone(content.kontak.telepon);
+  const kontakWhatsapp = phone.ok ? `https://wa.me/${phone.value.slice(1)}` : null;
+  const kontakEmail = content.kontak.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(content.kontak.email) ? `mailto:${encodeURIComponent(content.kontak.email)}` : null;
+  const logoPenyelenggara = photos.find((p) => p.kind === "logo_penyelenggara");
+  const logoEo = photos.find((p) => p.kind === "logo_eo");
   const tersedia: Record<BagianId, boolean> = {
     sampul: true,
     pembuka: true,
-    salam: Boolean(content.kutipan.trim() || content.sambutan.trim()),
+    tentang: Boolean(content.identitas.deskripsi.trim() || content.identitas.jenis.trim() || content.identitas.subjudul.trim()),
+    salam: Boolean(content.sambutan.trim()),
+    penyelenggara: Boolean(content.penyelenggara.nama.trim() || content.penyelenggara.namaEo.trim() || photos.some((p) => p.kind === "logo_penyelenggara" || p.kind === "logo_eo")),
+    agenda: events.some((e) => e.agenda.length > 0),
+    pengisi: content.pengisiAcara.length > 0,
+    informasi: Object.values(content.informasiPeserta).some((value) => value.trim()),
+    kontak: Boolean(content.kontak.nama.trim() && (kontakWhatsapp || kontakEmail)),
     hitung: target !== null,
     acara: events.length > 0,
-    cerita: cerita.length > 0,
     galeri: galeri.length > 0,
     rsvp: events.length > 0,
     ucapan: ucapan !== null,
-    amplop: rekening.length > 0 || Boolean(qrisFoto),
     penutup: true,
   };
   const sembunyi = new Set<BagianId>(content.susunan.sembunyi);
@@ -117,12 +125,19 @@ export function siapkanData(view: InvitationView): DataUndangan {
     tglBesar: tanggal ? formatLongDate(tanggal).toUpperCase() : "",
     tglKata: tanggal ? tanggalKata(tanggal) : "",
     tglKota: tanggal ? [formatDate(tanggal), kota].filter(Boolean).join(", ") : kota,
-    kutipan: content.kutipan.trim(),
+    identitas: content.identitas,
+    penyelenggara: content.penyelenggara,
+    pengisiAcara: content.pengisiAcara,
+    informasiPeserta: content.informasiPeserta,
+    kontak: content.kontak,
+    kontakWhatsapp,
+    kontakEmail,
+    logoPenyelenggara: logoPenyelenggara ? { src: foto(logoPenyelenggara.id), width: logoPenyelenggara.width || 180, height: logoPenyelenggara.height || 100 } : null,
+    logoEo: logoEo ? { src: foto(logoEo.id), width: logoEo.width || 180, height: logoEo.height || 100 } : null,
     sambutan: content.sambutan.trim(),
     penutup: content.penutup.trim() || PENUTUP_BAWAAN,
     namaTamu: view.guest.name,
-    maksDewasa: Math.max(1, view.guest.maxAdults),
-    maksAnak: Math.max(0, view.guest.maxChildren),
+    maksPeserta: Math.max(1, view.guest.maxAttendees),
     acara,
     jawaban,
     rsvpTutup: view.rsvp.closed,
@@ -130,11 +145,8 @@ export function siapkanData(view: InvitationView): DataUndangan {
     hitung: target ? { target: target.getTime(), detik: content.hitungMundur.detik } : null,
     sekarang: view.now,
     kalender,
-    cerita,
     galeri,
     lajurGaleri,
-    rekening,
-    qris: qrisFoto ? foto(qrisFoto.id) : null,
     ucapan,
     musik: content.musik.aktif && view.musicId ? `/musik/${view.musicId}` : null,
     urutan,

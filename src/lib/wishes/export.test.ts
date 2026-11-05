@@ -27,7 +27,7 @@ describe("buildWishCsv", () => {
 
   it("memuat header dan satu baris per ucapan dengan teks utuh", () => {
     expect(csv.startsWith("﻿")).toBe(true);
-    expect(rows[0]).toEqual(["Pengirim", "Ucapan", "Status", "Dikirim"]);
+    expect(rows[0]).toEqual(["Pengirim", "Pesan tamu", "Status", "Dikirim"]);
     expect(rows).toHaveLength(3);
     expect(rows[1].slice(0, 3)).toEqual(["Bapak Hendra", 'Selamat; "semoga" bahagia\nselalu', "Tampil"]);
   });

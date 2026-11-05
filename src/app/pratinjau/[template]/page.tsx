@@ -48,8 +48,7 @@ export default async function PratinjauPage({ params, searchParams }: PageProps<
     title: invitation.title,
     guest: {
       name: "Nama Tamu",
-      maxAdults: invitation.defaultMaxAdults,
-      maxChildren: invitation.defaultMaxChildren,
+      maxAttendees: invitation.defaultMaxAttendees,
     },
     content,
     events: events.map((e) => ({ ...e, response: null })),

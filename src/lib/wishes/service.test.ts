@@ -24,6 +24,7 @@ beforeAll(async () => {
 
 async function setup(options: { published?: boolean; guests?: number } = {}) {
   const seeded = await seedInvitation(db);
+  await saveContentText(db, seeded.invitation.id, { ucapan: { tampil: true, tahan: false } });
   const events = await listEventDetails(db, seeded.invitation.id);
   const guests = [];
   for (let i = 0; i < (options.guests ?? 1); i += 1) {
@@ -33,8 +34,7 @@ async function setup(options: { published?: boolean; guests?: number } = {}) {
         phone: `+62812000001${String(i).padStart(2, "0")}`,
         groupName: null,
         eventIds: [events[0].id],
-        maxAdults: 2,
-        maxChildren: 0,
+        maxAttendees: 2,
       }),
     );
   }
@@ -199,8 +199,8 @@ describe("status kehadiran penulis ucapan", () => {
     const ctx = await setup({ guests: 3 });
     const [acara] = await listEventDetails(db, ctx.invitation.id);
     await db.insert(rsvp).values([
-      { guestId: ctx.guests[0].id, eventId: acara.id, attending: true, adults: 1, children: 0 },
-      { guestId: ctx.guests[1].id, eventId: acara.id, attending: false, adults: 0, children: 0 },
+      { guestId: ctx.guests[0].id, eventId: acara.id, attending: true, attendeeCount: 1,  },
+      { guestId: ctx.guests[1].id, eventId: acara.id, attending: false, attendeeCount: 0,  },
     ]);
     await send(ctx, "Dari tamu satu", 0);
     await send(ctx, "Dari tamu dua", 1);

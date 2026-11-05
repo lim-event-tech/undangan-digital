@@ -98,8 +98,7 @@ export default async function UndanganTamuPage({ params }: PageProps<"/[slug]/[t
     title: invitation.title,
     guest: {
       name: guest.name,
-      maxAdults: guest.maxAdults,
-      maxChildren: guest.maxChildren,
+      maxAttendees: guest.maxAttendees,
     },
     content,
     events,

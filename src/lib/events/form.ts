@@ -1,3 +1,4 @@
+import { parseAgenda, type AgendaItem } from "./agenda";
 import {
   isDateString,
   isTimeString,
@@ -22,6 +23,8 @@ export type EventInput = {
   name: string;
   date: string | null;
   time: string | null;
+  endTime: string | null;
+  agenda: AgendaItem[];
   timezone: Zone;
   venueName: string | null;
   address: string | null;
@@ -61,6 +64,13 @@ export function parseEventForm(
   const time = singleLine(formData, "jam");
   if (time && !isTimeString(time)) errors.jam = "Jam tidak valid";
 
+  const endTime = singleLine(formData, "jamSelesai");
+  if (endTime && (!isTimeString(endTime) || !time || endTime <= time)) {
+    errors.jamSelesai = "Jam selesai harus setelah jam mulai pada tanggal yang sama";
+  }
+  const parsedAgenda = parseAgenda(formData, time, endTime);
+  Object.assign(errors, parsedAgenda.errors);
+
   const zone = singleLine(formData, "zona") || "WIB";
   if (!isZone(zone)) errors.zona = "Pilih WIB, WITA, atau WIT";
   if (
@@ -99,6 +109,8 @@ export function parseEventForm(
       name: parsedName.name,
       date: date || null,
       time: time || null,
+      endTime: endTime || null,
+      agenda: parsedAgenda.agenda,
       timezone: zone,
       venueName: venue || null,
       address: address || null,

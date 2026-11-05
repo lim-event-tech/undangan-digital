@@ -31,12 +31,13 @@ function jpeg(): Buffer {
 }
 
 async function lengkapi(invitationId: string) {
+  await saveContentText(db, invitationId, { penyelenggara: { nama: "Penyelenggara tes", namaEo: "" } });
   await addPhoto(db, invitationId, { kind: "cover", fileName: "cover.jpg", bytes: jpeg() });
   for (const e of await listEventDetails(db, invitationId)) {
     await updateEvent(db, invitationId, e.id, {
       name: e.name,
       date: "2026-12-20",
-      time: "09:00",
+      endTime: null, agenda: [], time: "09:00",
       timezone: "WIB",
       venueName: null,
       address: null,
@@ -58,6 +59,7 @@ describe("getMissingForPublish", () => {
     const { invitation: created } = await seedInvitation(db);
     const missing = await getMissingForPublish(db, created.id);
     expect(missing.map((m) => m.label)).toEqual([
+      "Nama penyelenggara",
       "Foto cover",
       "Tanggal Acara utama",
       "Jam Acara utama",
@@ -66,8 +68,8 @@ describe("getMissingForPublish", () => {
       "Jam Sesi lanjutan",
       "Link Maps Sesi lanjutan",
     ]);
-    expect(missing[0].anchor).toBe("sampul");
-    expect(missing[1].anchor).toMatch(/^acara-[0-9a-f-]{36}$/);
+    expect(missing[0].anchor).toBe("penyelenggara");
+    expect(missing[2].anchor).toMatch(/^acara-[0-9a-f-]{36}$/);
   });
 
   it("kosong setelah semua field wajib terisi", async () => {
@@ -122,7 +124,7 @@ describe("publishInvitation", () => {
 describe("konten undangan", () => {
   it("menyimpan judul event tanpa menimpa teks sambutan", async () => {
     const { invitation: created } = await seedInvitation(db, { title: "Raka" });
-    await saveContentText(db, created.id, { kutipan: "Dan di antara tanda-tanda-Nya", sambutan: "Selamat datang" });
+    await saveContentText(db, created.id, { identitas: { jenis: "Seminar", subjudul: "", deskripsi: "" }, sambutan: "Selamat datang" });
     await saveTitle(db, created.id, {
       title: "Rakai",
     });
@@ -130,31 +132,20 @@ describe("konten undangan", () => {
     const [row] = await db.select().from(invitation).where(eq(invitation.id, created.id));
     expect(row.title).toBe("Rakai");
     expect(row.slug).toBe("raka");
-    expect(readContent(row.content)).toEqual({
-      kutipan: "Dan di antara tanda-tanda-Nya",
-      sambutan: "Selamat datang",
-      penutup: "",
-      pesanWa: "",
-      pesanPengingat: "",
-      amplop: [],
-      cerita: [],
-      ucapan: { tampil: true, tahan: false },
-      hitungMundur: { aktif: true, detik: true },
-      musik: { aktif: false },
-      checkin: { aktif: true },
-      susunan: DEFAULT_SUSUNAN,
+    expect(readContent(row.content)).toMatchObject({
+      identitas: { jenis: "Seminar", subjudul: "", deskripsi: "" }, sambutan: "Selamat datang", ucapan: { tampil: false, tahan: false }, susunan: DEFAULT_SUSUNAN,
     });
   });
 
   it("memperbarui satu bagian teks tanpa menghapus bagian lain", async () => {
     const { invitation: created } = await seedInvitation(db);
-    await saveContentText(db, created.id, { kutipan: "Kutipan", sambutan: "Sambutan" });
+    await saveContentText(db, created.id, { identitas: { jenis: "Seminar", subjudul: "", deskripsi: "" }, sambutan: "Sambutan" });
     await saveContentText(db, created.id, { penutup: "Terima kasih" });
     await saveContentText(db, created.id, { sambutan: "Sambutan baru" });
 
     const [row] = await db.select().from(invitation).where(eq(invitation.id, created.id));
     expect(readContent(row.content)).toMatchObject({
-      kutipan: "Kutipan",
+      identitas: { jenis: "Seminar" },
       sambutan: "Sambutan baru",
       penutup: "Terima kasih",
     });
@@ -163,14 +154,13 @@ describe("konten undangan", () => {
   it("menyimpan batas waktu RSVP dan bawaan jumlah tamu", async () => {
     const { invitation: created } = await seedInvitation(db);
     const deadline = new Date("2026-12-10T16:59:59.000Z");
-    await saveRsvpSettings(db, created.id, { deadline, maxAdults: 3, maxChildren: 2 });
+    await saveRsvpSettings(db, created.id, { deadline, maxAttendees: 5,  });
 
     const [row] = await db.select().from(invitation).where(eq(invitation.id, created.id));
     expect(row.rsvpDeadline?.toISOString()).toBe(deadline.toISOString());
-    expect(row.defaultMaxAdults).toBe(3);
-    expect(row.defaultMaxChildren).toBe(2);
+    expect(row.defaultMaxAttendees).toBe(5);
 
-    await saveRsvpSettings(db, created.id, { deadline: null, maxAdults: 2, maxChildren: 0 });
+    await saveRsvpSettings(db, created.id, { deadline: null, maxAttendees: 2,  });
     const [cleared] = await db.select().from(invitation).where(eq(invitation.id, created.id));
     expect(cleared.rsvpDeadline).toBeNull();
   });
@@ -179,14 +169,16 @@ describe("konten undangan", () => {
 describe("readContent", () => {
   it("memberi nilai kosong untuk data yang rusak atau tidak ada", () => {
     const empty = {
-      kutipan: "",
+      identitas: { jenis: "", subjudul: "", deskripsi: "" },
+      penyelenggara: { nama: "", namaEo: "" },
+      pengisiAcara: [],
+      informasiPeserta: { dressCode: "", ketentuan: "", petunjukLokasi: "" },
+      kontak: { nama: "", telepon: "", email: "" },
       sambutan: "",
       penutup: "",
       pesanWa: "",
       pesanPengingat: "",
-      amplop: [],
-      cerita: [],
-      ucapan: { tampil: true, tahan: false },
+      ucapan: { tampil: false, tahan: false },
       hitungMundur: { aktif: true, detik: true },
       musik: { aktif: false },
       checkin: { aktif: true },
@@ -208,8 +200,7 @@ describe("deleteInvitation", () => {
       phone: "+6281200000001",
       groupName: "Keluarga",
       eventIds: events.map((e) => e.id),
-      maxAdults: 2,
-      maxChildren: 0,
+      maxAttendees: 2,
     });
     await addPhoto(db, created.id, { kind: "cover", fileName: "cover.jpg", bytes: jpeg() });
 
@@ -231,8 +222,7 @@ describe("deleteInvitation", () => {
       phone: "+6281200000002",
       groupName: null,
       eventIds: [events[0].id],
-      maxAdults: 2,
-      maxChildren: 0,
+      maxAttendees: 2,
     });
 
     expect(await deleteInvitation(db, owner.invitation.id, intruder.ownerId)).toBe(false);

@@ -11,7 +11,7 @@ import { isWishStatus, type WishStatus } from "@/lib/wishes/shared";
 import { ubahStatusUcapanAction } from "./actions";
 import { TombolHapusUcapan } from "./tombol-hapus";
 
-export const metadata: Metadata = { title: "Pesan dan harapan" };
+export const metadata: Metadata = { title: "Pesan tamu" };
 
 const MAKS_BARIS = 200;
 
@@ -65,15 +65,15 @@ export default async function UcapanPage({ params, searchParams }: PageProps<"/u
     <div className="mx-auto flex max-w-3xl flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className={`m-0 ${judulHalaman}`}>Pesan dan harapan</h1>
+          <h1 className={`m-0 ${judulHalaman}`}>Pesan tamu</h1>
           <p className="mt-1 mb-0 text-sm text-redup">
-            Ucapan yang ditulis tamu di undangan. Anda bisa menyetujui, menyembunyikan, atau
+            Pesan tamu yang ditulis tamu di undangan. Anda bisa menyetujui, menyembunyikan, atau
             menghapusnya.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href={`/undangan/${invitation.id}/isi#ucapan`} className={`${tombolTerang} no-underline`}>
-            Pengaturan ucapan
+            Pengaturan pesan tamu
           </Link>
           {total > 0 ? (
             <TombolUnduh href={`/undangan/${invitation.id}/ucapan/ekspor`} />
@@ -86,19 +86,19 @@ export default async function UcapanPage({ params, searchParams }: PageProps<"/u
           role="status"
           className="rounded-[10px] bg-jingga-bg p-4 text-sm leading-relaxed text-jingga"
         >
-          Ucapan sedang dimatikan, jadi tamu tidak bisa mengirim ucapan baru. Nyalakan lagi di
-          pengaturan ucapan.
+          Pesan tamu sedang dimatikan, jadi tamu tidak bisa mengirim pesan tamu baru. Nyalakan lagi di
+          pengaturan pesan tamu.
         </div>
       ) : pengaturan.tahan ? (
         <div
           role="status"
           className="rounded-[10px] bg-krem p-4 text-sm leading-relaxed text-emas-tua"
         >
-          Ucapan baru ditahan sampai Anda menyetujuinya.
+          Pesan tamu baru ditahan sampai Anda menyetujuinya.
         </div>
       ) : null}
 
-      <nav aria-label="Saring status ucapan" className="flex flex-wrap gap-2">
+      <nav aria-label="Saring status pesan tamu" className="flex flex-wrap gap-2">
         {tabs.map((item) => (
           <Link
             key={item.key}
@@ -119,8 +119,8 @@ export default async function UcapanPage({ params, searchParams }: PageProps<"/u
       {tampil.length === 0 ? (
         <div className={`${kartu} border-dashed p-10 text-center text-sm leading-relaxed text-redup-2`}>
           {total === 0
-            ? "Belum ada ucapan. Ucapan dari tamu akan muncul di sini."
-            : "Tidak ada ucapan dengan status ini."}
+            ? "Belum ada pesan tamu. Pesan tamu dari tamu akan muncul di sini."
+            : "Tidak ada pesan tamu dengan status ini."}
         </div>
       ) : (
         <ul className="m-0 flex list-none flex-col gap-3 p-0">
@@ -159,7 +159,7 @@ export default async function UcapanPage({ params, searchParams }: PageProps<"/u
 
       {daftar.length > MAKS_BARIS ? (
         <p className="m-0 text-[13px] text-redup">
-          Menampilkan {MAKS_BARIS} dari {daftar.length} ucapan. Unduh file untuk melihat semuanya.
+          Menampilkan {MAKS_BARIS} dari {daftar.length} pesan tamu. Unduh file untuk melihat semuanya.
         </p>
       ) : null}
     </div>

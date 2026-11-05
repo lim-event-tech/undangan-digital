@@ -14,8 +14,7 @@ function guest(overrides: Partial<DashboardGuest> & { id: string }): DashboardGu
     invitedEventIds: [],
     status: "belum",
     answers: [],
-    adults: 0,
-    children: 0,
+    attendeeCount: 0,
     respondedAt: null,
     ...overrides,
   };
@@ -27,8 +26,7 @@ const answer = {
   eventId: "e",
   eventName: "Sesi lanjutan",
   attending: true,
-  adults: 1,
-  children: 0,
+  attendeeCount: 1,
   note: "",
   respondedAt: when("2026-11-10T00:00:00Z"),
 };
@@ -94,16 +92,16 @@ describe("buildDaily", () => {
 describe("buildByGroup", () => {
   it("merangkum status per grup dan menaruh tamu tanpa grup di akhir", () => {
     const guests = [
-      guest({ id: "a", groupId: "k", groupName: "Keluarga", status: "hadir", adults: 2, children: 1 }),
+      guest({ id: "a", groupId: "k", groupName: "Keluarga", status: "hadir", attendeeCount: 3,  }),
       guest({ id: "b", groupId: "k", groupName: "Keluarga", status: "tidak" }),
       guest({ id: "c", groupId: "t", groupName: "Teman", status: "belum" }),
-      guest({ id: "d", groupId: "k", groupName: "Keluarga", status: "hadir", adults: 1 }),
+      guest({ id: "d", groupId: "k", groupName: "Keluarga", status: "hadir", attendeeCount: 1 }),
       guest({ id: "e", status: "belum" }),
       guest({ id: "f", status: "belum" }),
     ];
     const rows = buildByGroup(guests);
     expect(rows.map((r) => r.name)).toEqual(["Keluarga", "Teman", "Tanpa grup"]);
-    expect(rows[0]).toMatchObject({ total: 3, hadir: 2, tidak: 1, belum: 0, adults: 3, children: 1 });
+    expect(rows[0]).toMatchObject({ total: 3, hadir: 2, tidak: 1, belum: 0, attendeeCount: 4,  });
     expect(rows[2]).toMatchObject({ groupId: null, total: 2, belum: 2 });
   });
 });

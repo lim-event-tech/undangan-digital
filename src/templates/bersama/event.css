@@ -46,7 +46,6 @@
 .event-pembuka { min-height: 680px; justify-content: center; background: var(--event-lembut); }
 .event-pembuka .event-hiasan { width: 120px; }
 .event-salam { padding-block: 70px; }
-.event-salam blockquote { font: italic 400 27px/1.5 var(--event-serif); color: var(--event-utama); text-wrap: balance; white-space: pre-line; }
 .event-hitung { background: var(--event-utama); color: var(--event-tombol-teks, var(--event-kertas)); }
 .event-hitung :is(.event-label, h2, .event-tanggal, .event-sekunder) { color: inherit; }
 .event-hitung .event-pemisah { background: currentColor; opacity: .5; }
@@ -65,12 +64,6 @@
 .event-tempat strong { font-weight: 500; }
 .event-tempat p + p { margin-top: 5px; }
 .event-aksi { display: flex; align-items: flex-start; gap: 10px; flex-direction: column; }
-.event-cerita, .event-rekening { background: var(--event-lembut); }
-.event-linimasa { text-align: left; width: 100%; padding-left: 18px; }
-.event-linimasa article { position: relative; padding: 0 0 34px 25px; border-left: 1px solid var(--event-garis); }
-.event-linimasa article:last-child { padding-bottom: 0; }
-.event-linimasa article::before { content: ""; position: absolute; left: -4px; top: 6px; width: 7px; height: 7px; background: var(--event-aksen); transform: rotate(45deg); }
-.event-linimasa h3 { font-size: 26px; color: var(--event-utama); margin: 4px 0 12px; }
 .event-lajur { display: flex; align-items: flex-start; width: 100%; gap: 10px; }
 .event-lajur > div { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 10px; }
 .event-foto { display: block; width: 100%; position: relative; border: 0; padding: 0; overflow: hidden; border-radius: var(--event-radius, 3px); color: #324332; }
@@ -110,10 +103,6 @@
 .event-pesan-tamu .event-prosa { font-size: 12px; margin-bottom: 10px; }
 .event-halaman { display: flex; align-items: center; gap: 20px; font-size: 11px; }
 .event-halaman button { width: 42px; height: 42px; border: 1px solid var(--event-garis); background: transparent; color: var(--event-utama); }
-.event-bank { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.event-nomor-rekening { font: 500 25px/1.5 var(--event-serif); color: var(--event-utama); letter-spacing: .025em; }
-.event-bank > p:not([class]) { font-size: 12px; }
-.event-bank .event-tombol { margin-top: 12px; }
 .event-qr { display: flex; flex-direction: column; align-items: center; gap: 12px; font-size: 11px; text-align: center; }
 .event-qr img { background: white; padding: 8px; max-width: 100%; }
 .event-penutup { min-height: 650px; justify-content: center; padding-bottom: 90px; }
@@ -150,3 +139,13 @@ html.js .undangan-template [data-anim].tampil { opacity: 1; transform: none; }
   .event-identitas h1 { margin-block: 8px 12px; }
   .event-identitas .event-pemisah { margin-block: 12px; }
 }
+
+.event-subjudul { max-width: 38ch; margin-inline: auto; font-size: 17px; line-height: 1.6; overflow-wrap: anywhere; }
+.event-logo { display: block; width: auto; height: auto; max-width: 100%; max-height: 110px; margin: 18px auto; object-fit: contain; }
+.event-rundown { display: grid; gap: 0; margin: 20px 0 0; padding: 0; list-style: none; }
+.event-rundown li { display: grid; grid-template-columns: minmax(76px, 100px) minmax(0, 1fr); gap: 16px; padding-block: 18px; border-top: 1px solid var(--event-garis); text-align: left; }
+.event-rundown time { font-size: 13px; line-height: 1.6; }
+.event-rundown h4 { margin: 0 0 8px; font-size: 19px; overflow-wrap: anywhere; }
+.event-agenda-sesi + .event-agenda-sesi { margin-top: 40px; }
+.event-organisasi h3 { overflow-wrap: anywhere; }
+@media (max-width: 300px) { .event-rundown li { grid-template-columns: minmax(0, 1fr); gap: 8px; } }

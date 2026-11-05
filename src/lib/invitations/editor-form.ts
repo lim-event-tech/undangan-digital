@@ -1,6 +1,6 @@
 import { dateFromDeadline } from "@/lib/datetime";
 import { multiLine, singleLine } from "@/lib/form-text";
-import { parseRsvpDeadline } from "@/lib/rsvp/shared";
+import { parseRsvpDeadline, RSVP_MAX_ATTENDEES } from "@/lib/rsvp/shared";
 import type { FieldErrors } from "@/lib/save-result";
 import { CONTENT_LIMITS } from "./content";
 import { parseInvitationTitle } from "./title";
@@ -18,14 +18,12 @@ export function parseTitleForm(formData: FormData): Parsed<{ title: string }> {
 
 export function parseSambutanForm(
   formData: FormData,
-): Parsed<{ kutipan: string; sambutan: string }> {
+): Parsed<{ sambutan: string }> {
   const errors: FieldErrors = {};
-  const kutipan = multiLine(formData, "kutipan");
   const sambutan = multiLine(formData, "sambutan");
-  tooLong(errors, "kutipan", kutipan, CONTENT_LIMITS.kutipan, "Kutipan");
   tooLong(errors, "sambutan", sambutan, CONTENT_LIMITS.sambutan, "Teks sambutan");
   if (Object.keys(errors).length > 0) return { ok: false, errors };
-  return { ok: true, input: { kutipan, sambutan } };
+  return { ok: true, input: { sambutan } };
 }
 
 export function parsePenutupForm(formData: FormData): Parsed<{ penutup: string }> {
@@ -36,8 +34,7 @@ export function parsePenutupForm(formData: FormData): Parsed<{ penutup: string }
   return { ok: true, input: { penutup } };
 }
 
-export const RSVP_MAX_ADULTS = 20;
-export const RSVP_MAX_CHILDREN = 20;
+export { RSVP_MAX_ATTENDEES } from "@/lib/rsvp/shared";
 
 function parseCount(
   value: string,
@@ -51,7 +48,7 @@ function parseCount(
   return { value: n };
 }
 
-export type RsvpInput = { deadline: Date | null; maxAdults: number; maxChildren: number };
+export type RsvpInput = { deadline: Date | null; maxAttendees: number };
 
 export function parseRsvpForm(
   formData: FormData,
@@ -68,16 +65,12 @@ export function parseRsvpForm(
     errors.batas = parsedDeadline.error;
   }
 
-  const adults = parseCount(singleLine(formData, "maksDewasa"), "Maks. dewasa", 1, RSVP_MAX_ADULTS);
-  if ("error" in adults) errors.maksDewasa = adults.error;
-  const children = parseCount(singleLine(formData, "maksAnak"), "Maks. anak", 0, RSVP_MAX_CHILDREN);
-  if ("error" in children) errors.maksAnak = children.error;
+  const attendees = parseCount(singleLine(formData, "maksPeserta"), "Maks. peserta", 1, RSVP_MAX_ATTENDEES);
+  if ("error" in attendees) errors.maksPeserta = attendees.error;
+  if (Object.keys(errors).length > 0 || "error" in attendees) return { ok: false, errors };
 
-  if (Object.keys(errors).length > 0 || "error" in adults || "error" in children) {
-    return { ok: false, errors };
-  }
   return {
     ok: true,
-    input: { deadline, maxAdults: adults.value, maxChildren: children.value },
+    input: { deadline, maxAttendees: attendees.value },
   };
 }

@@ -141,7 +141,7 @@ export default async function DetailUndanganAdminPage({ params }: PageProps<"/ad
                           <td className="px-3 py-2">{g.groupName ?? "—"}</td>
                           <td className="px-3 py-2">{STATUS_TAMU[g.status]}</td>
                           <td className="px-3 py-2 text-center lining-nums">
-                            {g.status === "hadir" ? `${g.adults} + ${g.children}` : "—"}
+                            {g.status === "hadir" ? `${g.attendeeCount}` : "—"}
                           </td>
                           <td className="px-3 py-2 whitespace-nowrap text-[13px] text-redup-2">
                             {g.sentAt ? formatStamp(g.sentAt) : "—"}
@@ -217,7 +217,7 @@ export default async function DetailUndanganAdminPage({ params }: PageProps<"/ad
                 Kelola isi undangan
               </h2>
               <p className="m-0 text-sm leading-relaxed text-redup-2">
-                Buka undangan ini seperti pengguna: isi, tamu, RSVP, ucapan, foto, musik, dan pengiriman. Setiap sesi
+                Buka undangan ini seperti pengguna: isi, tamu, RSVP, pesan tamu, foto, musik, dan pengiriman. Setiap sesi
                 kelola tercatat di log audit.
               </p>
               <form action={mulaiKelolaAction}>
@@ -265,7 +265,7 @@ export default async function DetailUndanganAdminPage({ params }: PageProps<"/ad
               {bolehHapus ? (
                 <div className="flex flex-col gap-2 border-t border-garis-halus pt-4">
                   <p className="m-0 text-sm leading-relaxed text-redup-2">
-                    Menghapus undangan, {detail.guests} tamu, RSVP, ucapan, dan foto. Tidak bisa dibatalkan.
+                    Menghapus undangan, {detail.guests} tamu, RSVP, pesan tamu, dan foto. Tidak bisa dibatalkan.
                   </p>
                   <FormHapus id={detail.id} slug={detail.slug} />
                 </div>

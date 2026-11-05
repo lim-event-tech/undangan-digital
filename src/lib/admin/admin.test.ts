@@ -41,8 +41,7 @@ async function addGuest(invitationId: string, name: string, phone: string) {
     phone,
     groupName: null,
     eventIds: events.map((e) => e.id),
-    maxAdults: 2,
-    maxChildren: 0,
+    maxAttendees: 2,
   });
 }
 
@@ -50,7 +49,7 @@ async function answer(invitationSlug: string, token: string, now?: Date) {
   return submitRsvp(db, {
     slug: invitationSlug,
     token,
-    read: () => ({ attending: "ya", adults: "2", children: "0", note: "" }),
+    read: () => ({ attending: "ya", attendeeCount: "2",  note: "" }),
     now,
   });
 }
@@ -285,8 +284,7 @@ describe("daftar undangan admin", () => {
           phone: `+62816000${index}00${i}0`,
           groupName: null,
           eventIds: [events[0].id],
-          maxAdults: 2,
-          maxChildren: 0,
+          maxAttendees: 2,
         });
       }
     }
@@ -434,8 +432,7 @@ describe("statistik platform", () => {
       phone: "+6281800000001",
       groupName: null,
       eventIds: [events[0].id],
-      maxAdults: 2,
-      maxChildren: 0,
+      maxAttendees: 2,
     });
     await markSent(fresh, a.invitation.id, guest.id);
     await fresh
@@ -445,7 +442,7 @@ describe("statistik platform", () => {
     await submitRsvp(fresh, {
       slug: a.invitation.slug,
       token: guest.token,
-      read: () => ({ attending: "ya", adults: "1", children: "0", note: "" }),
+      read: () => ({ attending: "ya", attendeeCount: "1",  note: "" }),
       now: new Date("2026-11-15T01:00:00.000Z"),
     });
 

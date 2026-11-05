@@ -24,8 +24,7 @@ export type GuestPage = {
   guest: {
     id: string;
     name: string;
-    maxAdults: number;
-    maxChildren: number;
+    maxAttendees: number;
     firstOpenedAt: Date | null;
   };
   events: GuestEvent[];
@@ -35,8 +34,7 @@ export type GuestPage = {
 const GUEST_COLUMNS = {
   guestId: guest.id,
   guestName: guest.name,
-  maxAdults: guest.maxAdults,
-  maxChildren: guest.maxChildren,
+  maxAttendees: guest.maxAttendees,
   firstOpenedAt: guest.firstOpenedAt,
   invitationId: invitation.id,
   slug: invitation.slug,
@@ -92,8 +90,7 @@ export async function findGuestPage(
     guest: {
       id: row.guestId,
       name: row.guestName,
-      maxAdults: row.maxAdults,
-      maxChildren: row.maxChildren,
+      maxAttendees: row.maxAttendees,
       firstOpenedAt: row.firstOpenedAt,
     },
     events: eventRows.map(({ ev }) => {
@@ -103,8 +100,7 @@ export async function findGuestPage(
         response: response
           ? {
               attending: response.attending,
-              adults: response.adults,
-              children: response.children,
+              attendeeCount: response.attendeeCount,
               note: response.note ?? "",
             }
           : null,
@@ -116,16 +112,14 @@ export async function findGuestPage(
 
 export type RawAnswer = {
   attending: string | null;
-  adults: string;
-  children: string;
+  attendeeCount: string;
   note: string;
 };
 
 type Answer = {
   eventId: string;
   attending: boolean;
-  adults: number;
-  children: number;
+  attendeeCount: number;
   note: string | null;
 };
 
@@ -143,36 +137,17 @@ function parseCount(value: string): number | null {
 function validateAnswer(
   eventId: string,
   raw: RawAnswer,
-  limits: { maxAdults: number; maxChildren: number },
+  limits: { maxAttendees: number },
 ): { answer: Answer } | { error: string } {
   const note = raw.note.replace(/\r\n?/g, "\n").trim();
-  if (note.length > RSVP_NOTE_MAX) {
-    return { error: `Pesan maksimal ${RSVP_NOTE_MAX} karakter.` };
-  }
-
-  if (raw.attending === "tidak") {
-    return {
-      answer: { eventId, attending: false, adults: 0, children: 0, note: note || null },
-    };
-  }
+  if (note.length > RSVP_NOTE_MAX) return { error: `Pesan maksimal ${RSVP_NOTE_MAX} karakter.` };
+  if (raw.attending === "tidak") return { answer: { eventId, attending: false, attendeeCount: 0, note: note || null } };
   if (raw.attending !== "ya") return { error: "Pilih hadir atau tidak hadir." };
-
-  const adults = parseCount(raw.adults);
-  if (adults === null || adults < 1 || adults > limits.maxAdults) {
-    return { error: `Jumlah dewasa harus 1 sampai ${limits.maxAdults}.` };
+  const attendeeCount = parseCount(raw.attendeeCount);
+  if (attendeeCount === null || attendeeCount < 1 || attendeeCount > limits.maxAttendees) {
+    return { error: `Jumlah peserta harus 1 sampai ${limits.maxAttendees}.` };
   }
-  const children = parseCount(raw.children);
-  if (children === null || children > limits.maxChildren) {
-    return {
-      error:
-        limits.maxChildren === 0
-          ? "Undangan ini tidak mencakup anak."
-          : `Jumlah anak maksimal ${limits.maxChildren}.`,
-    };
-  }
-  return {
-    answer: { eventId, attending: true, adults, children, note: note || null },
-  };
+  return { answer: { eventId, attending: true, attendeeCount, note: note || null } };
 }
 
 export async function submitRsvp(
@@ -200,8 +175,7 @@ export async function submitRsvp(
   const errors: Record<string, string> = {};
   for (const { id } of invited) {
     const result = validateAnswer(id, input.read(id), {
-      maxAdults: row.maxAdults,
-      maxChildren: row.maxChildren,
+      maxAttendees: row.maxAttendees,
     });
     if ("error" in result) errors[id] = result.error;
     else answers.push(result.answer);
@@ -216,8 +190,7 @@ export async function submitRsvp(
           guestId: row.guestId,
           eventId: answer.eventId,
           attending: answer.attending,
-          adults: answer.adults,
-          children: answer.children,
+          attendeeCount: answer.attendeeCount,
           note: answer.note,
           respondedAt: now,
         })
@@ -225,8 +198,7 @@ export async function submitRsvp(
           target: [rsvp.guestId, rsvp.eventId],
           set: {
             attending: answer.attending,
-            adults: answer.adults,
-            children: answer.children,
+            attendeeCount: answer.attendeeCount,
             note: answer.note,
             respondedAt: now,
             updatedAt: now,

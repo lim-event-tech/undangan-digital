@@ -37,8 +37,7 @@ async function seedJob(name: string, phone: string, existing?: { id: string }) {
     phone,
     groupName: null,
     eventIds: [events[0].id],
-    maxAdults: 2,
-    maxChildren: 0,
+    maxAttendees: 2,
   });
   await enqueueJobs(db, invitation.id, "undangan", [
     { guestId: g.id, phone: g.phone, message: `Halo ${name}` },

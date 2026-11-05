@@ -76,10 +76,3 @@ export function waktuRelatif(waktu: Date, sekarang: Date): string {
   const lokal = new Date(waktu.getTime() + 7 * 60 * 60 * 1000);
   return formatDate(lokal.toISOString().slice(0, 10));
 }
-
-export function kutipanBerpetik(teks: string): string {
-  const bersih = teks.trim();
-  if (!bersih) return "";
-  if (/^["“'‘]/.test(bersih)) return bersih;
-  return `“${bersih}”`;
-}

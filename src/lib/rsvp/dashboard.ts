@@ -25,8 +25,7 @@ export type DashboardAnswer = {
   eventId: string;
   eventName: string;
   attending: boolean;
-  adults: number;
-  children: number;
+  attendeeCount: number;
   note: string;
   respondedAt: Date;
 };
@@ -43,8 +42,7 @@ export type DashboardGuest = {
   invitedEventIds: string[];
   status: GuestStatus;
   answers: DashboardAnswer[];
-  adults: number;
-  children: number;
+  attendeeCount: number;
   respondedAt: Date | null;
 };
 
@@ -55,8 +53,7 @@ export type EventSummary = {
   attending: number;
   notAttending: number;
   pending: number;
-  adults: number;
-  children: number;
+  attendeeCount: number;
 };
 
 export type DashboardTotals = {
@@ -64,8 +61,7 @@ export type DashboardTotals = {
   attending: number;
   notAttending: number;
   pending: number;
-  adults: number;
-  children: number;
+  attendeeCount: number;
 };
 
 export type DashboardFilters = {
@@ -104,8 +100,7 @@ export type RawResponse = {
   guestId: string;
   eventId: string;
   attending: boolean;
-  adults: number;
-  children: number;
+  attendeeCount: number;
   note: string | null;
   respondedAt: Date;
 };
@@ -143,8 +138,7 @@ export function buildDashboard(
       eventId: r.eventId,
       eventName: eventName.get(r.eventId) ?? "",
       attending: r.attending,
-      adults: r.adults,
-      children: r.children,
+      attendeeCount: r.attendeeCount,
       note: r.note ?? "",
       respondedAt: r.respondedAt,
     });
@@ -161,8 +155,7 @@ export function buildDashboard(
         attending: 0,
         notAttending: 0,
         pending: 0,
-        adults: 0,
-        children: 0,
+        attendeeCount: 0,
       },
     ]),
   );
@@ -171,8 +164,7 @@ export function buildDashboard(
     attending: 0,
     notAttending: 0,
     pending: 0,
-    adults: 0,
-    children: 0,
+    attendeeCount: 0,
   };
 
   const built: DashboardGuest[] = guests.map((g) => {
@@ -190,18 +182,15 @@ export function buildDashboard(
       if (!answer) summary.pending += 1;
       else if (answer.attending) {
         summary.attending += 1;
-        summary.adults += answer.adults;
-        summary.children += answer.children;
+        summary.attendeeCount += answer.attendeeCount;
       } else summary.notAttending += 1;
     }
 
     const status = statusOf(invited, answers);
-    const adults = attendingAnswers.reduce((max, a) => Math.max(max, a.adults), 0);
-    const children = attendingAnswers.reduce((max, a) => Math.max(max, a.children), 0);
+    const attendeeCount = attendingAnswers.reduce((max, a) => Math.max(max, a.attendeeCount), 0);
     if (status === "hadir") {
       totals.attending += 1;
-      totals.adults += adults;
-      totals.children += children;
+      totals.attendeeCount += attendeeCount;
     } else if (status === "tidak") totals.notAttending += 1;
     else totals.pending += 1;
 
@@ -221,8 +210,7 @@ export function buildDashboard(
       invitedEventIds: invited,
       status,
       answers,
-      adults,
-      children,
+      attendeeCount,
       respondedAt,
     };
   });
@@ -288,8 +276,7 @@ export async function getDashboard(
         guestId: rsvp.guestId,
         eventId: rsvp.eventId,
         attending: rsvp.attending,
-        adults: rsvp.adults,
-        children: rsvp.children,
+        attendeeCount: rsvp.attendeeCount,
         note: rsvp.note,
         respondedAt: rsvp.respondedAt,
       })

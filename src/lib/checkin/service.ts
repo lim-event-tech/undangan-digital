@@ -69,16 +69,14 @@ export async function findInvitationByKey(
 }
 
 const ATTENDING = sql<boolean>`coalesce((select bool_or(rsvp.attending) from rsvp where rsvp.guest_id = ${guest.id}), false)`;
-const ADULTS = sql<number>`coalesce((select max(rsvp.adults) from rsvp where rsvp.guest_id = ${guest.id} and rsvp.attending), 0)::int`;
-const CHILDREN = sql<number>`coalesce((select max(rsvp.children) from rsvp where rsvp.guest_id = ${guest.id} and rsvp.attending), 0)::int`;
+const ATTENDEES = sql<number>`coalesce((select max(rsvp.attendee_count) from rsvp where rsvp.guest_id = ${guest.id} and rsvp.attending), 0)::int`;
 
 export type CheckinGuest = {
   id: string;
   name: string;
   groupName: string | null;
   attending: boolean;
-  adults: number;
-  children: number;
+  attendeeCount: number;
   checkedInAt: Date | null;
 };
 
@@ -99,8 +97,7 @@ async function loadGuest(
       name: guest.name,
       groupName: guestGroup.name,
       attending: ATTENDING,
-      adults: ADULTS,
-      children: CHILDREN,
+      attendeeCount: ATTENDEES,
       checkedInAt: guest.checkedInAt,
     })
     .from(guest)
@@ -189,8 +186,7 @@ export async function listCheckinGuests(
       name: guest.name,
       groupName: guestGroup.name,
       attending: ATTENDING,
-      adults: ADULTS,
-      children: CHILDREN,
+      attendeeCount: ATTENDEES,
       checkedInAt: guest.checkedInAt,
       token: guest.token,
     })
@@ -213,7 +209,7 @@ export async function checkinCounts(db: AppDb, invitationId: string): Promise<Ch
     .select({
       confirmed: sql<number>`(count(*) filter (where ${ATTENDING}))::int`,
       inside: sql<number>`(count(*) filter (where ${guest.checkedInAt} is not null))::int`,
-      insidePeople: sql<number>`coalesce(sum(case when ${guest.checkedInAt} is not null then greatest(${ADULTS} + ${CHILDREN}, 1) else 0 end), 0)::int`,
+      insidePeople: sql<number>`coalesce(sum(case when ${guest.checkedInAt} is not null then greatest(${ATTENDEES}, 1) else 0 end), 0)::int`,
       other: sql<number>`(count(*) filter (where ${guest.checkedInAt} is not null and not ${ATTENDING}))::int`,
     })
     .from(guest)

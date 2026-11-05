@@ -161,6 +161,13 @@ const actions = [editorActions, guestActions, importActions, sendingActions, che
   .flatMap((module) => Object.entries(module).filter(([, value]) => typeof value === "function"));
 
 describe("batas akses seluruh action pengelolaan", () => {
+  it("menyimpan bagian formal pada target eksplisit dan menolak target akun lain", async () => {
+    const payload = form({ nama: "PIC undangan A", email: "panitia@example.com" });
+    expect(await editorActions.simpanFormalAction("kontak", first.id, payload)).toEqual({ ok: true });
+    expect((await getOwnedInvitation(mocks.db, ownerId, first.id))?.content.kontak).toMatchObject({ nama: "PIC undangan A" });
+    expect((await getOwnedInvitation(mocks.db, ownerId, second.id))?.content.kontak).toBeUndefined();
+    await expect(editorActions.simpanFormalAction("kontak", other.id, payload)).rejects.toThrow("not-found");
+  });
   it.each(actions)("%s menolak ID asing dan ID hilang sebelum memproses payload", async (_name, action) => {
     for (const id of [other.id, undefined]) {
       await expect(Reflect.apply(action, undefined, [id, new FormData(), new FormData()])).rejects.toThrow("not-found");
@@ -208,10 +215,10 @@ describe("batas akses seluruh action pengelolaan", () => {
   it("mengimpor tamu dan mengekspor hanya undangan yang diminta", async () => {
     const a = await createInvitation(mocks.db, ownerId, { title: "Impor A" });
     const b = await createInvitation(mocks.db, ownerId, { title: "Impor B" });
-    const row = { row: 2, nama: "Tamu Impor A", whatsapp: "081234567890", grup: "", acara: "", maks_dewasa: "1", maks_anak: "0" };
+    const row = { row: 2, nama: "Tamu Impor A", whatsapp: "081234567890", grup: "", acara: "", maks_peserta: "1",  };
     expect(await importActions.commitImportAction(a.id, [row], false)).toMatchObject({ ok: true, imported: 1 });
     const [event] = await listEventDetails(mocks.db, b.id);
-    await createGuest(mocks.db, b.id, { name: "Tamu Rahasia B", phone: "+6281234567890", eventIds: [event.id], groupName: null, maxAdults: 1, maxChildren: 0 });
+    await createGuest(mocks.db, b.id, { name: "Tamu Rahasia B", phone: "+6281234567890", eventIds: [event.id], groupName: null, maxAttendees: 1,  });
     const response = await exportRsvp(new Request(`http://localhost/undangan/${a.id}/ringkasan/ekspor?format=csv`), { params: Promise.resolve({ id: a.id }) });
     const csv = await response.text();
     expect(csv).toContain("Tamu Impor A");
@@ -249,7 +256,7 @@ describe("unggah, WhatsApp dan check-in dengan ID eksplisit", () => {
     const guests = [];
     for (const target of [a, b]) {
       const [event] = await listEventDetails(mocks.db, target.id);
-      guests.push(await createGuest(mocks.db, target.id, { name: `Tamu ${target.title}`, phone: "+6281234567890", eventIds: [event.id], groupName: null, maxAdults: 1, maxChildren: 0 }));
+      guests.push(await createGuest(mocks.db, target.id, { name: `Tamu ${target.title}`, phone: "+6281234567890", eventIds: [event.id], groupName: null, maxAttendees: 1,  }));
       await mocks.db.update(invitationTable).set({ status: "terbit" }).where(eq(invitationTable.id, target.id));
       await checkinActions.gantiKunciAction(target.id);
     }

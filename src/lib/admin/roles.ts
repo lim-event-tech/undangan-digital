@@ -28,7 +28,7 @@ export const PERMISSION_INFO: Record<Permission, { label: string; ket: string }>
   },
   "kelola-undangan": {
     label: "Mengelola seluruh isi undangan",
-    ket: "Membuka undangan sebagai pengguna: isi, tamu, RSVP, ucapan, foto, musik, dan pengiriman.",
+    ket: "Membuka undangan sebagai pengguna: isi, tamu, RSVP, pesan tamu, foto, musik, dan pengiriman.",
   },
   "ubah-undangan": {
     label: "Mengubah slug dan batas RSVP",

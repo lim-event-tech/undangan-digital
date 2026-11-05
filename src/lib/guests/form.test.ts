@@ -14,11 +14,16 @@ const valid = {
   whatsapp: "0812 0000 0102",
   grup: "Keluarga pria",
   acara: ["e1", "e2"],
-  maksDewasa: "2",
-  maksAnak: "1",
+  maksPeserta: "3",
 };
 
 describe("parseGuestForm", () => {
+  it.each(["1", "40"])("menerima batas peserta %s", (maksPeserta) => {
+    expect(parseGuestForm(formData({ ...valid, maksPeserta })).ok).toBe(true);
+  });
+  it.each(["0", "41", "1.5", "-1", "dua"])("menolak batas peserta %s", (maksPeserta) => {
+    expect(parseGuestForm(formData({ ...valid, maksPeserta }))).toMatchObject({ ok: false, errors: { maksPeserta: expect.any(String) } });
+  });
   it("menormalkan isian yang valid", () => {
     const result = parseGuestForm(formData(valid));
     expect(result.ok).toBe(true);
@@ -28,8 +33,7 @@ describe("parseGuestForm", () => {
       phone: "+6281200000102",
       groupName: "Keluarga pria",
       eventIds: ["e1", "e2"],
-      maxAdults: 2,
-      maxChildren: 1,
+      maxAttendees: 3,
     });
   });
 
@@ -52,8 +56,7 @@ describe("parseGuestForm", () => {
         whatsapp: "12",
         grup: NEW_GROUP_VALUE,
         grupBaru: "",
-        maksDewasa: "0",
-        maksAnak: "-1",
+        maksPeserta: "0",
       }),
     );
     expect(result.ok).toBe(false);
@@ -63,8 +66,7 @@ describe("parseGuestForm", () => {
       whatsapp: "Format nomor tidak dikenali",
       grup: "Isi nama grup baru",
       acara: "Pilih minimal satu acara",
-      maksDewasa: "Maks. dewasa harus 1 sampai 20",
-      maksAnak: "Maks. anak harus berupa angka 0 sampai 20",
+      maksPeserta: "Maks. peserta harus 1 sampai 40",
     });
     expect(result.values.whatsapp).toBe("12");
   });

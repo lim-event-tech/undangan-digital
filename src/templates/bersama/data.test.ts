@@ -14,23 +14,23 @@ describe("siapkanData", () => {
   it("memformat tanggal, nama, dan acara untuk template", () => {
     const data = siapkanData(tamu());
     expect(data).toMatchObject({
-      judul: "Gathering Komunitas",
-      tglTitik: "12 . 12 . 2026",
-      tglTitikTengah: "12 · 12 · 2026",
-      tglPanjang: "Sabtu, 12 Desember 2026",
-      tglBesar: "SABTU, 12 DESEMBER 2026",
-      tglKata: "Sabtu, dua belas Desember 2026",
-      tglKota: "12 Desember 2026, Bandung",
-      batasRsvp: "5 Desember 2026",
+      judul: "Seminar Kepemimpinan Organisasi",
+      tglTitik: "20 . 02 . 2027",
+      tglTitikTengah: "20 · 02 · 2027",
+      tglPanjang: "Sabtu, 20 Februari 2027",
+      tglBesar: "SABTU, 20 FEBRUARI 2027",
+      tglKata: "Sabtu, dua puluh Februari 2027",
+      tglKota: "20 Februari 2027, Bandung",
+      batasRsvp: "15 Februari 2027",
     });
     expect(data.acara[0]).toMatchObject({
-      nama: "Acara utama",
-      tgl: "Sabtu, 12 Desember 2026",
-      jam: "08.00 WIB",
+      nama: "Sesi utama",
+      tgl: "Sabtu, 20 Februari 2027",
+      jam: "09:00–11:00 WIB",
       tempat: "Aula Graha Puspa",
     });
     expect(data.acara[0].kalender).toMatch(/^https:\/\/calendar\.google\.com\//);
-    expect(data.hitung).toEqual({ target: Date.parse("2026-12-12T01:00:00Z"), detik: true });
+    expect(data.hitung).toEqual({ target: Date.parse("2027-02-20T02:00:00Z"), detik: true });
   });
 
   it("memberi tautan kalender dan QR hanya untuk tamu sungguhan", () => {
@@ -53,17 +53,15 @@ describe("siapkanData", () => {
     const view = tamu();
     const content = readContent({
       ...view.content,
-      kutipan: "",
       sambutan: "",
-      cerita: [],
-      amplop: [{ bank: "BCA", nomor: "  ", atasNama: "Raka" }],
+      identitas: {}, penyelenggara: {}, pengisiAcara: [], informasiPeserta: {}, kontak: {},
       hitungMundur: { aktif: false, detik: true },
       susunan: { urutan: ["rsvp", "acara", "pembuka"], sembunyi: ["pembuka"] },
     });
-    const data = siapkanData({ ...view, content });
+    const data = siapkanData({ ...view, content, events: view.events.map((e) => ({ ...e, agenda: [] })) });
     expect(data.urutan).toEqual(["sampul", "rsvp", "ucapan", "acara", "penutup"]);
     expect(data.hitung).toBeNull();
-    expect(data.rekening).toEqual([]);
+    expect(data).not.toHaveProperty("rekening");
   });
 
   it("menyusun galeri menurut ukuran asli foto dan petak contoh hanya di mode contoh", () => {
@@ -91,9 +89,9 @@ describe("siapkanData", () => {
 
   it("mengambil jawaban RSVP tamu dan memakai teks penutup bawaan", () => {
     const view = tamu();
-    view.events[0] = { ...view.events[0], response: { attending: true, adults: 2, children: 1, note: "Halo" } };
+    view.events[0] = { ...view.events[0], response: { attending: true, attendeeCount: 3,  note: "Halo" } };
     const data = siapkanData(view);
-    expect(data.jawaban).toEqual({ "contoh-utama": { hadir: true, dewasa: 2, anak: 1, pesan: "Halo" } });
-    expect(data.penutup).toMatch(/^Merupakan kehormatan/);
+    expect(data.jawaban).toEqual({ "contoh-utama": { hadir: true, peserta: 3, pesan: "Halo" } });
+    expect(siapkanData({ ...view, content: readContent({ ...view.content, penutup: "" }) }).penutup).toMatch(/^Merupakan kehormatan/);
   });
 });

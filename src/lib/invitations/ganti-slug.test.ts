@@ -26,8 +26,7 @@ async function addGuest(invitationId: string) {
     phone: "+6281300000001",
     groupName: null,
     eventIds: [events[0].id],
-    maxAdults: 2,
-    maxChildren: 0,
+    maxAttendees: 2,
   });
 }
 

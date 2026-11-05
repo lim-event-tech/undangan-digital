@@ -1,5 +1,7 @@
 import { deadlineFromDate, isDateString, todayWib } from "@/lib/datetime";
 
+export const RSVP_MAX_ATTENDEES = 40;
+
 export const RSVP_NOTE_MAX = 300;
 
 export function parseRsvpDeadline(
@@ -20,7 +22,6 @@ export function isRsvpClosed(deadline: Date | null, now: Date = new Date()): boo
 
 export type RsvpResponse = {
   attending: boolean;
-  adults: number;
-  children: number;
+  attendeeCount: number;
   note: string;
 };

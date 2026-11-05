@@ -26,8 +26,7 @@ describe("createInvitation", () => {
     expect(created.slug).toBe("seminar-kreatif");
     expect(created.status).toBe("draf");
     expect(created.templateKey).toBe("melati");
-    expect(created.defaultMaxAdults).toBe(2);
-    expect(created.defaultMaxChildren).toBe(0);
+    expect(created.defaultMaxAttendees).toBe(1);
 
     const events = await db
       .select({ key: event.key, name: event.name, sortOrder: event.sortOrder })

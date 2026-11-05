@@ -7,7 +7,9 @@ it("migrasi event umum menghapus profil dan foto mempelai sambil mempertahankan 
   const client = new PGlite();
   try {
     const migrations = readMigrationFiles({ migrationsFolder: path.resolve("drizzle") });
-    for (const migration of migrations.slice(0, -1)) await client.exec(migration.sql.join("\n"));
+    const target = migrations.findIndex((migration) => migration.folderMillis === 1793808336740);
+    expect(target).toBeGreaterThan(-1);
+    for (const migration of migrations.slice(0, target)) await client.exec(migration.sql.join("\n"));
     const id = "11111111-1111-4111-8111-111111111111";
     await client.query('INSERT INTO "user" (id, name, email) VALUES ($1, $2, $3)', ["migration-owner", "Pengguna", "migration@example.com"]);
     await client.query('INSERT INTO invitation (id, owner_id, slug, groom_name, bride_name, content) VALUES ($1, $2, $3, $4, $5, $6)', [
@@ -24,7 +26,7 @@ it("migrasi event umum menghapus profil dan foto mempelai sambil mempertahankan 
       await client.query("INSERT INTO photo (invitation_id, kind, file_name, content_type, size_bytes, data) VALUES ($1, $2, $3, 'image/jpeg', 3, decode('ffd8ff', 'hex'))", [id, kind, `${kind}.jpg`]);
     }
     await client.query("INSERT INTO platform_setting (key, value) VALUES ('pesanWaBawaan', $1)", [JSON.stringify("Pernikahan {mempelai}: {link}")]);
-    await client.exec(migrations.at(-1)!.sql.join("\n"));
+    await client.exec(migrations[target].sql.join("\n"));
 
     const stored = await client.query<{ title: string; slug: string; content: Record<string, unknown> }>("SELECT title, slug, content FROM invitation WHERE id = $1", [id]);
     expect(stored.rows[0]).toMatchObject({ title: "Event 11111111", slug: "undangan-uji", content: { sambutan: "Sambutan yang dipertahankan", checkin: { aktif: false }, pesanWa: "Undangan acara {event}: {link}" } });

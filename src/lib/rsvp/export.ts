@@ -21,15 +21,15 @@ function stamp(value: Date | null): string {
   return value ? formatStamp(value) : "";
 }
 
-type Answer = { label: string; adults: number | string; children: number | string; note: string };
+type Answer = { label: string; attendeeCount: number | string; note: string };
 
 function eventAnswer(guest: DashboardGuest, eventId: string): Answer {
-  if (!guest.invitedEventIds.includes(eventId)) return { label: "Tidak diundang", adults: "", children: "", note: "" };
+  if (!guest.invitedEventIds.includes(eventId)) return { label: "Tidak diundang", attendeeCount: "", note: "" };
   const answer = guest.answers.find((a) => a.eventId === eventId);
-  if (!answer) return { label: "Belum menjawab", adults: "", children: "", note: "" };
+  if (!answer) return { label: "Belum menjawab", attendeeCount: "", note: "" };
   return answer.attending
-    ? { label: "Hadir", adults: answer.adults, children: answer.children, note: answer.note }
-    : { label: "Tidak hadir", adults: "", children: "", note: answer.note };
+    ? { label: "Hadir", attendeeCount: answer.attendeeCount, note: answer.note }
+    : { label: "Tidak hadir", attendeeCount: "", note: answer.note };
 }
 
 export function buildRsvpRows(events: DashboardEvent[], guests: DashboardGuest[]): Rows {
@@ -38,16 +38,14 @@ export function buildRsvpRows(events: DashboardEvent[], guests: DashboardGuest[]
     "Grup",
     "Nomor WhatsApp",
     "Status",
-    "Dewasa hadir",
-    "Anak hadir",
+    "Peserta hadir",
     "Terkirim",
     "Diingatkan",
     "Pertama dibuka",
     "Dijawab",
     ...events.flatMap((e) => [
       `${e.name}: jawaban`,
-      `${e.name}: dewasa`,
-      `${e.name}: anak`,
+      `${e.name}: peserta`,
       `${e.name}: pesan`,
     ]),
   ];
@@ -57,15 +55,14 @@ export function buildRsvpRows(events: DashboardEvent[], guests: DashboardGuest[]
     g.groupName ?? "",
     exportPhone(g.phone),
     STATUS_LABEL[g.status],
-    g.status === "hadir" ? g.adults : "",
-    g.status === "hadir" ? g.children : "",
+    g.status === "hadir" ? g.attendeeCount : "",
     stamp(g.sentAt),
     stamp(g.remindedAt),
     stamp(g.openedAt),
     stamp(g.respondedAt),
     ...events.flatMap((e) => {
       const answer = eventAnswer(g, e.id);
-      return [answer.label, answer.adults, answer.children, answer.note];
+      return [answer.label, answer.attendeeCount, answer.note];
     }),
   ]);
 

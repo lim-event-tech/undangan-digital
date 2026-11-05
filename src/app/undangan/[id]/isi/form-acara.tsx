@@ -11,6 +11,7 @@ import { isGoogleMapsUrl } from "@/lib/maps";
 import type { SaveResult } from "@/lib/save-result";
 import { hapusAcaraAction, simpanAcaraAction, tambahAcaraAction } from "./actions";
 import { BidangArea, BidangTeks } from "./bidang";
+import { FormAgenda } from "./form-agenda";
 import { KartuBagian } from "./kartu-bagian";
 import { StatusSimpan, useAutoSave } from "./use-auto-save";
 
@@ -63,13 +64,14 @@ function KartuAcara({ acara, bisaHapus, tanggalMinimal }: { acara: EventDetail; 
         </div>
         <div className="sm:col-span-2">
           <BidangTeks
-            label="Jam"
+            label="Jam mulai"
             name="jam"
             type="time"
             defaultValue={acara.time ?? ""}
             error={errors.jam}
           />
         </div>
+        <div className="sm:col-span-2"><BidangTeks label="Jam selesai" name="jamSelesai" type="time" defaultValue={acara.endTime ?? ""} hint="Opsional, pada tanggal yang sama" error={errors.jamSelesai} /></div>
         <label className={`${labelKolom} sm:col-span-2`}>
           Zona waktu
           <select
@@ -126,6 +128,7 @@ function KartuAcara({ acara, bisaHapus, tanggalMinimal }: { acara: EventDetail; 
             error={mapsGalat}
           />
         </div>
+        <FormAgenda agenda={acara.agenda} errors={errors} changed={() => formProps.onChange()} />
         {formError ? (
           <p role="alert" className={`m-0 sm:col-span-6 ${pesanGalat}`}>
             {formError}
@@ -174,7 +177,7 @@ function TambahAcara({ penuh }: { penuh: boolean }) {
           name="nama"
           required
           maxLength={EVENT_LIMITS.name}
-          placeholder="mis. Ngunduh Mantu"
+          placeholder="mis. Diskusi dan jejaring"
           disabled={penuh}
           error={galat}
           hint={penuh ? `Sudah mencapai ${MAX_EVENTS} acara` : undefined}

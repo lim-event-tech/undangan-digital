@@ -15,8 +15,7 @@ export type GroupRow = {
   hadir: number;
   tidak: number;
   belum: number;
-  adults: number;
-  children: number;
+  attendeeCount: number;
 };
 
 export function buildFunnel(guests: DashboardGuest[]): FunnelStep[] {
@@ -74,16 +73,14 @@ export function buildByGroup(guests: DashboardGuest[]): GroupRow[] {
         hadir: 0,
         tidak: 0,
         belum: 0,
-        adults: 0,
-        children: 0,
+        attendeeCount: 0,
       };
       rows.set(key, row);
     }
     row.total += 1;
     row[g.status] += 1;
     if (g.status === "hadir") {
-      row.adults += g.adults;
-      row.children += g.children;
+      row.attendeeCount += g.attendeeCount;
     }
   }
   return [...rows.values()].sort((a, b) => {

@@ -92,6 +92,20 @@
       "when": 1793808336740,
       "tag": "0012_event_umum",
       "breakpoints": false
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793855687922,
+      "tag": "0013_event_organizer",
+      "breakpoints": false
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793860788845,
+      "tag": "0014_rsvp_peserta",
+      "breakpoints": false
     }
   ]
 }

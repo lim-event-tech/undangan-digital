@@ -11,7 +11,7 @@ export async function GET(request: Request, context: RouteContext<"/undangan/[id
   return tableResponse(
     parseFormat(new URL(request.url).searchParams.get("format")),
     `ucapan-${invitation.slug}-${stamp}`,
-    "Ucapan",
+    "Pesan tamu",
     buildWishRows(wishes),
     { wrap: [1] },
   );

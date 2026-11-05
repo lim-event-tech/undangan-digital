@@ -171,7 +171,7 @@ export default async function CheckinPage({ params, searchParams }: PageProps<"/
                   <span className="truncate font-medium">{g.name}</span>
                   <span className="text-xs text-redup">
                     {g.attending
-                      ? `Hadir · ${g.adults} dewasa${g.children > 0 ? `, ${g.children} anak` : ""}`
+                      ? `Hadir · ${g.attendeeCount} peserta`
                       : "Belum konfirmasi hadir"}
                     {g.groupName ? ` · ${g.groupName}` : ""}
                   </span>

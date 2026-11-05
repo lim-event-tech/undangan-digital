@@ -31,8 +31,7 @@ async function newGuest(invitationId: string, name: string, phone: string) {
     phone,
     groupName: null,
     eventIds: [events[0].id],
-    maxAdults: 2,
-    maxChildren: 0,
+    maxAttendees: 2,
   });
 }
 

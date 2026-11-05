@@ -30,6 +30,7 @@ export async function GET(_request: Request, ctx: RouteContext<"/[slug]/[token]/
       name: e.name,
       date: e.date,
       time: e.time,
+      endTime: e.endTime,
       timezone: e.timezone,
       venueName: e.venueName,
       address: e.address,

@@ -49,7 +49,7 @@ function ringkasJawaban(g: DashboardGuest) {
     key: a.eventId,
     acara: a.eventName,
     teks: a.attending
-      ? `Hadir · ${a.adults} dewasa${a.children > 0 ? `, ${a.children} anak` : ""}`
+      ? `Hadir · ${a.attendeeCount} peserta`
       : "Tidak hadir",
     pesan: a.note,
   }));
@@ -107,8 +107,7 @@ export default async function RingkasanPage({ params, searchParams }: PageProps<
     { label: "Hadir", nilai: totals.attending, kelas: "text-hijau" },
     { label: "Tidak hadir", nilai: totals.notAttending, kelas: "text-galat" },
     { label: "Belum menjawab", nilai: totals.pending },
-    { label: "Dewasa hadir", nilai: totals.adults },
-    { label: "Anak hadir", nilai: totals.children },
+    { label: "Peserta hadir", nilai: totals.attendeeCount },
   ];
 
   return (
@@ -149,7 +148,7 @@ export default async function RingkasanPage({ params, searchParams }: PageProps<
               ))}
             </dl>
             <p className="mt-2 mb-0 text-xs text-redup">
-              Dewasa dan anak dihitung per tamu dengan jumlah terbanyak di antara acara yang
+              Peserta dihitung per tamu dengan jumlah terbanyak di antara sesi yang
               dihadirinya, agar tamu yang datang ke dua acara tidak terhitung dua kali.
             </p>
           </section>
@@ -169,8 +168,7 @@ export default async function RingkasanPage({ params, searchParams }: PageProps<
                     <th scope="col" className="px-3 py-3 text-center font-medium">Hadir</th>
                     <th scope="col" className="px-3 py-3 text-center font-medium">Tidak hadir</th>
                     <th scope="col" className="px-3 py-3 text-center font-medium">Belum</th>
-                    <th scope="col" className="px-3 py-3 text-center font-medium">Dewasa</th>
-                    <th scope="col" className="px-3 py-3 text-center font-medium">Anak</th>
+                    <th scope="col" className="px-3 py-3 text-center font-medium">Peserta</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -181,8 +179,7 @@ export default async function RingkasanPage({ params, searchParams }: PageProps<
                       <td className="px-3 py-3 text-center font-medium text-hijau">{e.attending}</td>
                       <td className="px-3 py-3 text-center font-medium text-galat">{e.notAttending}</td>
                       <td className="px-3 py-3 text-center">{e.pending}</td>
-                      <td className="px-3 py-3 text-center">{e.adults}</td>
-                      <td className="px-3 py-3 text-center">{e.children}</td>
+                      <td className="px-3 py-3 text-center">{e.attendeeCount}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -198,8 +195,7 @@ export default async function RingkasanPage({ params, searchParams }: PageProps<
                       ["Hadir", e.attending],
                       ["Tidak hadir", e.notAttending],
                       ["Belum", e.pending],
-                      ["Dewasa", e.adults],
-                      ["Anak", e.children],
+                      ["Peserta", e.attendeeCount],
                     ].map(([label, nilai]) => (
                       <div key={label} className="flex flex-col">
                         <dt className="text-xs text-redup">{label}</dt>

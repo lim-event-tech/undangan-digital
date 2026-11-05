@@ -1,5 +1,5 @@
 import type { ChangeEvent, CSSProperties, ComponentType, MouseEvent } from "react";
-import type { BagianId } from "@/lib/invitations/content";
+import type { IdentitasEvent, Penyelenggara, PengisiAcara, InformasiPeserta, Kontak, BagianId } from "@/lib/invitations/content";
 
 export type StatusTamu = "hadir" | "tidak" | "belum";
 
@@ -13,9 +13,10 @@ export type AcaraData = {
   alamat: string;
   peta: string | null;
   kalender: string | null;
+  agenda: { id: string; jam: string; judul: string; keterangan: string }[];
 };
 
-export type JawabanData = { hadir: boolean; dewasa: number; anak: number; pesan: string };
+export type JawabanData = { hadir: boolean; peserta: number; pesan: string };
 
 export type UcapanData = {
   id: string;
@@ -32,10 +33,6 @@ export type HalamanUcapan = {
   total: number;
 };
 
-export type RekeningData = { bank: string; nomor: string; atasNama: string };
-
-export type MomenData = { tahun: string; judul: string; teks: string };
-
 export type FotoGaleri = { id: string; src: string; rasio: string; sizes: string };
 
 export type DataUndangan = {
@@ -49,12 +46,19 @@ export type DataUndangan = {
   tglBesar: string;
   tglKata: string;
   tglKota: string;
-  kutipan: string;
+  identitas: IdentitasEvent;
+  penyelenggara: Penyelenggara;
+  pengisiAcara: PengisiAcara[];
+  informasiPeserta: InformasiPeserta;
+  kontak: Kontak;
+  kontakWhatsapp: string | null;
+  kontakEmail: string | null;
+  logoPenyelenggara: { src: string; width: number; height: number } | null;
+  logoEo: { src: string; width: number; height: number } | null;
   sambutan: string;
   penutup: string;
   namaTamu: string;
-  maksDewasa: number;
-  maksAnak: number;
+  maksPeserta: number;
   acara: AcaraData[];
   jawaban: Record<string, JawabanData>;
   rsvpTutup: boolean;
@@ -62,11 +66,8 @@ export type DataUndangan = {
   hitung: { target: number; detik: boolean } | null;
   sekarang: number;
   kalender: string | null;
-  cerita: MomenData[];
   galeri: FotoGaleri[];
   lajurGaleri: number[][];
-  rekening: RekeningData[];
-  qris: string | null;
   ucapan: (HalamanUcapan & { lokal: UcapanData[] | null }) | null;
   musik: string | null;
   urutan: BagianId[];
@@ -84,30 +85,14 @@ export type Palet = {
 };
 
 export type RsvpAcara = AcaraData & {
-  ya: boolean;
-  tidak: boolean;
-  yaBg: string;
-  yaFg: string;
-  yaBd: string;
-  tdBg: string;
-  tdFg: string;
-  tdBd: string;
+  ya: boolean; tidak: boolean;
+  yaBg: string; yaFg: string; yaBd: string;
+  tdBg: string; tdFg: string; tdBd: string;
   tampilJumlah: boolean;
-  showAnak: boolean;
-  maksD: number;
-  maksA: number;
-  dewasa: number;
-  anak: number;
-  dMinOp: string;
-  dMaxOp: string;
-  aMinOp: string;
-  aMaxOp: string;
-  pilihYa: () => void;
-  pilihTidak: () => void;
-  tambahD: () => void;
-  kurangD: () => void;
-  tambahA: () => void;
-  kurangA: () => void;
+  maksPeserta: number;
+  peserta: number;
+  pilihYa: () => void; pilihTidak: () => void;
+  tambah: () => void; kurang: () => void;
 };
 
 export type UcapanTampil = UcapanData & {
@@ -124,21 +109,10 @@ export type GaleriTampil = FotoGaleri & {
   buka: () => void;
 };
 
-export type RekeningTampil = RekeningData & {
-  kunci: string;
-  label: string;
-  salin: () => void;
-  arah: "kiri" | "kanan";
-  tunda: string;
-};
-
-export type MomenTampil = MomenData & { kunci: string; akhir: boolean; tunda: string; tundaGaris: string };
-
-export type Vals = Omit<DataUndangan, "ucapan" | "galeri" | "lajurGaleri" | "cerita" | "rekening" | "hitung"> & {
+export type Vals = Omit<DataUndangan, "ucapan" | "galeri" | "lajurGaleri" | "hitung"> & {
   judulBesar: string;
   ukuranJudul: number;
   inisialEvent: string;
-  kutipanTampil: string;
   inisialTamu: string;
   keteranganMaks: string;
   teksBatas: string;
@@ -190,12 +164,6 @@ export type Vals = Omit<DataUndangan, "ucapan" | "galeri" | "lajurGaleri" | "cer
   fotoTutup: () => void;
   fotoSebelum: () => void;
   fotoBerikut: () => void;
-  cerita: MomenTampil[];
-  rekening: RekeningTampil[];
-  label1: string;
-  label2: string;
-  salin1: () => void;
-  salin2: () => void;
   undanganTerbuka: boolean;
   bukaUndangan: (event: MouseEvent<HTMLAnchorElement>) => void;
   adaMusik: boolean;

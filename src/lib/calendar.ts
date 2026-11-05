@@ -3,6 +3,7 @@ import { eventInstant, type TimedEvent } from "@/lib/countdown";
 export const DEFAULT_DURATION_MINUTES = 120;
 
 export type CalendarEvent = TimedEvent & {
+  endTime?: string | null;
   id: string;
   name: string;
   venueName: string | null;
@@ -38,7 +39,10 @@ export function calendarSlots(
       id: e.id,
       title: `${e.name} ${eventTitle}`,
       start,
-      end: new Date(start.getTime() + minutes * 60_000),
+      end: (() => {
+        const end = e.endTime ? eventInstant(e.date, e.endTime, e.timezone) : null;
+        return end && end > start ? end : new Date(start.getTime() + minutes * 60_000);
+      })(),
       location,
       details: e.mapsUrl ? `Peta: ${e.mapsUrl}` : "",
     });

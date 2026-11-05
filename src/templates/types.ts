@@ -10,7 +10,7 @@ export type InvitationView = {
   slug: string;
   token: string;
   title: string;
-  guest: { name: string; maxAdults: number; maxChildren: number };
+  guest: { name: string; maxAttendees: number };
   content: InvitationContent;
   events: GuestEvent[];
   photos: PhotoInfo[];

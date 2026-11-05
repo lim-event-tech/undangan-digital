@@ -3,7 +3,7 @@
 import { pesanGalat } from "@/components/ui";
 import { CONTENT_LIMITS } from "@/lib/invitations/content";
 import { MAX_INVITATION_TITLE } from "@/lib/invitations/title";
-import { RSVP_MAX_ADULTS, RSVP_MAX_CHILDREN } from "@/lib/invitations/editor-form";
+import { RSVP_MAX_ATTENDEES } from "@/lib/invitations/editor-form";
 import {
   simpanTitleAction,
   simpanPenutupAction,
@@ -35,25 +35,17 @@ export function FormTitle({ title }: { title: string }) {
   );
 }
 
-export function FormSambutan({ kutipan, sambutan }: { kutipan: string; sambutan: string }) {
+export function FormSambutan({ sambutan }: { sambutan: string }) {
   const { formRef, status, errors, formError, formProps } = useAutoSave(simpanSambutanAction);
 
   return (
     <KartuBagian
       id="sambutan"
       judul="Sambutan"
-      deskripsi="Kutipan pembuka dan kata sambutan untuk tamu. Boleh dikosongkan."
+      deskripsi="Teks undangan formal untuk peserta. Boleh dikosongkan."
       aksi={<StatusSimpan status={status} />}
     >
       <form ref={formRef} {...formProps} className="flex flex-col gap-3.5">
-        <BidangArea
-          label="Kutipan"
-          name="kutipan"
-          rows={3}
-          maxLength={CONTENT_LIMITS.kutipan}
-          defaultValue={kutipan}
-          error={errors.kutipan}
-        />
         <BidangArea
           label="Teks sambutan"
           name="sambutan"
@@ -94,63 +86,13 @@ export function FormPenutup({ penutup }: { penutup: string }) {
   );
 }
 
-export function FormRsvp({
-  batas,
-  hariIni,
-  maksDewasa,
-  maksAnak,
-}: {
-  batas: string;
-  hariIni: string;
-  maksDewasa: number;
-  maksAnak: number;
-}) {
+export function FormRsvp({ batas, hariIni, maksPeserta }: { batas: string; hariIni: string; maksPeserta: number }) {
   const { formRef, status, errors, formError, formProps } = useAutoSave(simpanRsvpAction);
-
-  return (
-    <KartuBagian
-      id="rsvp"
-      judul="Pengaturan RSVP"
-      deskripsi="Batas jumlah ini menjadi bawaan untuk tamu baru. Tiap tamu tetap bisa diubah di daftar tamu."
-      aksi={<StatusSimpan status={status} />}
-    >
-      <form ref={formRef} {...formProps} className="grid gap-3.5 sm:grid-cols-3">
-        <BidangTeks
-          label="Batas waktu RSVP"
-          name="batas"
-          type="date"
-          min={hariIni}
-          defaultValue={batas}
-          hint="Kosongkan bila tanpa batas"
-          error={errors.batas}
-        />
-        <BidangTeks
-          label="Maks. dewasa per tamu"
-          name="maksDewasa"
-          type="number"
-          inputMode="numeric"
-          min={1}
-          max={RSVP_MAX_ADULTS}
-          required
-          defaultValue={maksDewasa}
-          error={errors.maksDewasa}
-        />
-        <BidangTeks
-          label="Maks. anak per tamu"
-          name="maksAnak"
-          type="number"
-          inputMode="numeric"
-          min={0}
-          max={RSVP_MAX_CHILDREN}
-          required
-          defaultValue={maksAnak}
-          hint="Isi 0 untuk menyembunyikan pilihan anak"
-          error={errors.maksAnak}
-        />
-        <div className="sm:col-span-3">
-          <GalatForm pesan={formError} />
-        </div>
-      </form>
-    </KartuBagian>
-  );
+  return <KartuBagian id="rsvp" judul="Pengaturan RSVP" deskripsi="Batas peserta mencakup tamu utama dan pendamping. Nilai ini menjadi bawaan untuk tamu baru dan dapat diubah per tamu." aksi={<StatusSimpan status={status} />}>
+    <form ref={formRef} {...formProps} className="grid gap-3.5 sm:grid-cols-2">
+      <BidangTeks label="Batas waktu RSVP" name="batas" type="date" min={hariIni} defaultValue={batas} hint="Kosongkan bila tanpa batas" error={errors.batas} />
+      <BidangTeks label="Maks. peserta per tamu" name="maksPeserta" type="number" inputMode="numeric" min={1} max={RSVP_MAX_ATTENDEES} required defaultValue={maksPeserta} error={errors.maksPeserta} />
+      <div className="sm:col-span-2"><GalatForm pesan={formError} /></div>
+    </form>
+  </KartuBagian>;
 }

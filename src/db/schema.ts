@@ -16,6 +16,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import type { AgendaItem } from "@/lib/events/agenda";
 
 const bytea = customType<{ data: Buffer; driverData: Buffer | Uint8Array }>({
   dataType() {
@@ -126,8 +127,7 @@ export const invitation = pgTable(
       .notNull()
       .default("draf"),
     content: jsonb().$type<Record<string, unknown>>().notNull().default({}),
-    defaultMaxAdults: integer().notNull().default(2),
-    defaultMaxChildren: integer().notNull().default(0),
+    defaultMaxAttendees: integer().notNull().default(1),
     rsvpDeadline: timestamp({ withTimezone: true }),
     checkinKey: text().unique(),
     createdAt: createdAt(),
@@ -137,7 +137,7 @@ export const invitation = pgTable(
     index("invitation_owner_idx").on(t.ownerId),
     check(
       "invitation_default_max_ck",
-      sql`${t.defaultMaxAdults} >= 1 and ${t.defaultMaxChildren} >= 0`,
+      sql`${t.defaultMaxAttendees} between 1 and 40`,
     ),
   ],
 );
@@ -154,6 +154,8 @@ export const event = pgTable(
     sortOrder: integer().notNull().default(0),
     eventDate: date({ mode: "string" }),
     eventTime: time(),
+    eventEndTime: time(),
+    agenda: jsonb().$type<AgendaItem[]>().notNull().default([]),
     timezone: text({ enum: ["WIB", "WITA", "WIT"] })
       .notNull()
       .default("WIB"),
@@ -173,7 +175,7 @@ export const photo = pgTable(
     invitationId: uuid()
       .notNull()
       .references(() => invitation.id, { onDelete: "cascade" }),
-    kind: text({ enum: ["cover", "galeri", "qris"] }).notNull(),
+    kind: text({ enum: ["cover", "galeri", "logo_penyelenggara", "logo_eo"] }).notNull(),
     sortOrder: integer().notNull().default(0),
     fileName: text().notNull(),
     contentType: text().notNull(),
@@ -185,6 +187,7 @@ export const photo = pgTable(
   },
   (t) => [
     index("photo_invitation_idx").on(t.invitationId, t.kind),
+    uniqueIndex("photo_logo_unique").on(t.invitationId, t.kind).where(sql`${t.kind} in ('logo_penyelenggara', 'logo_eo')`),
     uniqueIndex("photo_cover_unique")
       .on(t.invitationId)
       .where(sql`${t.kind} = 'cover'`),
@@ -228,8 +231,7 @@ export const guest = pgTable(
     name: text().notNull(),
     phone: text().notNull(),
     token: text().notNull().unique(),
-    maxAdults: integer().notNull().default(2),
-    maxChildren: integer().notNull().default(0),
+    maxAttendees: integer().notNull().default(1),
     sentAt: timestamp({ withTimezone: true }),
     firstOpenedAt: timestamp({ withTimezone: true }),
     lastRemindedAt: timestamp({ withTimezone: true }),
@@ -240,7 +242,7 @@ export const guest = pgTable(
   (t) => [
     index("guest_invitation_idx").on(t.invitationId),
     index("guest_invitation_phone_idx").on(t.invitationId, t.phone),
-    check("guest_max_ck", sql`${t.maxAdults} >= 1 and ${t.maxChildren} >= 0`),
+    check("guest_max_ck", sql`${t.maxAttendees} between 1 and 40`),
   ],
 );
 
@@ -271,15 +273,14 @@ export const rsvp = pgTable(
       .notNull()
       .references(() => event.id, { onDelete: "cascade" }),
     attending: boolean().notNull(),
-    adults: integer().notNull().default(0),
-    children: integer().notNull().default(0),
+    attendeeCount: integer().notNull().default(0),
     note: text(),
     respondedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: updatedAt(),
   },
   (t) => [
     unique("rsvp_guest_event_unique").on(t.guestId, t.eventId),
-    check("rsvp_counts_ck", sql`${t.adults} >= 0 and ${t.children} >= 0`),
+    check("rsvp_counts_ck", sql`${t.attendeeCount} between 0 and 40 and ((${t.attending} and ${t.attendeeCount} >= 1) or (not ${t.attending} and ${t.attendeeCount} = 0))`),
   ],
 );
 

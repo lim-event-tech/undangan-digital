@@ -26,24 +26,21 @@ describe("firstGuestToken", () => {
       phone: "+6281500000001",
       groupName: null,
       eventIds: [myEvents[0].id],
-      maxAdults: 2,
-      maxChildren: 0,
+      maxAttendees: 2,
     });
     await createGuest(db, mine.invitation.id, {
       name: "Tamu Kedua",
       phone: "+6281500000002",
       groupName: null,
       eventIds: [myEvents[0].id],
-      maxAdults: 2,
-      maxChildren: 0,
+      maxAttendees: 2,
     });
     await createGuest(db, other.invitation.id, {
       name: "Tamu Orang Lain",
       phone: "+6281500000003",
       groupName: null,
       eventIds: [otherEvents[0].id],
-      maxAdults: 2,
-      maxChildren: 0,
+      maxAttendees: 2,
     });
 
     expect(await firstGuestToken(db, mine.invitation.id)).toBe(first.token);

@@ -20,7 +20,7 @@ function invitationNav(id: string): ItemNav[] {
     { label: "Isi undangan", ikon: "pena", href: `${base}/isi` },
     { label: "Daftar tamu", ikon: "tamu", href: `${base}/tamu` },
     { label: "Kirim undangan", ikon: "kirim", href: `${base}/kirim` },
-    { label: "Ucapan", ikon: "surat", href: `${base}/ucapan` },
+    { label: "Pesan tamu", ikon: "surat", href: `${base}/ucapan` },
     { label: "Check-in", ikon: "ceklis", href: `${base}/checkin` },
     { label: "Ganti template", ikon: "templat", href: `${base}/template` },
   ];

@@ -19,8 +19,7 @@ function guest(overrides: Partial<DashboardGuest> & { id: string; name: string }
     invitedEventIds: ["utama", "lanjutan"],
     status: "belum",
     answers: [],
-    adults: 0,
-    children: 0,
+    attendeeCount: 0,
     respondedAt: null,
     ...overrides,
   };
@@ -58,8 +57,7 @@ describe("buildRsvpCsv", () => {
       name: "Bapak Hendra",
       groupName: "Keluarga",
       status: "hadir",
-      adults: 2,
-      children: 1,
+      attendeeCount: 3,
       respondedAt,
       sentAt: new Date("2026-11-02T03:00:00.000Z"),
       openedAt: new Date("2026-11-03T03:00:00.000Z"),
@@ -68,8 +66,7 @@ describe("buildRsvpCsv", () => {
           eventId: "utama",
           eventName: "Utama",
           attending: true,
-          adults: 2,
-          children: 1,
+          attendeeCount: 3,
           note: 'Sampai jumpa; "insya Allah"',
           respondedAt,
         },
@@ -77,8 +74,7 @@ describe("buildRsvpCsv", () => {
           eventId: "lanjutan",
           eventName: "Sesi lanjutan",
           attending: false,
-          adults: 0,
-          children: 0,
+          attendeeCount: 0,
           note: "",
           respondedAt,
         },
@@ -108,9 +104,9 @@ describe("buildRsvpCsv", () => {
     expect(row[0]).toBe("Bapak Hendra");
     expect(row[2]).toBe("0812-3456-7890");
     expect(row[3]).toBe("Hadir");
-    expect(row.slice(4, 6)).toEqual(["2", "1"]);
+    expect(row[4]).toBe("3");
     const utama = rows[0].indexOf("Utama: jawaban");
-    expect(row.slice(utama, utama + 4)).toEqual(["Hadir", "2", "1", 'Sampai jumpa; "insya Allah"']);
+    expect(row.slice(utama, utama + 3)).toEqual(["Hadir", "3", 'Sampai jumpa; "insya Allah"']);
     const lanjutan = rows[0].indexOf("Sesi lanjutan: jawaban");
     expect(row[lanjutan]).toBe("Tidak hadir");
   });

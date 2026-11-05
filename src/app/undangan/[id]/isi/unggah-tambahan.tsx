@@ -40,89 +40,36 @@ async function kirimBerkas(
   }
 }
 
-export function UnggahQris({ qris }: { qris: PhotoInfo | null }) {
+export function UnggahLogo({ foto, jenis }: { foto: PhotoInfo | null; jenis: "logo_penyelenggara" | "logo_eo" }) {
   const invitationId = useInvitationId();
-  const hapusFotoActionForInvitation = useInvitationAction(hapusFotoAction);
-
+  const hapus = useInvitationAction(hapusFotoAction);
   const router = useRouter();
   const [mengunggah, setMengunggah] = useState(false);
-  const [galat, setGalat] = useState<string | undefined>();
-
+  const [galat, setGalat] = useState<string>();
+  const label = jenis === "logo_penyelenggara" ? "Logo penyelenggara" : "Logo EO";
   async function unggah(file: File) {
     setGalat(undefined);
-    if (file.size > MAX_PHOTO_BYTES) {
-      setGalat("Gambar QRIS terlalu besar. Pilih file di bawah 3 MB.");
-      return;
-    }
+    if (file.size > MAX_PHOTO_BYTES) { setGalat("Logo terlalu besar. Pilih file di bawah 3 MB."); return; }
     setMengunggah(true);
     const body = new FormData();
     body.set("file", file);
-    body.set("jenis", "qris");
-    const result = await kirimBerkas(`/api/foto?invitationId=${invitationId}`, body, "QRIS gagal diunggah.");
+    body.set("jenis", jenis);
+    const result = await kirimBerkas(`/api/foto?invitationId=${invitationId}`, body, "Logo gagal diunggah.");
     setMengunggah(false);
     if (!result.ok) setGalat(result.error);
     router.refresh();
   }
-
-  return (
-    <div className="flex flex-col gap-3 rounded-lg border border-garis-halus bg-kertas/60 p-4">
-      <span className="text-[13px] font-medium tracking-[0.06em] text-emas uppercase">
-        Kode QRIS
-      </span>
-      <div className="flex flex-wrap items-start gap-4">
-        {qris ? (
-          <Image
-            src={`/foto/${qris.id}`}
-            alt="Kode QRIS"
-            width={160}
-            height={160}
-            unoptimized
-            className="size-40 rounded-lg border border-garis bg-white object-contain"
-          />
-        ) : (
-          <div className="flex size-40 items-center justify-center rounded-lg border border-dashed border-garis-input bg-white px-3 text-center text-sm text-redup">
-            QRIS belum ada
-          </div>
-        )}
-        <div className="flex flex-col items-start gap-2">
-          <p className="m-0 max-w-xs text-sm leading-relaxed text-redup-2">
-            Unggah gambar QRIS apa adanya (JPG, PNG, atau WebP, di bawah 3 MB). Gambar tidak
-            dikompres agar tetap bisa dipindai.
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <label className={LABEL_UNGGAH} aria-disabled={mengunggah}>
-              <Ikon nama="unduh" ukuran={16} className="rotate-180" />
-              {mengunggah ? "Mengunggah…" : qris ? "Ganti QRIS" : "Unggah QRIS"}
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                disabled={mengunggah}
-                className="sr-only"
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  event.target.value = "";
-                  if (file) void unggah(file);
-                }}
-              />
-            </label>
-            {qris ? (
-              <form action={hapusFotoActionForInvitation}>
-                <input type="hidden" name="id" value={qris.id} />
-                <button type="submit" className={tombolTerang}>
-                  Hapus QRIS
-                </button>
-              </form>
-            ) : null}
-          </div>
-          {galat ? (
-            <p role="alert" className={`m-0 ${pesanGalat}`}>
-              {galat}
-            </p>
-          ) : null}
-        </div>
-      </div>
-    </div>
-  );
+  return <div className="flex min-w-0 flex-col gap-3 rounded-lg border border-garis p-4">
+    <h3 className="m-0 text-sm font-medium">{label}</h3>
+    {foto ? <Image src={`/foto/${foto.id}`} alt={label} width={foto.width || 180} height={foto.height || 100} unoptimized className="mx-auto h-auto max-h-25 w-auto max-w-full bg-white object-contain" /> : <p className="m-0 text-sm text-redup">Belum ada logo</p>}
+    <p className="m-0 text-xs text-redup">Opsional. JPG, PNG, atau WebP, maksimal 3 MB. Transparansi dipertahankan.</p>
+    <label className={LABEL_UNGGAH}>
+      {mengunggah ? "Mengunggah..." : foto ? `Ganti ${label.toLowerCase()}` : `Unggah ${label.toLowerCase()}`}
+      <input type="file" accept="image/jpeg,image/png,image/webp" disabled={mengunggah} className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; if (file) void unggah(file); }} />
+    </label>
+    {foto ? <form action={hapus}><input type="hidden" name="id" value={foto.id} /><button className={tombolTerang} type="submit">Hapus {label.toLowerCase()}</button></form> : null}
+    {galat ? <p role="alert" className={pesanGalat}>{galat}</p> : null}
+  </div>;
 }
 
 export function BagianMusik({ aktif, musik }: { aktif: boolean; musik: MusicInfo | null }) {

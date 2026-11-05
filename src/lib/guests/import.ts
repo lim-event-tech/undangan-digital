@@ -1,3 +1,4 @@
+import { RSVP_MAX_ATTENDEES } from "@/lib/rsvp/shared";
 import Papa from "papaparse";
 import { formatPhone, normalizePhone } from "@/lib/phone";
 
@@ -9,8 +10,7 @@ export const COLUMNS = [
   "whatsapp",
   "grup",
   "acara",
-  "maks_dewasa",
-  "maks_anak",
+  "maks_peserta",
 ] as const;
 type Column = (typeof COLUMNS)[number];
 
@@ -20,8 +20,7 @@ export type RawRow = {
   whatsapp: string;
   grup: string;
   acara: string;
-  maks_dewasa: string;
-  maks_anak: string;
+  maks_peserta: string;
 };
 
 export type EventRef = { id: string; key: string; name: string };
@@ -30,7 +29,7 @@ export type ImportContext = {
   events: EventRef[];
   groups: string[];
   existing: { name: string; phone: string }[];
-  defaults: { maxAdults: number; maxChildren: number };
+  defaults: { maxAttendees: number };
 };
 
 export type RowStatus = "siap" | "perlu_diperbaiki" | "duplikat";
@@ -44,10 +43,8 @@ export type ValidatedRow = {
   newGroup: boolean;
   eventIds: string[];
   eventNames: string[];
-  maxAdults: number;
-  maxChildren: number;
-  adultsFromDefault: boolean;
-  childrenFromDefault: boolean;
+  maxAttendees: number;
+  attendeesFromDefault: boolean;
   status: RowStatus;
   issues: string[];
   duplicateOf?: string;
@@ -71,9 +68,11 @@ const HEADER_ALIASES: Record<Column, string[]> = {
   ],
   grup: ["grup", "group", "kelompok", "kategori"],
   acara: ["acara", "event", "diundang_ke"],
-  maks_dewasa: ["maks_dewasa", "max_dewasa", "maksimal_dewasa", "dewasa"],
-  maks_anak: ["maks_anak", "max_anak", "maksimal_anak", "anak"],
+  maks_peserta: ["maks_peserta", "max_peserta", "maksimal_peserta", "peserta", "max_attendees", "jumlah_peserta"],
 };
+
+const LEGACY_HEADERS = new Set(["maks_dewasa", "max_dewasa", "maksimal_dewasa", "dewasa", "maks_anak", "max_anak", "maksimal_anak", "anak", "adults", "children", "max_adults", "max_children"]);
+const LEGACY_ERROR = "Format dewasa/anak sudah tidak digunakan. Unduh contoh impor terbaru dan isi kolom maks_peserta dengan jumlah seluruh peserta, termasuk tamu utama dan pendamping.";
 
 const ALIAS_TO_COLUMN = new Map<string, Column>(
   (Object.entries(HEADER_ALIASES) as [Column, string[]][]).flatMap(
@@ -151,6 +150,7 @@ function collectRows(
   records: Record<string, string>[],
   firstRow: number,
 ): ParseResult {
+  if (fields.some((field) => LEGACY_HEADERS.has(field))) return { ok: false, error: LEGACY_ERROR };
   const missing = (["nama", "whatsapp"] as const).filter(
     (c) => !fields.includes(c),
   );
@@ -170,8 +170,7 @@ function collectRows(
       whatsapp: get("whatsapp"),
       grup: get("grup"),
       acara: get("acara"),
-      maks_dewasa: get("maks_dewasa"),
-      maks_anak: get("maks_anak"),
+      maks_peserta: get("maks_peserta"),
     };
     const isEmpty = COLUMNS.every((c) => raw[c] === "");
     if (!isEmpty) rows.push(raw);
@@ -188,11 +187,11 @@ function collectRows(
 }
 
 export const SAMPLE_CSV = [
-  "nama,whatsapp,grup,acara,maks_dewasa,maks_anak",
-  "Bapak Hendra & Istri,0812-0000-0101,Komunitas,utama;lanjutan,2,0",
-  "Kak Dimas Aditya,0857 0000 0102,Teman kuliah,lanjutan,1,0",
-  "Mbak Ayu & Keluarga,+62 811-0000-0103,Teman kantor,lanjutan,2,2",
-  "Tante Lina,81200000104,Panitia,,,",
+  "nama,whatsapp,grup,acara,maks_peserta",
+  "Bapak Hendra Permana,0812-0000-0101,Manajemen,utama;lanjutan,2",
+  "Ibu Dian Pratiwi,0857 0000 0102,Mitra,lanjutan,1",
+  "Tim Kolaborasi,+62 811-0000-0103,Mitra,lanjutan,4",
+  "Panitia Registrasi,81200000104,Panitia,,",
   "",
 ].join("\r\n");
 
@@ -288,10 +287,9 @@ export function validateImportRows(
       }
     }
 
-    const adults = parseCount(raw.maks_dewasa, "Maks. dewasa", 1, 20);
-    if (adults.error) issues.push(adults.error);
-    const children = parseCount(raw.maks_anak, "Maks. anak", 0, 20);
-    if (children.error) issues.push(children.error);
+    if (Object.keys(raw).some((key) => LEGACY_HEADERS.has(key))) issues.push(LEGACY_ERROR);
+    const attendees = parseCount(raw.maks_peserta ?? "", "Maks. peserta", 1, RSVP_MAX_ATTENDEES);
+    if (attendees.error) issues.push(attendees.error);
 
     let status: RowStatus = "siap";
     let duplicateOf: string | undefined;
@@ -321,10 +319,8 @@ export function validateImportRows(
       newGroup,
       eventIds: invited.map((e) => e.id),
       eventNames: invited.map((e) => e.name),
-      maxAdults: adults.value ?? ctx.defaults.maxAdults,
-      maxChildren: children.value ?? ctx.defaults.maxChildren,
-      adultsFromDefault: adults.value === null,
-      childrenFromDefault: children.value === null,
+      maxAttendees: attendees.value ?? ctx.defaults.maxAttendees,
+      attendeesFromDefault: attendees.value === null,
       status,
       issues,
       duplicateOf,

@@ -14,8 +14,7 @@ const rowSchema = z.object({
   whatsapp: z.string().max(100),
   grup: z.string().max(200),
   acara: z.string().max(300),
-  maks_dewasa: z.string().max(10),
-  maks_anak: z.string().max(10),
+  maks_peserta: z.string().max(10),
 });
 
 const payloadSchema = z.object({

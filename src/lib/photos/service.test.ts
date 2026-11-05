@@ -151,19 +151,19 @@ describe("deletePhoto", () => {
   });
 });
 
-describe("addPhoto qris", () => {
-  it("menyimpan satu QRIS per undangan dan menggantinya tanpa menyentuh cover dan galeri", async () => {
+describe("addPhoto logo_penyelenggara", () => {
+  it("menyimpan satu logo penyelenggara per undangan dan menggantinya tanpa menyentuh cover dan galeri", async () => {
     const { invitation } = await seedInvitation(db);
     await addPhoto(db, invitation.id, { kind: "cover", fileName: "c.jpg", bytes: jpeg() });
     await addPhoto(db, invitation.id, { kind: "galeri", fileName: "g.jpg", bytes: jpeg() });
-    const first = await addPhoto(db, invitation.id, { kind: "qris", fileName: "qris1.jpg", bytes: jpeg(80, 1) });
-    const second = await addPhoto(db, invitation.id, { kind: "qris", fileName: "qris2.jpg", bytes: jpeg(90, 2) });
+    const first = await addPhoto(db, invitation.id, { kind: "logo_penyelenggara", fileName: "logo_penyelenggara1.jpg", bytes: jpeg(80, 1) });
+    const second = await addPhoto(db, invitation.id, { kind: "logo_penyelenggara", fileName: "logo_penyelenggara2.jpg", bytes: jpeg(90, 2) });
     expect(first.ok && second.ok).toBe(true);
 
     const kinds = (await listPhotos(db, invitation.id)).map((p) => p.kind).sort();
-    expect(kinds).toEqual(["cover", "galeri", "qris"]);
-    const qris = (await listPhotos(db, invitation.id)).find((p) => p.kind === "qris");
-    expect(qris?.fileName).toBe("qris2.jpg");
+    expect(kinds).toEqual(["cover", "galeri", "logo_penyelenggara"]);
+    const logo_penyelenggara = (await listPhotos(db, invitation.id)).find((p) => p.kind === "logo_penyelenggara");
+    expect(logo_penyelenggara?.fileName).toBe("logo_penyelenggara2.jpg");
   });
 });
 

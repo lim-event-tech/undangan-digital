@@ -193,7 +193,7 @@ export function ImportClient({ context }: { context: ImportContext }) {
         <div className="flex min-w-70 flex-[1_1_280px] flex-col gap-1.5 text-[13px] leading-normal text-redup-2">
           <span className="font-medium text-tinta">Kolom yang dibaca</span>
           <code className="rounded-lg bg-krem-2 px-2.5 py-2 text-xs wrap-anywhere text-tinta-2">
-            nama, whatsapp, grup, acara, maks_dewasa, maks_anak
+            nama, whatsapp, grup, acara, maks_peserta
           </code>
           <span>
             Acara dipisah titik koma, mis.{" "}
@@ -251,8 +251,7 @@ export function ImportClient({ context }: { context: ImportContext }) {
                   <th scope="col" className={`${kolomTabel} font-medium`}>WhatsApp</th>
                   <th scope="col" className={`${kolomTabel} font-medium`}>Grup</th>
                   <th scope="col" className={`${kolomTabel} font-medium`}>Acara</th>
-                  <th scope="col" className={`${kolomTabel} text-center font-medium`}>Dewasa</th>
-                  <th scope="col" className={`${kolomTabel} text-center font-medium`}>Anak</th>
+                  <th scope="col" className={`${kolomTabel} text-center font-medium`}>Peserta</th>
                   <th scope="col" className={`${kolomTabel} font-medium`}>Status</th>
                 </tr>
               </thead>
@@ -310,14 +309,8 @@ export function ImportClient({ context }: { context: ImportContext }) {
                       <td className={kolomTabel}>{r.groupName ?? <span className="text-redup">—</span>}</td>
                       <td className={kolomTabel}>{r.eventNames.join(", ")}</td>
                       <td className={`${kolomTabel} text-center`}>
-                        {r.maxAdults}
-                        {r.adultsFromDefault ? (
-                          <span className="text-redup"> (bawaan)</span>
-                        ) : null}
-                      </td>
-                      <td className={`${kolomTabel} text-center`}>
-                        {r.maxChildren}
-                        {r.childrenFromDefault ? (
+                        {r.maxAttendees}
+                        {r.attendeesFromDefault ? (
                           <span className="text-redup"> (bawaan)</span>
                         ) : null}
                       </td>

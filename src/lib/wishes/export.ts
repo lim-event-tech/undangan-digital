@@ -11,7 +11,7 @@ const STATUS_LABEL: Record<WishStatus, string> = {
 
 export function buildWishRows(wishes: OwnerWish[]): Rows {
   return [
-    ["Pengirim", "Ucapan", "Status", "Dikirim"],
+    ["Pengirim", "Pesan tamu", "Status", "Dikirim"],
     ...wishes.map((w) => [
       w.authorName,
       w.message,

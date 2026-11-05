@@ -16,11 +16,11 @@ export type HasilKirimUcapan =
 
 const PESAN_GALAT = {
   "tidak-ditemukan": "Undangan tidak ditemukan.",
-  "belum-terbit": "Undangan ini belum dibuka untuk ucapan.",
-  dimatikan: "Ucapan sedang tidak dibuka oleh pengelola.",
-  kosong: "Tulis ucapan terlebih dahulu.",
-  "terlalu-panjang": `Ucapan maksimal ${WISH_MAX_LENGTH} karakter.`,
-  batas: `Setiap tamu bisa mengirim paling banyak ${WISH_MAX_PER_GUEST} ucapan.`,
+  "belum-terbit": "Undangan ini belum dibuka untuk pesan tamu.",
+  dimatikan: "Pesan tamu sedang tidak dibuka oleh pengelola.",
+  kosong: "Tulis pesan tamu terlebih dahulu.",
+  "terlalu-panjang": `Pesan tamu maksimal ${WISH_MAX_LENGTH} karakter.`,
+  batas: `Setiap tamu bisa mengirim paling banyak ${WISH_MAX_PER_GUEST} pesan tamu.`,
 } as const;
 
 type Kunci = { slug: string; token: string };

@@ -37,8 +37,7 @@ export async function submitRsvpAction(
       const choice = text(formData, `hadir-${eventId}`);
       return {
         attending: choice === "" ? null : choice,
-        adults: text(formData, `dewasa-${eventId}`),
-        children: text(formData, `anak-${eventId}`),
+        attendeeCount: text(formData, `peserta-${eventId}`),
         note: text(formData, `pesan-${eventId}`),
       };
     },

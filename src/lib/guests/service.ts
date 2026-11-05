@@ -42,8 +42,7 @@ export type GuestRow = {
   token: string;
   groupId: string | null;
   groupName: string | null;
-  maxAdults: number;
-  maxChildren: number;
+  maxAttendees: number;
   sentAt: Date | null;
   eventIds: string[];
 };
@@ -91,8 +90,7 @@ export async function listGuests(
       token: guest.token,
       groupId: guest.groupId,
       groupName: guestGroup.name,
-      maxAdults: guest.maxAdults,
-      maxChildren: guest.maxChildren,
+      maxAttendees: guest.maxAttendees,
       sentAt: guest.sentAt,
     })
     .from(guest)
@@ -222,8 +220,7 @@ export type GuestInput = {
   phone: string;
   groupName: string | null;
   eventIds: string[];
-  maxAdults: number;
-  maxChildren: number;
+  maxAttendees: number;
 };
 
 export async function createGuest(
@@ -242,8 +239,7 @@ export async function createGuest(
         name: input.name,
         phone: input.phone,
         token: newGuestToken(),
-        maxAdults: input.maxAdults,
-        maxChildren: input.maxChildren,
+        maxAttendees: input.maxAttendees,
       })
       .returning();
     if (eventIds.length > 0) {
@@ -270,8 +266,7 @@ export async function updateGuest(
         groupId,
         name: input.name,
         phone: input.phone,
-        maxAdults: input.maxAdults,
-        maxChildren: input.maxChildren,
+        maxAttendees: input.maxAttendees,
       })
       .where(and(eq(guest.id, guestId), eq(guest.invitationId, invitationId)))
       .returning();
@@ -321,8 +316,7 @@ export async function getImportContext(
 ): Promise<ImportContext> {
   const [inv] = await db
     .select({
-      maxAdults: invitation.defaultMaxAdults,
-      maxChildren: invitation.defaultMaxChildren,
+      maxAttendees: invitation.defaultMaxAttendees,
     })
     .from(invitation)
     .where(eq(invitation.id, invitationId));
@@ -342,7 +336,7 @@ export async function getImportContext(
     events,
     groups: groups.map((g) => g.name),
     existing,
-    defaults: { maxAdults: inv.maxAdults, maxChildren: inv.maxChildren },
+    defaults: { maxAttendees: inv.maxAttendees },
   };
 }
 
@@ -406,8 +400,7 @@ export async function commitImport(
           name: row.name,
           phone: row.phone!,
           token: newGuestToken(),
-          maxAdults: row.maxAdults,
-          maxChildren: row.maxChildren,
+          maxAttendees: row.maxAttendees,
         })),
       );
       const links = chunk.flatMap(({ row, id }) =>

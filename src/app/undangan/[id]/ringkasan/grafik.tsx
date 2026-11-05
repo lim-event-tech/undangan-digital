@@ -186,7 +186,7 @@ function PerGrup({ grup }: { grup: DashboardCharts["groups"] }) {
               <span className="text-xs text-redup lining-nums">
                 {g.total} tamu · hadir {g.hadir} · tidak {g.tidak} · belum {g.belum}
                 {g.hadir > 0
-                  ? ` · ${g.adults} dewasa${g.children > 0 ? `, ${g.children} anak` : ""}`
+                  ? ` · ${g.attendeeCount} peserta`
                   : ""}
               </span>
             </div>

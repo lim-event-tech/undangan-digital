@@ -42,12 +42,12 @@ const at = new Date("2026-11-10T03:00:00.000Z");
 const later = new Date("2026-11-12T03:00:00.000Z");
 
 const responses: RawResponse[] = [
-  { guestId: "g1", eventId: "utama", attending: true, adults: 2, children: 1, note: "Sampai jumpa", respondedAt: at },
-  { guestId: "g1", eventId: "lanjutan", attending: true, adults: 3, children: 0, note: null, respondedAt: later },
-  { guestId: "g2", eventId: "utama", attending: false, adults: 0, children: 0, note: null, respondedAt: at },
-  { guestId: "g2", eventId: "lanjutan", attending: false, adults: 0, children: 0, note: null, respondedAt: at },
-  { guestId: "g3", eventId: "lanjutan", attending: true, adults: 1, children: 0, note: null, respondedAt: at },
-  { guestId: "g5", eventId: "utama", attending: false, adults: 0, children: 0, note: null, respondedAt: at },
+  { guestId: "g1", eventId: "utama", attending: true, attendeeCount: 3,  note: "Sampai jumpa", respondedAt: at },
+  { guestId: "g1", eventId: "lanjutan", attending: true, attendeeCount: 3,  note: null, respondedAt: later },
+  { guestId: "g2", eventId: "utama", attending: false, attendeeCount: 0,  note: null, respondedAt: at },
+  { guestId: "g2", eventId: "lanjutan", attending: false, attendeeCount: 0,  note: null, respondedAt: at },
+  { guestId: "g3", eventId: "lanjutan", attending: true, attendeeCount: 1,  note: null, respondedAt: at },
+  { guestId: "g5", eventId: "utama", attending: false, attendeeCount: 0,  note: null, respondedAt: at },
 ];
 
 describe("buildDashboard", () => {
@@ -70,26 +70,24 @@ describe("buildDashboard", () => {
       attending: 2,
       notAttending: 1,
       pending: 2,
-      adults: 4,
-      children: 1,
+      attendeeCount: 4,
     });
   });
 
-  it("merinci setiap acara dengan jumlah diundang, hadir, tidak hadir, belum, dewasa, dan anak", () => {
+  it("merinci setiap acara dengan jumlah diundang, hadir, tidak hadir, belum, dan jumlah peserta", () => {
     expect(data.events).toEqual([
-      { eventId: "utama", name: "Acara utama", invited: 4, attending: 1, notAttending: 2, pending: 1, adults: 2, children: 1 },
-      { eventId: "lanjutan", name: "Sesi lanjutan", invited: 5, attending: 2, notAttending: 1, pending: 2, adults: 4, children: 0 },
+      { eventId: "utama", name: "Acara utama", invited: 4, attending: 1, notAttending: 2, pending: 1, attendeeCount: 3,  },
+      { eventId: "lanjutan", name: "Sesi lanjutan", invited: 5, attending: 2, notAttending: 1, pending: 2, attendeeCount: 4,  },
     ]);
   });
 
   it("menyertakan jawaban per acara, pesan, dan waktu jawaban terbaru", () => {
     const hendra = data.guests.find((g) => g.id === "g1")!;
-    expect(hendra.answers.map((a) => [a.eventName, a.attending, a.adults, a.children, a.note])).toEqual([
-      ["Acara utama", true, 2, 1, "Sampai jumpa"],
-      ["Sesi lanjutan", true, 3, 0, ""],
+    expect(hendra.answers.map((a) => [a.eventName, a.attending, a.attendeeCount, a.note])).toEqual([
+      ["Acara utama", true, 3, "Sampai jumpa"],
+      ["Sesi lanjutan", true, 3, ""],
     ]);
-    expect(hendra.adults).toBe(3);
-    expect(hendra.children).toBe(1);
+    expect(hendra.attendeeCount).toBe(3);
     expect(hendra.respondedAt).toEqual(later);
     expect(data.guests.find((g) => g.id === "g4")!.respondedAt).toBeNull();
   });
@@ -116,10 +114,10 @@ describe("buildDashboard", () => {
   it("mengabaikan jawaban untuk acara yang tidak diundangkan", () => {
     const stray = buildDashboard(events, guests, links, [
       ...responses,
-      { guestId: "g3", eventId: "utama", attending: true, adults: 5, children: 5, note: null, respondedAt: at },
+      { guestId: "g3", eventId: "utama", attending: true, attendeeCount: 10,  note: null, respondedAt: at },
     ]);
-    expect(stray.guests.find((g) => g.id === "g3")!.adults).toBe(1);
-    expect(stray.events[0].adults).toBe(2);
+    expect(stray.guests.find((g) => g.id === "g3")!.attendeeCount).toBe(1);
+    expect(stray.events[0].attendeeCount).toBe(3);
   });
 
   it("menyaring menurut status, grup, dan pencarian nama tanpa mengubah ringkasan", () => {
@@ -148,7 +146,7 @@ describe("buildDashboard", () => {
 
   it("aman untuk undangan tanpa tamu", () => {
     const empty = buildDashboard(events, [], [], []);
-    expect(empty.totals).toEqual({ invited: 0, attending: 0, notAttending: 0, pending: 0, adults: 0, children: 0 });
+    expect(empty.totals).toEqual({ invited: 0, attending: 0, notAttending: 0, pending: 0, attendeeCount: 0,  });
     expect(empty.events.map((e) => e.invited)).toEqual([0, 0]);
   });
 });
@@ -167,29 +165,26 @@ describe("getDashboard", () => {
       phone: "+6281300000001",
       groupName: "Keluarga",
       eventIds: myEvents.map((e) => e.id),
-      maxAdults: 3,
-      maxChildren: 2,
+      maxAttendees: 5,
     });
     await createGuest(db, mine.invitation.id, {
       name: "Tamu B",
       phone: "+6281300000002",
       groupName: null,
       eventIds: [myEvents[0].id],
-      maxAdults: 2,
-      maxChildren: 0,
+      maxAttendees: 2,
     });
     const stranger = await createGuest(db, other.invitation.id, {
       name: "Orang Lain",
       phone: "+6281300000003",
       groupName: null,
       eventIds: otherEvents.map((e) => e.id),
-      maxAdults: 2,
-      maxChildren: 0,
+      maxAttendees: 2,
     });
 
     const answers: Record<string, RawAnswer> = {
-      [myEvents[0].id]: { attending: "ya", adults: "3", children: "2", note: "Siap hadir" },
-      [myEvents[1].id]: { attending: "tidak", adults: "", children: "", note: "" },
+      [myEvents[0].id]: { attending: "ya", attendeeCount: "5",  note: "Siap hadir" },
+      [myEvents[1].id]: { attending: "tidak", attendeeCount: "",  note: "" },
     };
     expect(
       await submitRsvp(db, {
@@ -201,11 +196,11 @@ describe("getDashboard", () => {
     await submitRsvp(db, {
       slug: other.invitation.slug,
       token: stranger.token,
-      read: () => ({ attending: "ya", adults: "2", children: "0", note: "" }),
+      read: () => ({ attending: "ya", attendeeCount: "2",  note: "" }),
     });
 
     const data = await getDashboard(db, mine.invitation.id);
-    expect(data.totals).toEqual({ invited: 2, attending: 1, notAttending: 0, pending: 1, adults: 3, children: 2 });
+    expect(data.totals).toEqual({ invited: 2, attending: 1, notAttending: 0, pending: 1, attendeeCount: 5,  });
     expect(data.events.map((e) => [e.name, e.invited, e.attending, e.pending])).toEqual([
       ["Acara utama", 2, 1, 1],
       ["Sesi lanjutan", 1, 0, 0],

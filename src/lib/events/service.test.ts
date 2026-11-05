@@ -21,7 +21,7 @@ beforeAll(async () => {
 const input: EventInput = {
   name: "Acara utama",
   date: "2026-12-20",
-  time: "09:30",
+  endTime: null, agenda: [], time: "09:30",
   timezone: "WITA",
   venueName: "Gedung Serbaguna",
   address: "Jl. Melati No. 1",
@@ -47,10 +47,10 @@ describe("makeEventKey", () => {
 describe("createEvent", () => {
   it("menambah acara berikutnya dengan urutan baru dan kunci unik", async () => {
     const { invitation } = await seedInvitation(db);
-    const first = await createEvent(db, invitation.id, "Ngunduh Mantu");
-    const second = await createEvent(db, invitation.id, "Ngunduh Mantu");
-    expect(first.ok && first.event.key).toBe("ngunduh-mantu");
-    expect(second.ok && second.event.key).toBe("ngunduh-mantu-2");
+    const first = await createEvent(db, invitation.id, "Diskusi Mitra");
+    const second = await createEvent(db, invitation.id, "Diskusi Mitra");
+    expect(first.ok && first.event.key).toBe("diskusi-mitra");
+    expect(second.ok && second.event.key).toBe("diskusi-mitra-2");
     expect(first.ok && first.event.sortOrder).toBe(2);
     expect(second.ok && second.event.sortOrder).toBe(3);
 
@@ -58,8 +58,8 @@ describe("createEvent", () => {
     expect(all.map((e) => e.name)).toEqual([
       "Acara utama",
       "Sesi lanjutan",
-      "Ngunduh Mantu",
-      "Ngunduh Mantu",
+      "Diskusi Mitra",
+      "Diskusi Mitra",
     ]);
   });
 
@@ -85,7 +85,7 @@ describe("updateEvent", () => {
     expect(updated).toMatchObject({
       name: "Acara utama",
       date: "2026-12-20",
-      time: "09:30",
+      endTime: null, agenda: [], time: "09:30",
       timezone: "WITA",
       venueName: "Gedung Serbaguna",
       address: "Jl. Melati No. 1",
@@ -133,12 +133,11 @@ describe("deleteEvent", () => {
       phone: "+6281200000001",
       groupName: null,
       eventIds: [utama.id, lanjutan.id],
-      maxAdults: 2,
-      maxChildren: 0,
+      maxAttendees: 2,
     });
     await db
       .insert(rsvp)
-      .values({ guestId: guest.id, eventId: utama.id, attending: true, adults: 2 });
+      .values({ guestId: guest.id, eventId: utama.id, attending: true, attendeeCount: 2 });
 
     expect(await deleteEvent(db, invitation.id, utama.id)).toBe("dihapus");
 

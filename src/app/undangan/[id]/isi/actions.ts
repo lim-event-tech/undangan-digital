@@ -22,8 +22,6 @@ import {
   unpublishInvitation,
 } from "@/lib/invitations/editor";
 import {
-  parseAmplopForm,
-  parseCeritaForm,
   parseCheckinForm,
   parseHitungMundurForm,
   parseMusikForm,
@@ -33,6 +31,7 @@ import {
 import { deleteMusic } from "@/lib/music/service";
 import { getSettings } from "@/lib/platform/service";
 import { deletePhoto } from "@/lib/photos/service";
+import { parseFormalForm } from "@/lib/invitations/formal-form";
 import { SAVED, type SaveResult } from "@/lib/save-result";
 import { ACTING_COOKIE, getActing, requireInvitationById } from "@/lib/session";
 import { recordAudit } from "@/lib/admin/audit";
@@ -71,19 +70,12 @@ export async function simpanPenutupAction(invitationId: string, formData: FormDa
   return SAVED;
 }
 
-export async function simpanAmplopAction(invitationId: string, formData: FormData): Promise<SaveResult> {
+export async function simpanFormalAction(group: string, invitationId: string, formData: FormData): Promise<SaveResult> {
   const { invitation } = await requireInvitationById(invitationId);
-  const parsed = parseAmplopForm(formData);
+  const parsed = parseFormalForm(group, formData);
   if (!parsed.ok) return { ok: false, errors: parsed.errors };
   if (!(await saveContentText(db, invitation.id, parsed.input))) return NOT_FOUND;
-  return SAVED;
-}
-
-export async function simpanCeritaAction(invitationId: string, formData: FormData): Promise<SaveResult> {
-  const { invitation } = await requireInvitationById(invitationId);
-  const parsed = parseCeritaForm(formData);
-  if (!parsed.ok) return { ok: false, errors: parsed.errors };
-  if (!(await saveContentText(db, invitation.id, parsed.input))) return NOT_FOUND;
+  if (group === "penyelenggara") revalidatePath(`/undangan/${invitation.id}/isi`);
   return SAVED;
 }
 

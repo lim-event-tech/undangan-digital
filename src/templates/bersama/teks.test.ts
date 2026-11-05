@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { angkaKata, inisialNama, kotaDari, kutipanBerpetik, tanggalKata, waktuRelatif } from "./teks";
+import { angkaKata, inisialNama, kotaDari, tanggalKata, waktuRelatif } from "./teks";
 
 describe("angkaKata dan tanggalKata", () => {
   it("menulis angka tanggal dalam kata", () => {
@@ -44,13 +44,5 @@ describe("waktuRelatif", () => {
     expect(waktuRelatif(new Date("2026-11-01T07:00:00Z"), sekarang)).toBe("5 jam lalu");
     expect(waktuRelatif(new Date("2026-10-30T12:00:00Z"), sekarang)).toBe("2 hari lalu");
     expect(waktuRelatif(new Date("2026-10-01T20:00:00Z"), sekarang)).toBe("2 Oktober 2026");
-  });
-});
-
-describe("kutipanBerpetik", () => {
-  it("menambah tanda petik bila belum ada", () => {
-    expect(kutipanBerpetik(" Dua hati ")).toBe("“Dua hati”");
-    expect(kutipanBerpetik("“Sudah berpetik”")).toBe("“Sudah berpetik”");
-    expect(kutipanBerpetik("  ")).toBe("");
   });
 });

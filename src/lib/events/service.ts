@@ -1,3 +1,4 @@
+import { readAgenda, type AgendaItem } from "./agenda";
 import { and, asc, eq } from "drizzle-orm";
 import { event, invitation } from "@/db/schema";
 import type { AppDb } from "@/db/types";
@@ -11,6 +12,8 @@ export type EventDetail = {
   sortOrder: number;
   date: string | null;
   time: string | null;
+  endTime: string | null;
+  agenda: AgendaItem[];
   timezone: Zone;
   venueName: string | null;
   address: string | null;
@@ -27,6 +30,8 @@ export function toEventDetail(row: EventRow): EventDetail {
     sortOrder: row.sortOrder,
     date: row.eventDate,
     time: shortTime(row.eventTime),
+    endTime: shortTime(row.eventEndTime),
+    agenda: readAgenda(row.agenda),
     timezone: row.timezone,
     venueName: row.venueName,
     address: row.address,
@@ -109,6 +114,8 @@ export async function updateEvent(
       name: input.name,
       eventDate: input.date,
       eventTime: input.time,
+      eventEndTime: input.endTime,
+      agenda: input.agenda,
       timezone: input.timezone,
       venueName: input.venueName,
       address: input.address,

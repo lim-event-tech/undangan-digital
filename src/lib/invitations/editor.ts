@@ -4,7 +4,7 @@ import type { AppDb } from "@/db/types";
 import { isUniqueViolation } from "@/lib/db-errors";
 import { listEventDetails, type EventDetail } from "@/lib/events/service";
 import { listPhotos, type PhotoInfo } from "@/lib/photos/service";
-import type { InvitationContent } from "./content";
+import { readContent, type InvitationContent } from "./content";
 import { parseInvitationTitle } from "./title";
 
 export type MissingItem = { id: string; label: string; anchor: string };
@@ -32,14 +32,13 @@ export async function saveContentText(
 export async function saveRsvpSettings(
   db: AppDb,
   invitationId: string,
-  input: { deadline: Date | null; maxAdults: number; maxChildren: number },
+  input: { deadline: Date | null; maxAttendees: number },
 ): Promise<boolean> {
   const rows = await db
     .update(invitation)
     .set({
       rsvpDeadline: input.deadline,
-      defaultMaxAdults: input.maxAdults,
-      defaultMaxChildren: input.maxChildren,
+      defaultMaxAttendees: input.maxAttendees,
     })
     .where(eq(invitation.id, invitationId))
     .returning({ id: invitation.id });
@@ -101,8 +100,12 @@ export async function isSlugLocked(db: AppDb, invitationId: string): Promise<boo
 export function findMissing(
   events: EventDetail[],
   photos: PhotoInfo[],
+  identity: { title: string; content: unknown },
 ): MissingItem[] {
   const missing: MissingItem[] = [];
+  if (!parseInvitationTitle(identity.title).ok) missing.push({ id: "title", label: "Nama event", anchor: "identitas-event" });
+  if (!readContent(identity.content).penyelenggara.nama.trim()) missing.push({ id: "penyelenggara", label: "Nama penyelenggara", anchor: "penyelenggara" });
+  if (!events.length) missing.push({ id: "acara", label: "Minimal satu sesi acara", anchor: "acara" });
   if (!photos.some((p) => p.kind === "cover")) {
     missing.push({ id: "cover", label: "Foto cover", anchor: "sampul" });
   }
@@ -125,11 +128,12 @@ export async function getMissingForPublish(
   db: AppDb,
   invitationId: string,
 ): Promise<MissingItem[]> {
-  const [events, photos] = await Promise.all([
+  const [events, photos, identity] = await Promise.all([
     listEventDetails(db, invitationId),
     listPhotos(db, invitationId),
+    db.select({ title: invitation.title, content: invitation.content }).from(invitation).where(eq(invitation.id, invitationId)),
   ]);
-  return findMissing(events, photos);
+  return findMissing(events, photos, identity[0] ?? { title: "", content: {} });
 }
 
 export type PublishResult =

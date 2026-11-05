@@ -44,8 +44,8 @@ export function renderTemplate(key: string, view: InvitationView): ReactElement 
           }}
         >
           {view.mode === "contoh"
-            ? "Contoh tampilan dengan data contoh. RSVP dan ucapan tidak disimpan."
-            : "Pratinjau. RSVP dan ucapan tidak disimpan, dan hanya Anda yang melihat halaman ini."}
+            ? "Contoh tampilan dengan data contoh. RSVP dan pesan tamu tidak disimpan."
+            : "Pratinjau. RSVP dan pesan tamu tidak disimpan, dan hanya Anda yang melihat halaman ini."}
         </p>
       )}
       <Komponen data={data} />

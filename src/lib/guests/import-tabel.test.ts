@@ -8,22 +8,25 @@ const konteks: ImportContext = {
   ],
   groups: [],
   existing: [],
-  defaults: { maxAdults: 2, maxChildren: 0 },
+  defaults: { maxAttendees: 2,  },
 };
 
 describe("parseGuestTable (Excel)", () => {
+  it("menolak header kuota dewasa dan anak pada berkas Excel", () => {
+    expect(parseGuestTable([["nama", "whatsapp", "maks_dewasa", "maks_anak"], ["Tamu", "081234567890", "2", "1"]])).toMatchObject({ ok: false, error: expect.stringContaining("maks_peserta") });
+  });
   it("membaca tabel dengan judul kolom di baris pertama dan memakai nomor baris lembar", () => {
     const hasil = parseGuestTable([
-      ["Nama", "WhatsApp", "Grup", "Acara", "Maks dewasa", "Maks anak"],
-      ["Bapak Hendra", "81200000101", "Keluarga", "utama;lanjutan", "2", "1"],
+      ["Nama", "WhatsApp", "Grup", "Acara", "Maks peserta"],
+      ["Bapak Hendra", "81200000101", "Keluarga", "utama;lanjutan", "3"],
       ["", "", "", "", "", ""],
-      ["Tante Lina", "0812-0000-0104", "", "", "", ""],
+      ["Tante Lina", "0812-0000-0104", "", "", ""],
     ]);
     expect(hasil.ok).toBe(true);
     if (!hasil.ok) return;
-    expect(hasil.rows.map((r) => [r.row, r.nama, r.whatsapp, r.maks_dewasa, r.maks_anak])).toEqual([
-      [2, "Bapak Hendra", "81200000101", "2", "1"],
-      [4, "Tante Lina", "0812-0000-0104", "", ""],
+    expect(hasil.rows.map((r) => [r.row, r.nama, r.whatsapp, r.maks_peserta])).toEqual([
+      [2, "Bapak Hendra", "81200000101", "3"],
+      [4, "Tante Lina", "0812-0000-0104", ""],
     ]);
     const validasi = validateImportRows(hasil.rows, konteks);
     expect(validasi.map((r) => r.status)).toEqual(["siap", "siap"]);

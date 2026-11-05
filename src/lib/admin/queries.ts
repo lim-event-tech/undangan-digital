@@ -273,7 +273,7 @@ export async function getInvitationAdmin(
       opened: COUNTS.opened,
       responded: COUNTS.responded,
       events: sql<number>`(select count(*)::int from event where event.invitation_id = ${invitation.id})`,
-      photos: sql<number>`(select count(*)::int from photo where photo.invitation_id = ${invitation.id} and photo.kind <> 'qris')`,
+      photos: sql<number>`(select count(*)::int from photo where photo.invitation_id = ${invitation.id} and photo.kind in ('cover', 'galeri'))`,
       checkedIn: sql<number>`(select count(*)::int from guest where guest.invitation_id = ${invitation.id} and guest.checked_in_at is not null)`,
       createdAt: invitation.createdAt,
     })

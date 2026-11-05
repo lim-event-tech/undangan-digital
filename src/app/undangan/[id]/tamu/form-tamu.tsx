@@ -22,15 +22,14 @@ import { deleteGuestAction, saveGuestAction } from "./actions";
 export type FormTamuProps = {
   events: { id: string; name: string }[];
   groups: string[];
-  defaults: { maxAdults: number; maxChildren: number };
+  defaults: { maxAttendees: number };
   guest: {
     id: string;
     name: string;
     phone: string;
     groupName: string | null;
     eventIds: string[];
-    maxAdults: number;
-    maxChildren: number;
+    maxAttendees: number;
   } | null;
   batalHref: string;
 };
@@ -101,7 +100,7 @@ export function FormTamu({
             required
             maxLength={120}
             autoComplete="off"
-            placeholder="mis. Bapak Hendra & Istri"
+            placeholder="mis. Bapak Hendra Permana"
             defaultValue={v?.nama ?? guest?.name ?? ""}
             aria-invalid={errors?.nama ? true : undefined}
             aria-describedby={errors?.nama ? "galat-nama" : undefined}
@@ -160,7 +159,7 @@ export function FormTamu({
               type="text"
               maxLength={60}
               autoComplete="off"
-              placeholder="mis. Teman SMA"
+              placeholder="mis. Mitra"
               defaultValue={v?.grupBaru ?? ""}
               aria-invalid={errors?.grup ? true : undefined}
               className={kolom}
@@ -191,36 +190,22 @@ export function FormTamu({
 
         <div className="grid grid-cols-2 gap-2.5">
           <label className={labelKolom}>
-            Maks. dewasa
+            Maks. peserta
             <input
-              name="maksDewasa"
+              name="maksPeserta"
               type="number"
               min={1}
-              max={20}
+              max={40}
               required
-              defaultValue={v?.maksDewasa ?? guest?.maxAdults ?? defaults.maxAdults}
-              aria-invalid={errors?.maksDewasa ? true : undefined}
-              className={kolom}
-            />
-          </label>
-          <label className={labelKolom}>
-            Maks. anak
-            <input
-              name="maksAnak"
-              type="number"
-              min={0}
-              max={20}
-              required
-              defaultValue={v?.maksAnak ?? guest?.maxChildren ?? defaults.maxChildren}
-              aria-invalid={errors?.maksAnak ? true : undefined}
+              defaultValue={v?.maksPeserta ?? guest?.maxAttendees ?? defaults.maxAttendees}
+              aria-invalid={errors?.maksPeserta ? true : undefined}
               className={kolom}
             />
           </label>
         </div>
-        <Galat errors={errors} nama="maksDewasa" />
-        <Galat errors={errors} nama="maksAnak" />
+        <Galat errors={errors} nama="maksPeserta" />
         <p className="m-0 text-xs leading-normal text-redup">
-          Bawaan dari pengaturan undangan. Ubah untuk tamu ini saja bila perlu.
+          Termasuk tamu utama dan pendamping. Bawaan dari pengaturan undangan, dapat diubah untuk tamu ini.
         </p>
 
         {state.duplicate ? (

@@ -12,7 +12,7 @@ export function TombolHapusUcapan({ id, pengirim }: { id: string; pengirim: stri
     <form
       action={hapusUcapanActionForInvitation}
       onSubmit={(event) => {
-        if (!window.confirm(`Hapus ucapan dari ${pengirim}? Ucapan yang dihapus tidak bisa dikembalikan.`)) {
+        if (!window.confirm(`Hapus pesan tamu dari ${pengirim}? Pesan tamu yang dihapus tidak bisa dikembalikan.`)) {
           event.preventDefault();
         }
       }}
