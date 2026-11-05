@@ -1,0 +1,78 @@
+.portal-awal {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: #faf7f0;
+  color: #2a2622;
+  font-family: 'Jost', system-ui, sans-serif;
+  overflow-wrap: anywhere;
+  -webkit-font-smoothing: antialiased;
+}
+.portal-awal *, .portal-awal *::before, .portal-awal *::after { box-sizing: border-box; }
+.portal-awal a { text-decoration: none; }
+.portal-awal a:focus-visible { outline: 2px solid #7d5f28; outline-offset: 5px; }
+.portal-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; max-width: 1440px; margin-inline: auto; padding: 24px 40px; }
+.portal-merek { display: inline-flex; align-items: center; gap: 10px; color: #2a2622; font: 500 25px/1.2 'Cormorant Garamond', Georgia, serif; white-space: nowrap; }
+.portal-lambang { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid #b69b63; border-radius: 50%; color: #7d5f28; }
+.portal-masuk { display: inline-flex; align-items: center; justify-content: center; gap: 14px; min-height: 44px; padding: 9px 17px; border: 1px solid #d9cdb6; border-radius: 7px; font-size: 13px; color: #3d3731; background: #fffdf8; white-space: nowrap; transition: border-color .2s, background .2s; }
+.portal-masuk:hover { border-color: #a8853f; background: #f3eddd; }
+.portal-main { display: flex; flex: 1; align-items: center; justify-content: center; padding: 44px 28px 54px; }
+.portal-isi { display: flex; flex-direction: column; gap: 34px; width: 100%; max-width: 1000px; }
+.portal-intro { text-align: center; animation: portal-tampil .65s ease both; }
+.portal-intro .portal-label { margin: 0 0 14px; color: #7d5f28; font-size: 10px; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; }
+.portal-intro h1 { margin: 0; font: 500 clamp(36px, 4.4vw, 56px)/1.08 'Cormorant Garamond', Georgia, serif; letter-spacing: -.02em; }
+.portal-jeda { display: none; }
+.portal-intro > p:last-child { margin: 16px auto 0; max-width: 480px; color: #6a6157; font-size: 14px; line-height: 1.7; }
+.portal-pilihan { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.portal-kartu { position: relative; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; min-height: 270px; padding: 30px; gap: 38px; border: 1px solid #e0d5c1; border-radius: 18px; animation: portal-tampil .65s ease both; transition: transform .25s ease, box-shadow .25s ease; }
+.portal-kartu:hover { transform: translateY(-4px); box-shadow: 0 14px 28px -22px #2a26225c; }
+.portal-kartu:hover .portal-panah, .portal-kartu:focus-visible .portal-panah { transform: translateX(4px); }
+.portal-buat { background: #384737; border-color: #384737; color: #fbf8ef; animation-delay: .1s; }
+.portal-kelola { background: #fffdf8; color: #2a2622; animation-delay: .2s; }
+.portal-kartu-atas { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.portal-ikon { display: inline-flex; color: #8d6e34; }
+.portal-buat .portal-ikon, .portal-buat .portal-panah { color: #e1ce9f; }
+.portal-panah { flex-shrink: 0; transition: transform .25s ease; }
+.portal-kartu h2 { margin: 0 0 10px; font: 500 36px/1.1 'Cormorant Garamond', Georgia, serif; letter-spacing: -.01em; }
+.portal-kartu p { margin: 0; max-width: 300px; color: #6a6157; font-size: 14px; line-height: 1.7; }
+.portal-buat p { color: #e4e4d7; }
+.portal-akses { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; animation: portal-tampil .65s .3s ease both; }
+.portal-akses > p { margin: 0; color: #6a6157; font-size: 12px; line-height: 1.7; }
+.portal-admin { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 44px; padding: 10px 20px; border: 1px solid #d9cdb6; border-radius: 30px; background: #fffdf8; color: #4b4236; font-size: 12px; transition: background .2s, border-color .2s; }
+.portal-admin:hover { background: #f3eddd; border-color: #a8853f; }
+.portal-akses .portal-daftar { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: -6px; }
+.portal-daftar a { display: inline-flex; align-items: center; min-height: 32px; padding-inline: 4px; color: #7d5f28; text-decoration: underline; text-underline-offset: 4px; }
+.portal-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px 28px; padding: 19px 40px; border-top: 1px solid #e9e0ce; font-size: 10px; color: #6a6157; }
+.portal-footer > span { flex-shrink: 0; letter-spacing: .06em; }
+.portal-footer p { margin: 0; line-height: 1.7; }
+@keyframes portal-tampil { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@media (max-width: 700px) {
+  .portal-header { padding: 18px 20px; }
+  .portal-merek { font-size: 22px; gap: 8px; }
+  .portal-lambang { width: 32px; height: 32px; }
+  .portal-main { padding: 30px 20px 36px; }
+  .portal-isi { max-width: 470px; gap: 28px; }
+  .portal-pilihan { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .portal-kartu { min-height: 210px; padding: 25px; gap: 30px; border-radius: 14px; }
+  .portal-kartu h2 { font-size: 32px; }
+  .portal-kartu p { font-size: 13px; }
+  .portal-intro > p:last-child { font-size: 13px; }
+  .portal-footer { flex-direction: column; align-items: flex-start; gap: 5px; padding: 18px 20px; }
+}
+@media (max-width: 360px) {
+  .portal-header { padding-inline: 16px; gap: 10px; }
+  .portal-merek { font-size: 20px; }
+  .portal-masuk { padding-inline: 12px; gap: 9px; font-size: 12px; }
+  .portal-main { padding-inline: 16px; }
+  .portal-jeda { display: block; }
+  .portal-kartu { padding: 22px; }
+  .portal-kartu h2 { font-size: 30px; }
+}
+@media (max-width: 300px) {
+  .portal-header { padding-inline: 12px; gap: 6px; }
+  .portal-merek { font-size: 17px; gap: 6px; }
+  .portal-lambang { width: 24px; height: 24px; }
+  .portal-lambang svg { width: 14px; height: 14px; }
+  .portal-masuk { padding-inline: 8px; gap: 6px; font-size: 11px; }
+}

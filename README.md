@@ -1,14 +1,16 @@
 # UndanganDigital
 
-Aplikasi undangan event digital. Setiap tamu mendapat link pribadi, dan pengguna memantau semuanya dari satu dashboard.
+Aplikasi undangan event digital. Setiap tamu mendapat link pribadi, dan pengguna mengelola beberapa undangan beserta RSVP masing-masing.
 
-Sprint 1 event umum terdiri dari dua batch: fondasi judul event beserta penghapusan profil/foto mempelai, lalu konsep visual dan isi keempat template. Melati memakai botani editorial, Keraton bingkai geometris, Malam Berbintang orbit bintang, dan Pasundan pola alam. Data contoh serta delapan gambar pratinjau HP/desktop mengikuti tampilan baru. Beberapa undangan per akun serta halaman awal internal berada pada sprint berikutnya.
+Sprint 1 event umum terdiri dari dua batch: fondasi judul event beserta penghapusan profil/foto mempelai, lalu konsep visual dan isi keempat template. Melati memakai botani editorial, Keraton bingkai geometris, Malam Berbintang orbit bintang, dan Pasundan pola alam. Data contoh serta delapan gambar pratinjau HP/desktop mengikuti tampilan baru.
 
 Sprint 2 menghubungkan beberapa undangan dalam satu akun. Halaman `/undangan` memuat daftar milik pengguna; editor dan menu pengelolaan berada di `/undangan/{id}/...`. Pembuatan tambahan langsung membuka editor ID yang baru. Semua aksi, unggahan, impor/ekspor, pratinjau, WhatsApp, dan check-in memakai ID eksplisit yang diperiksa di server. Dua tab dapat mengelola undangan berbeda. Pengaturan akun tetap di `/undangan/akun`; tautan pengelolaan lama diarahkan ke daftar. Sprint 2 tidak memerlukan migrasi database baru.
 
+Sprint 3 dibagi dua batch. Batch 1 selesai: halaman awal menjadi portal tindakan mengikuti susunan WordCLD: kartu Buat undangan dan Kelola undangan, akses admin terpisah, serta petunjuk singkat. Masuk dan Daftar tetap tersedia dengan kebijakan akun yang sama. Halaman awal tidak memerlukan kueri katalog template. Batch 2 berisi uji alur lengkap dari portal sampai RSVP/check-in dan dokumentasi akhir.
+
 Migrasi `0012_event_umum` menambahkan judul event, menghapus kolom dan profil mempelai serta foto jenis pria/wanita, lalu mengganti placeholder pesan lama menjadi `{event}`. Draf development yang sudah ada mendapat judul `Event` diikuti delapan karakter ID dan dapat disunting melalui editor. Terapkan migrasi dengan `npm run db:migrate` sebelum menjalankan kode baru pada database yang sudah ada.
 
-Sudah ada daftar dan masuk dengan Google atau email dan kata sandi (tanpa verifikasi email dan tanpa lupa kata sandi karena belum ada layanan email), daftar tamu dengan impor CSV/Excel, editor konten dengan simpan otomatis dan unggah foto, beberapa acara dalam satu undangan, empat template event umum dengan RSVP per acara, pratinjau link WhatsApp, kirim undangan lewat WhatsApp, serta ringkasan RSVP. Perubahan Sprint 1 diverifikasi secara lokal; database operasional dan deployment belum diubah.
+Sudah ada daftar dan masuk dengan Google atau email dan kata sandi (tanpa verifikasi email dan tanpa lupa kata sandi karena belum ada layanan email), daftar tamu dengan impor CSV/Excel, editor konten dengan simpan otomatis dan unggah foto, beberapa acara dalam satu undangan, empat template event umum dengan RSVP per acara, pratinjau link WhatsApp, kirim undangan lewat WhatsApp, serta ringkasan RSVP. Sprint 1, Sprint 2, dan Sprint 3 batch 1 diverifikasi secara lokal; database operasional dan deployment belum diubah oleh Codex.
 
 ## Kebutuhan
 
