@@ -82,7 +82,7 @@ export function useGerak(akar: RefObject<HTMLElement | null>, aktif = true) {
             io.unobserve(x.target);
           }
         },
-        { threshold: 0.12, rootMargin: "0px 0px -8% 0px" },
+        { threshold: 0.01, rootMargin: "0px 0px -24px 0px" },
       );
       elemen.forEach((e) => io.observe(e));
       pengamat = io;

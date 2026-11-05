@@ -5,7 +5,9 @@ import { formatDate, formatDots, formatLongDate, formatTime } from "@/lib/dateti
 import type { BagianId } from "@/lib/invitations/content";
 import type { InvitationView } from "@/templates/types";
 import type { DataUndangan, HalamanUcapan } from "./jenis";
-import { RASIO_CONTOH, rasioFoto, susunLajur } from "./pola-galeri";
+import { rasioFoto, susunLajur } from "./pola-galeri";
+import { FOTO_CONTOH } from "./aset-contoh";
+import { DEFAULT_TEMPLATE, type TemplateKey } from "@/templates/registry";
 import { kotaDari, tanggalKata } from "./teks";
 
 export const PENUTUP_BAWAAN =
@@ -13,7 +15,7 @@ export const PENUTUP_BAWAAN =
 
 const foto = (id: string) => `/foto/${id}`;
 
-export function siapkanData(view: InvitationView): DataUndangan {
+export function siapkanData(view: InvitationView, template: TemplateKey = DEFAULT_TEMPLATE): DataUndangan {
   const { content, events, photos } = view;
   const pertama = events.find((e) => e.date) ?? null;
   const tanggal = pertama?.date ?? null;
@@ -76,7 +78,7 @@ export function siapkanData(view: InvitationView): DataUndangan {
   const galeriFoto = photos.filter((p) => p.kind === "galeri");
   const sumberGaleri =
     galeriFoto.length === 0 && view.mode === "contoh"
-      ? RASIO_CONTOH.map((rasio, i) => ({ id: `contoh-${i}`, src: "", rasio }))
+      ? [FOTO_CONTOH[template], ...Object.entries(FOTO_CONTOH).filter(([key]) => key !== template).map(([, value]) => value)].map((p, i) => ({ id: `contoh-${i}`, src: p.src, rasio: rasioFoto(p.width, p.height) }))
       : galeriFoto.map((p) => ({ id: p.id, src: foto(p.id), rasio: rasioFoto(p.width, p.height) }));
   const lajurGaleri = susunLajur(sumberGaleri.map((p) => p.rasio));
   const sizes = lajurGaleri.length > 1 ? "(max-width: 430px) 50vw, 215px" : "(max-width: 430px) 100vw, 430px";
@@ -97,7 +99,7 @@ export function siapkanData(view: InvitationView): DataUndangan {
   const tersedia: Record<BagianId, boolean> = {
     sampul: true,
     pembuka: true,
-    tentang: Boolean(content.identitas.deskripsi.trim() || content.identitas.jenis.trim() || content.identitas.subjudul.trim()),
+    tentang: Boolean(content.identitas.deskripsi.trim()),
     salam: Boolean(content.sambutan.trim()),
     penyelenggara: Boolean(content.penyelenggara.nama.trim() || content.penyelenggara.namaEo.trim() || photos.some((p) => p.kind === "logo_penyelenggara" || p.kind === "logo_eo")),
     agenda: events.some((e) => e.agenda.length > 0),

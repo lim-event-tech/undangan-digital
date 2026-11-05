@@ -57,9 +57,13 @@ export function contohView(now: number): InvitationView {
     guest: { name: "Nama Tamu", maxAttendees: 2 },
     content: readContent({
       identitas: { jenis: "Seminar", subjudul: "Membangun organisasi yang adaptif dan berdampak", deskripsi: "Forum berbagi pengetahuan dan praktik kepemimpinan bagi para profesional dan pengelola organisasi." },
-      penyelenggara: { nama: "[Nama instansi penyelenggara]", namaEo: "[Nama event organizer]" },
+      penyelenggara: { nama: "Forum Nusantara", namaEo: "Ruang Temu" },
       sambutan: "Dengan hormat, kami mengundang Bapak/Ibu untuk menghadiri kegiatan ini. Kami berharap pertemuan ini dapat membuka ruang diskusi dan kerja sama yang bermanfaat.",
-      pengisiAcara: [{ id: "10000000-0000-4000-8000-000000000001", nama: "[Nama narasumber]", peran: "Narasumber", instansi: "[Nama instansi]", profil: "Paparan dan diskusi mengenai pengembangan organisasi." }],
+      pengisiAcara: [
+        { id: "10000000-0000-4000-8000-000000000001", nama: "Maya Pramesti", peran: "Narasumber", instansi: "Forum Nusantara", profil: "Berbagi gagasan tentang kepemimpinan dan pengembangan organisasi." },
+        { id: "10000000-0000-4000-8000-000000000002", nama: "Arif Wicaksono", peran: "Moderator", instansi: "Ruang Temu", profil: "Memandu percakapan dan diskusi bersama peserta." },
+      ],
+      kontak: { nama: "Sekretariat acara", email: "panitia@example.com" },
       informasiPeserta: { dressCode: "Busana formal atau batik", ketentuan: "Mohon hadir 30 menit sebelum sesi dimulai dan menyiapkan kode undangan.", petunjukLokasi: "Registrasi peserta berada di lobi utama gedung." },
       penutup: "Terima kasih atas perhatian dan kesediaan Bapak/Ibu untuk hadir. Sampai bertemu pada kegiatan kami.",
       ucapan: { tampil: true, tahan: false },

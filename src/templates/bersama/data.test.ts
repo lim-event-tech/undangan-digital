@@ -64,11 +64,11 @@ describe("siapkanData", () => {
     expect(data).not.toHaveProperty("rekening");
   });
 
-  it("menyusun galeri menurut ukuran asli foto dan petak contoh hanya di mode contoh", () => {
+  it("menyusun galeri menurut ukuran asli dan memakai aset ilustrasi hanya di mode contoh", () => {
     expect(siapkanData(tamu()).galeri).toEqual([]);
     const contoh = siapkanData(contohView(SEKARANG));
-    expect(contoh.galeri).toHaveLength(6);
-    expect(contoh.galeri[0]).toMatchObject({ src: "", rasio: "3 / 4" });
+    expect(contoh.galeri).toHaveLength(4);
+    expect(contoh.galeri[0]).toMatchObject({ src: "/template/assets/melati.webp", rasio: "1051 / 1400" });
     expect(contoh.lajurGaleri).toHaveLength(2);
 
     const photos = [
@@ -85,6 +85,19 @@ describe("siapkanData", () => {
     const satu = siapkanData(tamu({ photos: [photos[0]] }));
     expect(satu.lajurGaleri).toEqual([[0]]);
     expect(satu.galeri[0].sizes).toContain("100vw");
+  });
+
+  it("mengutamakan ilustrasi tema pada contoh dan tidak mengisi galeri pengguna", () => {
+    expect(siapkanData(tamu(), "bintang").galeri).toEqual([]);
+    expect(siapkanData(contohView(SEKARANG), "bintang").galeri[0].src).toBe("/template/assets/bintang.webp");
+  });
+
+  it("mendahulukan jadwal, agenda, dan informasi peserta sebelum konfirmasi pada susunan bawaan", () => {
+    const { urutan } = siapkanData(contohView(SEKARANG));
+    expect(urutan.indexOf("acara")).toBeLessThan(urutan.indexOf("agenda"));
+    expect(urutan.indexOf("agenda")).toBeLessThan(urutan.indexOf("informasi"));
+    expect(urutan.indexOf("informasi")).toBeLessThan(urutan.indexOf("rsvp"));
+    expect(urutan.indexOf("rsvp")).toBeLessThan(urutan.indexOf("galeri"));
   });
 
   it("mengambil jawaban RSVP tamu dan memakai teks penutup bawaan", () => {

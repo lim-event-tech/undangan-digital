@@ -1,27 +1,31 @@
 .tpl-bintang {
-  --event-utama: #e7cf98;
-  --event-teks: #c6cbd3;
-  --event-kertas: #152039;
-  --event-kartu: #1b2942;
-  --event-lembut: #202e49;
-  --event-latar: #0c1425;
-  --event-garis: #627084;
-  --event-aksen: #bca577;
-  --event-tombol-teks: #152039;
-  --event-sans: 'Jost', sans-serif;
-  --event-serif: 'Marcellus', serif;
-  --event-radius: 6px;
+  --event-tekstur-luar:radial-gradient(circle at 24px 32px,#f0d49b66 0 .8px,transparent 1.4px),radial-gradient(circle at 96px 110px,#c0cad944 0 .7px,transparent 1.3px);
+  --event-tekstur-ukuran:210px 240px,170px 190px;
+  --event-utama:#f0d49b; --event-teks:#e4e9f1; --event-muted:#c0cad9; --event-label:#deca9c;
+  --event-kertas:#111d32; --event-kartu:#1a2a44; --event-lembut:#182840; --event-latar:#091323; --event-garis:#526078; --event-border:#8897ac; --event-aksen:#d2b77d;
+  --event-ink:#1a2a44; --event-on-ink:#f9eed5; --event-tombol-teks:#132038; --event-sans:'Jost',sans-serif; --event-serif:'Marcellus',serif; --event-radius:2px;
 }
-.tpl-bintang { background-image: radial-gradient(circle at 12% 22%, #e7cf9866 1px, transparent 2px), radial-gradient(circle at 82% 68%, #e7cf9866 1px, transparent 2px); background-size: 145px 170px, 210px 245px; }
-.tpl-bintang::before { border-style: dashed; box-shadow: 0 0 0 45px #0c1425, 0 0 0 46px #627084; transform: rotate(-25deg); border-radius: 50%; height: 130px; }
-.tpl-bintang .event-sampul { background: radial-gradient(ellipse at 80% 18%, #3c4a6555, transparent 65%), radial-gradient(circle at 15% 35%, #e7cf9866 1px, transparent 2px), radial-gradient(circle at 86% 66%, #e7cf9888 1px, transparent 2px), #152039; }
-.tpl-bintang .event-bingkai { border: 0; border-top: 1px solid #627084; border-bottom: 1px solid #627084; inset: 22px; }
-.tpl-bintang .event-identitas h1 { letter-spacing: -.01em; font-size: calc(var(--ukuran-judul) * .95); }
-.tpl-bintang .event-sampul .event-hiasan { width: 210px; }
-.tpl-bintang .event-pembuka { background: radial-gradient(ellipse at 50% 20%, #36446188, transparent 65%), #152039; }
-.tpl-bintang .event-hitung { background: #202e49; color: #e7cf98; border-block: 1px solid #627084; }
-.tpl-bintang .event-hitung .event-sekunder { color: #e7cf98; }
-.tpl-bintang .event-hitungan > div { border-color: #627084; }
-.tpl-bintang .event-kartu { box-shadow: 0 12px 25px #0001; }
-.tpl-bintang .event-jumlah button { background: #152039; }
-.tpl-bintang .event-penutup { background: radial-gradient(ellipse at 50% 80%, #36446188, transparent 65%), #152039; }
+.tpl-bintang .event-sampul { background:radial-gradient(ellipse at 50% -20%,#38476a88,transparent 75%),#111d32; }
+.tpl-bintang .event-identitas h1 { color:#fbf3e2; font-size:calc(var(--ukuran-judul) * 1.08); font-weight:400; }
+.tpl-bintang .event-bingkai { border:0; border-top:1px solid #a68c54; border-bottom:1px solid #a68c54; inset:22px; }
+.tpl-bintang .event-meterai { width:120px; height:83px; }
+.tpl-bintang .event-meterai > span { font-size:17px; border:1px solid #d2b77d88; background:#111d32; padding:10px 8px; border-radius:50%; }
+.tpl-bintang .event-meterai > .event-hiasan { opacity:.8; }
+.tpl-bintang .event-ornamen-atas { width:400px; top:-160px; left:-200px; opacity:.3; }
+.tpl-bintang .event-ornamen-bawah { width:360px; bottom:10px; right:-220px; opacity:.2; }
+.tpl-bintang .event-pembuka { background:#14233b; border-bottom:1px solid #526078; }
+.tpl-bintang .event-kepala h2 { color:#fbf3e2; font-weight:400; font-size:35px; }
+.tpl-bintang .event-tentang { background:#111d32; }
+.tpl-bintang .event-agenda { border:1px solid #6a7890; border-top:3px solid #d2b77d; background:#1a2a44; }
+.tpl-bintang .event-agenda::before,.tpl-bintang .event-agenda::after { content:''; position:absolute; top:230px; width:18px; height:18px; border-radius:50%; background:#111d32; border:1px solid #6a7890; }
+.tpl-bintang .event-agenda::before { left:-10px; }
+.tpl-bintang .event-agenda::after { right:-10px; }
+.tpl-bintang .event-agenda h3 { color:#fbf3e2; }
+.tpl-bintang .event-sesi-kepala .event-nomor { border-radius:50%; border-color:#a48b5d; }
+.tpl-bintang .event-agenda .event-tempat { border-top:1px dashed #6a7890; }
+.tpl-bintang .event-hitung { border-block:1px solid #526078; }
+.tpl-bintang .event-profil { background:linear-gradient(145deg,#273854,#182840); }
+.tpl-bintang .event-info { border-color:#526078; }
+.tpl-bintang .event-rsvp { background:#14233b; }
+.tpl-bintang .event-form { background:#1a2a44; }
+.tpl-bintang .event-penutup { background:radial-gradient(ellipse at 50% 100%,#34466866,transparent 75%),#111d32; border-top:1px solid #526078; }

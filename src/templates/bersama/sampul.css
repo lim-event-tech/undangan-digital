@@ -2,7 +2,7 @@
   --tinggi-viewport: 100vh;
   height: var(--tinggi-sampul, var(--tinggi-viewport));
   min-height: 0;
-  padding: max(20px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(94px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  padding: max(28px, env(safe-area-inset-top, 0px)) max(28px, env(safe-area-inset-right, 0px)) calc(112px + env(safe-area-inset-bottom, 0px)) max(28px, env(safe-area-inset-left, 0px));
   justify-content: center;
 }
 
@@ -19,7 +19,7 @@
   flex: 0 0 auto;
   flex-direction: column;
   align-items: center;
-  gap: clamp(10px, 2.5vh, 26px);
+  gap: clamp(10px, 1.6vh, 14px);
   width: 100%;
   transform: scale(var(--skala-sampul, 1));
   transform-origin: center;
@@ -40,9 +40,12 @@
   position: absolute;
   z-index: 5;
   right: max(12px, env(safe-area-inset-right, 0px));
-  bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  bottom: max(30px, env(safe-area-inset-bottom, 0px));
   left: max(12px, env(safe-area-inset-left, 0px));
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   justify-content: center;
 }
 
@@ -78,4 +81,10 @@ html.js .undangan-template[data-terbuka="false"] .undangan-lanjutan {
   max-width: 100%;
   overflow-wrap: anywhere;
   line-height: 1.15 !important;
+}
+
+@media (max-height: 380px) {
+  .sampul-undangan { padding: 12px 22px 72px; }
+  .sampul-konten { gap: 5px; }
+  .sampul-aksi { bottom: 10px; }
 }

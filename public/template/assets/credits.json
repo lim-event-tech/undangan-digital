@@ -1,0 +1,11 @@
+{
+  "license": "Unsplash License",
+  "licenseUrl": "https://unsplash.com/license",
+  "usage": "Ilustrasi foto pada mode contoh template; tidak otomatis mengisi undangan pengguna.",
+  "photos": [
+    { "file": "melati.webp", "photographer": "Kin Shing Lai", "source": "https://unsplash.com/photos/empty-conference-room-with-chairs-arranged-in-a-circle-Bx7nJG0x6xo" },
+    { "file": "keraton.webp", "photographer": "Aditya Sethia", "source": "https://unsplash.com/photos/an-empty-conference-room-with-a-projector-screen-g1YKUSb11KY" },
+    { "file": "bintang.webp", "photographer": "Jose Marroquin", "source": "https://unsplash.com/photos/formal-dining-table-set-for-a-large-event-cNxEE79UAe8" },
+    { "file": "pasundan.webp", "photographer": "Jarden Bellamkonda", "source": "https://unsplash.com/photos/a-wooden-pavilion-in-a-lush-green-forest-setting-ZIuT0E5peH0" }
+  ]
+}

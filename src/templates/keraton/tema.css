@@ -1,25 +1,27 @@
 .tpl-keraton {
-  --event-utama: #173f36;
-  --event-teks: #555b50;
-  --event-kertas: #f9f4e7;
-  --event-lembut: #ece5d4;
-  --event-latar: #12382f;
-  --event-garis: #d4c6a1;
-  --event-aksen: #ac8c4d;
-  --event-sans: 'Jost', sans-serif;
-  --event-serif: 'Lora', serif;
-  --event-radius: 0px;
+  --event-tekstur-luar:repeating-linear-gradient(45deg,#d5b77b16 0 1px,transparent 1px 24px),repeating-linear-gradient(-45deg,#d5b77b10 0 1px,transparent 1px 24px);
+  --event-utama:#183e33; --event-teks:#454a3d; --event-muted:#5d604d; --event-label:#6d552e;
+  --event-kertas:#fbf5e7; --event-lembut:#efe6d2; --event-latar:#10372e; --event-garis:#ccbb93; --event-border:#8a764b; --event-aksen:#957138;
+  --event-ink:#183e33; --event-on-ink:#fbf1d9; --event-sans:'Jost',sans-serif; --event-serif:'Lora',serif; --event-radius:0px;
 }
-.tpl-keraton::before, .tpl-keraton::after { border-radius: 0; transform: rotate(45deg); opacity: .15; }
-.tpl-keraton .event-sampul { background: #173f36; color: #e8dec3; }
-.tpl-keraton .event-sampul :is(.event-label, h1, .event-tanggal, .event-nama-tamu) { color: #e8d3a3; }
-.tpl-keraton .event-sampul h1 { font-family: 'Cinzel', serif; font-size: calc(var(--ukuran-judul) * .85); letter-spacing: .025em; margin-block: 20px; }
-.tpl-keraton .event-bingkai { inset: 18px; border: 1px solid #ac8c4d88; outline: 1px solid #ac8c4d44; outline-offset: -7px; }
-.tpl-keraton .event-sampul .event-hiasan { width: 176px; color: #c8ad70; }
-.tpl-keraton .sampul-aksi .event-tombol { background: #e8d3a3; border-color: #e8d3a3; color: #173f36; }
-.tpl-keraton .event-tamu { border-top: 1px solid #ac8c4d66; padding-top: 20px; width: 85%; }
-.tpl-keraton .event-pembuka { background: #f9f4e7; border-bottom: 8px double #d4c6a1; }
-.tpl-keraton .event-kepala h2 { font-size: 30px; }
-.tpl-keraton .event-agenda { border-top: 3px solid #ac8c4d; }
-.tpl-keraton .event-salam { background: #ece5d4; }
-.tpl-keraton .event-penutup { border-top: 8px double #d4c6a1; }
+.tpl-keraton .event-sampul { background:#153d32; --event-utama:#f0d8a6; --event-teks:#f6eddb; --event-muted:#e0cfad; --event-label:#e3c68d; --event-garis:#8b7852; --event-aksen:#d5b77b; --event-kertas:#153d32; --event-tombol-teks:#183e33; }
+.tpl-keraton .event-identitas h1 { font-family:'Cinzel',serif; text-transform:uppercase; font-size:calc(var(--ukuran-judul) * .96); letter-spacing:.015em; }
+.tpl-keraton .event-bingkai { inset:17px; border:1px solid #b99b60; outline:1px solid #b99b6044; outline-offset:-7px; border-radius:160px 160px 0 0; }
+.tpl-keraton .event-meterai { width:120px; height:86px; }
+.tpl-keraton .event-meterai > span { font-family:'Cinzel',serif; font-size:19px; padding-top:26px; }
+.tpl-keraton .event-meterai > .event-hiasan { opacity:.8; }
+.tpl-keraton .event-ornamen-atas { width:330px; top:-100px; left:-205px; opacity:.17; }
+.tpl-keraton .event-ornamen-bawah { width:330px; bottom:20px; right:-215px; opacity:.17; transform:rotate(0); }
+.tpl-keraton .event-kisi { position:absolute; inset:26px; border-top:1px solid #b99b6044; border-bottom:1px solid #b99b6044; }
+.tpl-keraton .event-pembuka { border-bottom:5px double #ccbb93; }
+.tpl-keraton .event-bagian > .event-kepala { text-align:center; }
+.tpl-keraton .event-kepala .event-pemisah { margin-inline:auto; }
+.tpl-keraton .event-kepala h2 { font-size:32px; }
+.tpl-keraton .event-agenda { border:1px solid #b69c64; border-radius:75px 75px 0 0; padding:32px 22px 26px; background:#fbf5e7; text-align:center; }
+.tpl-keraton .event-agenda .event-sesi-kepala { justify-content:center; }
+.tpl-keraton .event-agenda .event-aksi { align-items:center; }
+.tpl-keraton .event-sesi-kepala .event-nomor { font-family:'Cinzel',serif; }
+.tpl-keraton .event-salam { background:#efe6d2; }
+.tpl-keraton .event-profil { border:1px solid #ccbb93; border-top:4px solid #957138; background:#f5ecd9; }
+.tpl-keraton .event-profil h3 { font-size:25px; }
+.tpl-keraton .event-penutup { border-top:5px double #ccbb93; }
