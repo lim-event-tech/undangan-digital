@@ -5,10 +5,9 @@ import { redirect } from "next/navigation";
 import { db } from "@/db";
 import {
   createInvitation,
-  getInvitationForOwner,
 } from "@/lib/invitations/service";
 import { canUseTemplate } from "@/lib/platform/templates";
-import { requireUser } from "@/lib/session";
+import { requireOwnAccount } from "@/lib/session";
 import { parseInvitationTitle } from "@/lib/invitations/title";
 import { DEFAULT_TEMPLATE } from "@/templates/registry";
 
@@ -21,19 +20,17 @@ export async function createInvitationAction(
   _state: BaruState,
   formData: FormData,
 ): Promise<BaruState> {
-  const user = await requireUser();
+  const { user } = await requireOwnAccount();
   const parsed = parseInvitationTitle(formData.get("title"));
   const rawTitle = formData.get("title");
   const values = { title: typeof rawTitle === "string" ? rawTitle : "" };
   if (!parsed.ok) return { error: parsed.error, values };
   const pilihan = formData.get("template");
   const templateKey =
-    typeof pilihan === "string" && (await canUseTemplate(db, pilihan)) ? pilihan : DEFAULT_TEMPLATE;
+    typeof pilihan === "string" ? pilihan : DEFAULT_TEMPLATE;
+  if (!(await canUseTemplate(db, templateKey))) return { error: "Template tidak tersedia. Pilih template lain.", values };
 
-  const existing = await getInvitationForOwner(db, user.id);
-  if (!existing) {
-    await createInvitation(db, user.id, { title: parsed.title, templateKey });
-  }
+  const created = await createInvitation(db, user.id, { title: parsed.title, templateKey });
   revalidatePath("/undangan", "layout");
-  redirect("/undangan/isi");
+  redirect(`/undangan/${created.id}/isi`);
 }

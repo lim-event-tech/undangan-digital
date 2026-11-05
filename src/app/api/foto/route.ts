@@ -2,7 +2,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { MAX_PHOTO_BYTES } from "@/lib/images";
 import { addPhoto } from "@/lib/photos/service";
-import { getWorkContext } from "@/lib/session";
+import { getWorkContextForInvitation } from "@/lib/session";
 
 const MESSAGES = {
   penuh: "Galeri sudah berisi 12 foto. Hapus satu foto dulu.",
@@ -28,7 +28,7 @@ function sameOrigin(request: Request): boolean {
 export async function POST(request: Request) {
   if (!sameOrigin(request)) return fail("Permintaan ditolak.", 403);
 
-  const context = await getWorkContext();
+  const context = await getWorkContextForInvitation(new URL(request.url).searchParams.get("invitationId"));
   if (!context) return fail("Sesi berakhir. Masuk lagi untuk melanjutkan.", 401);
   const invitation = context.invitation;
   if (!invitation) return fail("Undangan tidak ditemukan.", 404);
@@ -59,6 +59,6 @@ export async function POST(request: Request) {
     return fail(MESSAGES[result.error], result.error === "penuh" ? 409 : 422);
   }
 
-  revalidatePath("/undangan/isi");
+  revalidatePath(`/undangan/${invitation.id}/isi`);
   return Response.json({ ok: true, id: result.photo.id });
 }

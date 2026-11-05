@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { Ikon } from "@/components/ikon";
 import { SidebarNav, type ItemNav } from "@/components/sidebar-nav";
 import { TombolKeluar } from "@/components/tombol-keluar";
@@ -10,35 +13,41 @@ const STATUS_UNDANGAN = {
   ditangguhkan: { label: "Ditangguhkan", kelas: "bg-jingga-bg text-jingga" },
 } as const;
 
-const NAV_DENGAN_UNDANGAN: ItemNav[] = [
-  { label: "Ringkasan RSVP", ikon: "dasbor", href: "/undangan/ringkasan" },
-  { label: "Isi undangan", ikon: "pena", href: "/undangan/isi" },
-  { label: "Daftar tamu", ikon: "tamu", href: "/undangan/tamu" },
-  { label: "Kirim undangan", ikon: "kirim", href: "/undangan/kirim" },
-  { label: "Ucapan", ikon: "surat", href: "/undangan/ucapan" },
-  { label: "Check-in", ikon: "ceklis", href: "/undangan/checkin" },
-  { label: "Ganti template", ikon: "templat", href: "/undangan/template" },
-];
+function invitationNav(id: string): ItemNav[] {
+  const base = `/undangan/${id}`;
+  return [
+    { label: "Ringkasan RSVP", ikon: "dasbor", href: `${base}/ringkasan` },
+    { label: "Isi undangan", ikon: "pena", href: `${base}/isi` },
+    { label: "Daftar tamu", ikon: "tamu", href: `${base}/tamu` },
+    { label: "Kirim undangan", ikon: "kirim", href: `${base}/kirim` },
+    { label: "Ucapan", ikon: "surat", href: `${base}/ucapan` },
+    { label: "Check-in", ikon: "ceklis", href: `${base}/checkin` },
+    { label: "Ganti template", ikon: "templat", href: `${base}/template` },
+  ];
+}
 
 export type ShellUser = { name: string; email: string };
 export type ShellInvitation = {
+  id: string;
   title: string;
   status: keyof typeof STATUS_UNDANGAN;
 };
 
 export function AppShell({
   user,
-  invitation,
+  invitations,
   pengumuman,
   kelola,
   children,
 }: {
   user: ShellUser;
-  invitation: ShellInvitation | null;
+  invitations: ShellInvitation[];
   pengumuman?: { teks: string; jenis: string } | null;
   kelola?: { admin: string } | null;
   children: React.ReactNode;
 }) {
+  const { id } = useParams();
+  const invitation = invitations.find((item) => item.id === (typeof id === "string" ? id.toLowerCase() : null)) ?? null;
   const status = invitation ? STATUS_UNDANGAN[invitation.status] : null;
 
   return (
@@ -62,7 +71,7 @@ export function AppShell({
         {invitation && status ? (
           <div className="flex flex-col gap-0.5 rounded-lg bg-kertas p-3">
             <span className="text-xs text-redup">Undangan</span>
-            <span className="font-medium">
+            <span className="font-medium wrap-anywhere">
               {invitation.title}
             </span>
             <span
@@ -74,7 +83,11 @@ export function AppShell({
         ) : null}
 
         <SidebarNav items={[
-          ...(invitation ? NAV_DENGAN_UNDANGAN : [{ label: "Buat undangan", ikon: "pena" as const, href: "/undangan/baru" }]),
+          ...(!kelola ? [
+            { label: "Semua undangan", ikon: "surat" as const, href: "/undangan", tepat: true },
+            { label: "Buat undangan", ikon: "pena" as const, href: "/undangan/baru" },
+          ] : []),
+          ...(invitation ? invitationNav(invitation.id) : []),
           ...(!kelola ? [{ label: "Pengaturan akun", ikon: "kunci" as const, href: "/undangan/akun" }] : []),
         ]} />
 

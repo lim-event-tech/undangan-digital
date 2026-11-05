@@ -9,6 +9,7 @@ type Props = {
   templates: PilihanTemplate[];
   awal: string;
   aktif: string | null;
+  invitationId?: string;
   aksi?: (formData: FormData) => void | Promise<void>;
 };
 
@@ -58,7 +59,7 @@ function TombolPakai({
   );
 }
 
-export function PilihTemplate({ templates, awal, aktif, aksi }: Props) {
+export function PilihTemplate({ templates, awal, aktif, aksi, invitationId }: Props) {
   const [pilih, setPilih] = useState(awal);
   const [mode, setMode] = useState<"hp" | "desktop">("hp");
   const pilihan = templates.find((t) => t.key === pilih) ?? templates[0];
@@ -178,12 +179,12 @@ export function PilihTemplate({ templates, awal, aktif, aksi }: Props) {
             Di desktop, undangan tampil sebagai kolom selebar HP di tengah layar dengan latar tema di kiri dan kanan.
           </p>
           <div className="flex flex-wrap gap-2.5">
-            <a href={`/pratinjau/${pilihan.key}`} target="_blank" rel="noopener noreferrer" className={tombolPutih}>
+            <a href={invitationId ? `/pratinjau/${pilihan.key}?undangan=${invitationId}` : `/contoh/${pilihan.key}`} target="_blank" rel="noopener noreferrer" className={tombolPutih}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
                 <circle cx="12" cy="12" r="3" />
               </svg>
-              Buka contoh penuh
+              {invitationId ? "Pratinjau undangan" : "Buka contoh penuh"}
             </a>
             <div className="hidden md:block">
               <TombolPakai pilihan={pilihan} aktif={aktif} aksi={aksi} label={`Pakai ${pilihan.label}`} className={tombolTinta} />

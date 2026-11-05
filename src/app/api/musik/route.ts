@@ -2,7 +2,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { MAX_MUSIC_BYTES } from "@/lib/music/audio";
 import { setMusic } from "@/lib/music/service";
-import { getWorkContext } from "@/lib/session";
+import { getWorkContextForInvitation } from "@/lib/session";
 
 const MESSAGES = {
   format: "File bukan musik MP3, M4A, atau OGG.",
@@ -27,7 +27,7 @@ function sameOrigin(request: Request): boolean {
 export async function POST(request: Request) {
   if (!sameOrigin(request)) return fail("Permintaan ditolak.", 403);
 
-  const context = await getWorkContext();
+  const context = await getWorkContextForInvitation(new URL(request.url).searchParams.get("invitationId"));
   if (!context) return fail("Sesi berakhir. Masuk lagi untuk melanjutkan.", 401);
   const invitation = context.invitation;
   if (!invitation) return fail("Undangan tidak ditemukan.", 404);
@@ -49,6 +49,6 @@ export async function POST(request: Request) {
   });
   if (!result.ok) return fail(MESSAGES[result.error], 422);
 
-  revalidatePath("/undangan/isi");
+  revalidatePath(`/undangan/${invitation.id}/isi`);
   return Response.json({ ok: true, id: result.music.id });
 }

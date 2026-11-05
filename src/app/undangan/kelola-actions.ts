@@ -33,7 +33,7 @@ export async function mulaiKelolaAction(formData: FormData): Promise<void> {
     target: `/u/${detail.slug}`,
     detail: `Pemilik ${detail.ownerEmail}`,
   });
-  redirect("/undangan/isi");
+  redirect(`/undangan/${id}/isi`);
 }
 
 export async function akhiriKelolaAction(): Promise<void> {

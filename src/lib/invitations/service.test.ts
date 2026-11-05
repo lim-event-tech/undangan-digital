@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { asc, eq } from "drizzle-orm";
 import { event, invitation } from "@/db/schema";
 import { createTestDb, seedInvitation, type TestDb } from "@/test/db";
-import { createInvitation, getInvitationForOwner, setInvitationTemplate } from "./service";
+import { createInvitation, getOwnedInvitation, listInvitationsForOwner, setInvitationTemplate } from "./service";
 
 let db: TestDb;
 
@@ -71,12 +71,40 @@ describe("createInvitation", () => {
   });
 });
 
-describe("getInvitationForOwner", () => {
-  it("mengembalikan undangan terbaru milik pemilik dan null untuk pemilik lain", async () => {
-    const { ownerId, invitation: created } = await seedInvitation(db);
-    const found = await getInvitationForOwner(db, ownerId);
-    expect(found?.id).toBe(created.id);
-    expect(await getInvitationForOwner(db, "tidak-ada")).toBeNull();
+describe("beberapa undangan per pemilik", () => {
+  it("mendaftar semua undangan milik akun dengan urutan stabil dan tanpa data akun lain", async () => {
+    const { ownerId, invitation: first } = await seedInvitation(db);
+    const second = await createInvitation(db, ownerId, { title: "Workshop Bersama", templateKey: "keraton" });
+    const third = await createInvitation(db, ownerId, { title: "Gathering Anggota" });
+    const other = await seedInvitation(db);
+    const sama = new Date("2026-10-01T00:00:00Z");
+    await db.update(invitation).set({ createdAt: sama }).where(eq(invitation.ownerId, ownerId));
+    await db.update(invitation).set({ createdAt: new Date("2026-10-02T00:00:00Z") }).where(eq(invitation.id, third.id));
+    const rows = await listInvitationsForOwner(db, ownerId);
+    expect(rows.map((row) => row.id)).toEqual([third.id, ...[first.id, second.id].sort().reverse()]);
+    expect(rows.find((row) => row.id === second.id)).toMatchObject({ title: "Workshop Bersama", templateKey: "keraton", status: "draf" });
+    expect(rows).not.toEqual(expect.arrayContaining([expect.objectContaining({ id: other.invitation.id })]));
+    expect(rows[0]).not.toHaveProperty("content");
+    expect(rows[0]).not.toHaveProperty("checkinKey");
+    expect(await listInvitationsForOwner(db, "akun-tanpa-undangan")).toEqual([]);
+  });
+
+  it("mengambil ID yang diminta walaupun pemilik mempunyai undangan lebih baru", async () => {
+    const { ownerId, invitation: first } = await seedInvitation(db);
+    const second = await createInvitation(db, ownerId, { title: "Undangan Kedua" });
+    expect((await getOwnedInvitation(db, ownerId, first.id))?.id).toBe(first.id);
+    expect((await getOwnedInvitation(db, ownerId, second.id))?.id).toBe(second.id);
+    expect((await getOwnedInvitation(db, ownerId, first.id.toUpperCase()))?.id).toBe(first.id);
+  });
+
+  it("menolak pemilik lain dan ID yang hilang atau tidak valid tanpa memilih undangan cadangan", async () => {
+    const first = await seedInvitation(db);
+    const second = await seedInvitation(db);
+    expect(await getOwnedInvitation(db, first.ownerId, second.invitation.id)).toBeNull();
+    expect(await getOwnedInvitation(db, second.ownerId, first.invitation.id)).toBeNull();
+    for (const id of [undefined, null, "", "terbaru", "../isi", [], {}, "00000000-0000-4000-8000-000000000000"]) {
+      expect(await getOwnedInvitation(db, first.ownerId, id)).toBeNull();
+    }
   });
 });
 

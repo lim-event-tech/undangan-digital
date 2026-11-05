@@ -1,13 +1,16 @@
 import { cache } from "react";
 import { cookies, headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { invitation as invitationTable, user as userTable } from "@/db/schema";
 import { getRoleLabel, getRolePermissions } from "@/lib/admin/role-service";
 import { can, type Permission } from "@/lib/admin/roles";
 import { auth } from "@/lib/auth";
-import { getInvitationForOwner, type Invitation } from "@/lib/invitations/service";
+import {
+  getOwnedInvitation,
+  type Invitation,
+} from "@/lib/invitations/service";
 import { isUuid } from "@/lib/uuid";
 
 export const ACTING_COOKIE = "ud_kelola";
@@ -85,25 +88,41 @@ export async function requireOwnAccount() {
   return session;
 }
 
-export const loadInvitation = cache(async (ownerId: string) => {
-  const acting = await getActing();
-  if (acting && acting.owner.id === ownerId) return acting.invitation;
-  return getInvitationForOwner(db, ownerId);
-});
+export const loadOwnedInvitation = cache(
+  async (ownerId: string, invitationId: unknown): Promise<Invitation | null> => {
+    if (!isUuid(invitationId)) return null;
+    const session = await getSession();
+    if (!session || session.user.status === "diblokir") return null;
+    if (session.user.adminRole) {
+      const acting = await getActing();
+      if (
+        !acting ||
+        acting.owner.id !== ownerId ||
+        acting.invitation.id !== invitationId.toLowerCase()
+      ) return null;
+      return acting.invitation;
+    }
+    if (session.user.id !== ownerId) return null;
+    return getOwnedInvitation(db, ownerId, invitationId);
+  },
+);
 
-export async function requireInvitation() {
+export async function requireInvitationById(invitationId: unknown) {
   const user = await requireUser();
-  const invitation = await loadInvitation(user.id);
-  if (!invitation) redirect("/undangan/baru");
+  const invitation = await loadOwnedInvitation(user.id, invitationId);
+  if (!invitation) notFound();
   return { user, invitation };
 }
 
-export async function getWorkContext(): Promise<{ userId: string; invitation: Invitation | null } | null> {
+export async function getWorkContextForInvitation(
+  invitationId: unknown,
+): Promise<{ userId: string; invitation: Invitation | null } | null> {
   const session = await getSession();
   if (!session || session.user.status === "diblokir") return null;
   if (session.user.adminRole) {
     const acting = await getActing();
-    return acting ? { userId: acting.owner.id, invitation: acting.invitation } : null;
+    if (!acting) return null;
+    return { userId: acting.owner.id, invitation: await loadOwnedInvitation(acting.owner.id, invitationId) };
   }
-  return { userId: session.user.id, invitation: await loadInvitation(session.user.id) };
+  return { userId: session.user.id, invitation: await loadOwnedInvitation(session.user.id, invitationId) };
 }

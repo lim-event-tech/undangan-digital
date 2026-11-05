@@ -10,7 +10,12 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 2592000,
   },
   async redirects() {
-    return [{ source: "/u/:slug/:token/:path*", destination: "/:slug/:token/:path*", permanent: true }];
+    return [
+      { source: "/u/:slug/:token/:path*", destination: "/:slug/:token/:path*", permanent: true },
+      ...["isi", "tamu", "ringkasan", "kirim", "ucapan", "checkin", "template"].map((section) => ({
+        source: `/undangan/${section}/:path*`, destination: "/undangan", permanent: false,
+      })),
+    ];
   },
   async headers() {
     const noindex = { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" };

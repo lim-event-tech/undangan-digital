@@ -3,31 +3,25 @@ import { db } from "@/db";
 import { todayWib } from "@/lib/datetime";
 import { getSettings } from "@/lib/platform/service";
 import { ANNOUNCEMENT_LABEL, activeAnnouncement } from "@/lib/platform/settings";
-import { getActing, loadInvitation, requireUser } from "@/lib/session";
+import { getActing, requireUser } from "@/lib/session";
+import { listInvitationsForOwner } from "@/lib/invitations/service";
 
 export default async function UndanganLayout({
   children,
 }: LayoutProps<"/undangan">) {
   const user = await requireUser();
-  const [invitation, settings, acting] = await Promise.all([
-    loadInvitation(user.id),
+  const [settings, acting] = await Promise.all([
     getSettings(db),
     getActing(),
   ]);
+  const invitations = settings.pemeliharaan.aktif ? [] : acting ? [acting.invitation] : await listInvitationsForOwner(db, user.id);
   const announcement = activeAnnouncement(settings, todayWib());
 
   return (
     <AppShell
       kelola={acting ? { admin: acting.admin.name } : null}
       user={{ name: user.name, email: user.email }}
-      invitation={
-        invitation && !settings.pemeliharaan.aktif
-          ? {
-              title: invitation.title,
-              status: invitation.status,
-            }
-          : null
-      }
+      invitations={invitations.map(({ id, title, status }) => ({ id, title, status }))}
       pengumuman={
         announcement
           ? { teks: announcement.teks, jenis: ANNOUNCEMENT_LABEL[announcement.jenis] }

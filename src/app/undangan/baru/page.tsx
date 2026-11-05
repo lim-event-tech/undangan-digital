@@ -1,23 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { PilihTemplate } from "@/components/pilih-template";
 import { kartu, judulHalaman } from "@/components/ui";
 import { db } from "@/db";
 import { listSelectableTemplates } from "@/lib/platform/templates";
-import { loadInvitation, requireUser } from "@/lib/session";
+import { requireOwnAccount } from "@/lib/session";
 import { keDaftarPilihan } from "@/templates/registry";
 import { FormBaru } from "./form-baru";
 
 export const metadata: Metadata = { title: "Buat undangan" };
 
 export default async function UndanganBaruPage({ searchParams }: PageProps<"/undangan/baru">) {
-  const user = await requireUser();
-  const existing = await loadInvitation(user.id);
-  if (existing) redirect("/undangan/tamu");
+  await requireOwnAccount();
 
   const { template } = await searchParams;
   const katalog = keDaftarPilihan(await listSelectableTemplates(db));
+  if (!katalog.length) return <div className={`${kartu} mx-auto max-w-xl p-6`}><h1 className={judulHalaman}>Template belum tersedia</h1><p className="text-sm text-redup">Hubungi admin untuk menampilkan template undangan.</p><Link href="/undangan">Kembali ke daftar undangan</Link></div>;
   const dipilih = katalog.find((t) => t.key === template);
 
   if (!dipilih) {

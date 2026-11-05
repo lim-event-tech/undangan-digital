@@ -7,7 +7,7 @@ import { readContent } from "@/lib/invitations/content";
 import { getMusic } from "@/lib/music/service";
 import { listPhotos } from "@/lib/photos/service";
 import { isRsvpClosed } from "@/lib/rsvp/shared";
-import { loadInvitation, requireUser } from "@/lib/session";
+import { requireInvitationById, requireUser } from "@/lib/session";
 import { contohTemplateView } from "@/templates/bersama/contoh";
 import { semuaUcapan } from "@/templates/bersama/ucapan-server";
 import { isTemplateKey, templateInfo } from "@/templates/registry";
@@ -24,13 +24,14 @@ export async function generateMetadata({
   };
 }
 
-export default async function PratinjauPage({ params }: PageProps<"/pratinjau/[template]">) {
+export default async function PratinjauPage({ params, searchParams }: PageProps<"/pratinjau/[template]">) {
   const { template } = await params;
   if (!isTemplateKey(template)) notFound();
-  const user = await requireUser();
-  const invitation = await loadInvitation(user.id);
+  await requireUser();
+  const sp = await searchParams;
   const now = new Date();
-  if (!invitation) return renderTemplate(template, contohTemplateView(template, now.getTime()));
+  if (sp.undangan === undefined) return renderTemplate(template, contohTemplateView(template, now.getTime()));
+  const { invitation } = await requireInvitationById(sp.undangan);
 
   const content = readContent(invitation.content);
   const [events, photos, music, wishes] = await Promise.all([

@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { kolom, labelKolom, pesanGalat, tombolGelap } from "@/components/ui";
-import { Saklar } from "@/app/undangan/isi/bidang";
+import { Saklar } from "@/app/undangan/[id]/isi/bidang";
 import { ANNOUNCEMENT_KINDS, ANNOUNCEMENT_LABEL, SETTING_LIMITS, type PlatformSettings } from "@/lib/platform/settings";
 import type { SaveResult } from "@/lib/save-result";
 import { simpanPengaturanAction } from "./actions";

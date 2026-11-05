@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { Saklar } from "@/app/undangan/isi/bidang";
+import { Saklar } from "@/app/undangan/[id]/isi/bidang";
 import { kolom, labelKolom, pesanGalat, tombolGelap, tombolTerang } from "@/components/ui";
 import type { SaveResult } from "@/lib/save-result";
 import { WA_LIMITS, type WaConfig } from "@/lib/wa/config";
