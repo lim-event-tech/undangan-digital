@@ -7,6 +7,7 @@ import type { AppDb } from "@/db/types";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@/lib/auth-options-constants";
 import { getSettings } from "@/lib/platform/service";
 import { googleCallbackUrl } from "@/lib/google-callback";
+import { lingkarideSso } from "@/lib/sso-plugin";
 
 export function googleConfigured(): boolean {
   return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
@@ -60,6 +61,6 @@ export function authOptions(database: AppDb) {
         },
       },
     },
-    plugins: [nextCookies()],
+    plugins: [lingkarideSso(database), nextCookies()],
   } satisfies BetterAuthOptions;
 }
