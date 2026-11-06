@@ -60,8 +60,6 @@ export default function Beranda() {
           </div>
 
           <div className="portal-akses">
-            <p>Masuk ke akun untuk membuat atau mengelola undangan.</p>
-            <Link className="portal-admin" href="/admin/masuk"><Ikon nama="kunci" ukuran={16} />Masuk sebagai admin</Link>
             <p className="portal-daftar">Belum punya akun? <Link href="/daftar">Daftar</Link></p>
           </div>
         </div>
