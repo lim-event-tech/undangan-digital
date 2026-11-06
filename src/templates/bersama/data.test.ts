@@ -11,6 +11,20 @@ function tamu(ubah: Partial<InvitationView> = {}): InvitationView {
 }
 
 describe("siapkanData", () => {
+  it("menampilkan foto pengisi yang tersedia pada undangan dan tidak memakai cover atau foto yang hilang", () => {
+    const view = tamu();
+    const fotoId = "30000000-0000-4000-8000-000000000001";
+    view.content.pengisiAcara[0].fotoId = fotoId;
+    const p = { id: fotoId, kind: "pengisi_acara" as const, sortOrder: 0, fileName: "foto.png", sizeBytes: 200, width: 300, height: 500 };
+    view.photos = [p];
+    expect(siapkanData(view).pengisiAcara[0].foto).toEqual({ src: `/foto/${fotoId}`, width: 300, height: 500 });
+    expect(siapkanData(view).pengisiAcara[1].foto).toBeNull();
+    view.photos = [{ ...p, kind: "cover" }];
+    expect(siapkanData(view).pengisiAcara[0].foto).toBeNull();
+    view.photos = [];
+    expect(siapkanData(view).pengisiAcara[0].foto).toBeNull();
+  });
+
   it("memformat tanggal, nama, dan acara untuk template", () => {
     const data = siapkanData(tamu());
     expect(data).toMatchObject({

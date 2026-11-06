@@ -1,5 +1,5 @@
-import { and, eq, isNotNull, sql } from "drizzle-orm";
-import { guest, invitation } from "@/db/schema";
+import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { guest, invitation, photo } from "@/db/schema";
 import type { AppDb } from "@/db/types";
 import { isUniqueViolation } from "@/lib/db-errors";
 import { listEventDetails, type EventDetail } from "@/lib/events/service";
@@ -21,6 +21,22 @@ export async function saveContentText(
   invitationId: string,
   patch: Partial<InvitationContent>,
 ): Promise<boolean> {
+  if (patch.pengisiAcara) {
+    return db.transaction(async tx => {
+      const [current] = await tx.select({ content: invitation.content }).from(invitation).where(eq(invitation.id, invitationId)).for("update");
+      if (!current) return false;
+      const old = readContent(current.content).pengisiAcara;
+      const next = patch.pengisiAcara!.map(({ id, nama, peran, instansi, profil }) => {
+        const fields = { id, nama, peran, instansi, profil };
+        const fotoId = old.find(row => row.id === id)?.fotoId;
+        return { ...fields, ...(fotoId ? { fotoId } : {}) };
+      });
+      const removed = old.filter(item => !next.some(row => row.id === item.id)).flatMap(item => item.fotoId ? [item.fotoId] : []);
+      if (removed.length) await tx.delete(photo).where(and(eq(photo.invitationId, invitationId), eq(photo.kind, "pengisi_acara"), inArray(photo.id, removed)));
+      await tx.update(invitation).set({ content: sql`${invitation.content} || ${JSON.stringify({ ...patch, pengisiAcara: next })}::jsonb` }).where(eq(invitation.id, invitationId));
+      return true;
+    });
+  }
   const rows = await db
     .update(invitation)
     .set({ content: sql`${invitation.content} || ${JSON.stringify(patch)}::jsonb` })

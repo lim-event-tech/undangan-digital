@@ -1,7 +1,7 @@
 "use client";
 
-import "@fontsource/playfair-display/500.css";
-import "@fontsource/playfair-display/500-italic.css";
+import "@fontsource/lora/400.css";
+import "@fontsource/lora/500.css";
 import "@fontsource/mulish/400.css";
 import "@fontsource/mulish/500.css";
 import "@/templates/bersama/event.css";
@@ -10,7 +10,7 @@ import { Kerangka } from "@/templates/bersama/kerangka";
 import type { DataUndangan } from "@/templates/bersama/jenis";
 import { buatModulEvent } from "@/templates/bersama/modul-event";
 
-const MODUL = buatModulEvent("pasundan", { utama: "#74503c", kertas: "#faf3e6", lembut: "#ede4cf", teks: "#615a4c" });
+const MODUL = buatModulEvent("pasundan", { utama: "#743f2b", kertas: "#f8f1e8", lembut: "#dbc4ad", teks: "#4c3a31" });
 
 export function UndanganPasundan({ data }: { data: DataUndangan }) {
   return <Kerangka modul={MODUL} data={data} />;

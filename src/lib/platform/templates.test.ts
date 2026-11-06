@@ -42,7 +42,7 @@ describe("katalog template", () => {
     });
     expect(await listVisibleTemplates(db)).toEqual([
       { key: "melati", label: "Melati Klasik", ribbon: "Populer" },
-      { key: "pasundan", label: "Pasundan", ribbon: "Baru" },
+      { key: "pasundan", label: "Tembaga", ribbon: "Baru" },
     ]);
 
     await updateTemplate(db, "pasundan", { label: "Pasundan", visible: false, ribbon: null });
@@ -87,13 +87,14 @@ describe("katalog template", () => {
 describe("pilihan template untuk pasangan", () => {
   it("hanya menawarkan template yang tampil, ditambah template yang sedang dipakai", async () => {
     await db.update(templateRegistry).set({ visible: false, ribbon: null });
-    expect(await listSelectableTemplates(db)).toEqual([{ key: "melati", label: "Melati", ribbon: null }]);
+    expect(await listSelectableTemplates(db)).toEqual([{ key: "melati", label: "Paviliun", ribbon: null }]);
 
     await db.update(templateRegistry).set({ visible: true, ribbon: "Baru" }).where(eq(templateRegistry.key, "bintang"));
     expect(await listSelectableTemplates(db)).toEqual([{ key: "bintang", label: "Malam Berbintang", ribbon: "Baru" }]);
 
     const pilihan = await listSelectableTemplates(db, "pasundan");
     expect(pilihan.map((t) => t.key)).toEqual(["pasundan", "bintang"]);
+    expect(pilihan[0].label).toBe("Tembaga");
   });
 
   it("menolak template tersembunyi atau tidak dikenal kecuali template yang sedang dipakai", async () => {

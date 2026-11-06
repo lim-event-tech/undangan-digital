@@ -1,5 +1,6 @@
 import type { ChangeEvent, CSSProperties, ComponentType, MouseEvent } from "react";
 import type { IdentitasEvent, Penyelenggara, PengisiAcara, InformasiPeserta, Kontak, BagianId } from "@/lib/invitations/content";
+import type { TemplateKey } from "@/templates/registry";
 
 export type StatusTamu = "hadir" | "tidak" | "belum";
 
@@ -48,7 +49,7 @@ export type DataUndangan = {
   tglKota: string;
   identitas: IdentitasEvent;
   penyelenggara: Penyelenggara;
-  pengisiAcara: PengisiAcara[];
+  pengisiAcara: (PengisiAcara & { foto: { src: string; width: number; height: number } | null })[];
   informasiPeserta: InformasiPeserta;
   kontak: Kontak;
   kontakWhatsapp: string | null;
@@ -173,12 +174,12 @@ export type Vals = Omit<DataUndangan, "ucapan" | "galeri" | "lajurGaleri" | "hit
   musikLabel: string;
 };
 
-export type PropsBagian = { v: Vals; berikut: string };
+export type PropsBagian = { v: Vals; berikut: string; dekorasiId: string };
 
 export type KomponenBagian = ComponentType<PropsBagian>;
 
 export type ModulTemplate = {
-  kunci: string;
+  kunci: TemplateKey;
   akar: CSSProperties;
   kertas: { className?: string; style: CSSProperties };
   palet: Palet;

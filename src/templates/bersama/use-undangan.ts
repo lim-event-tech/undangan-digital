@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition, type RefObject } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { remaining } from "@/lib/countdown";
 import { WISH_MAX_LENGTH, WISH_PAGE_SIZE, cleanWish } from "@/lib/wishes/shared";
 import { submitRsvpAction } from "@/templates/rsvp-actions";
@@ -15,6 +15,7 @@ import type {
   Vals,
 } from "./jenis";
 import { inisialNama } from "./teks";
+import { useGulirHalus } from "./use-gulir";
 
 type Pilihan = "ya" | "tidak";
 type Jumlah = number;
@@ -46,62 +47,10 @@ function awalJumlah(data: DataUndangan): Record<string, Jumlah> {
   return hasil;
 }
 
-export function useGerak(akar: RefObject<HTMLElement | null>, aktif = true) {
-  useEffect(() => {
-    if (!aktif) return;
-    const root = document.documentElement;
-    let raf = 0;
-    const gulir = () => {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        const el = document.scrollingElement || root;
-        const maks = Math.max(1, el.scrollHeight - window.innerHeight);
-        root.style.setProperty("--gulir", String(el.scrollTop));
-        root.style.setProperty("--progres", String(Math.min(1, el.scrollTop / maks)));
-      });
-    };
-    window.addEventListener("scroll", gulir, { passive: true });
-    gulir();
-
-    const elemen = Array.from(akar.current?.querySelectorAll<HTMLElement>("[data-anim]") ?? []);
-    const pewaktu: number[] = [];
-    let pengamat: IntersectionObserver | null = null;
-    const el = document.scrollingElement || root;
-    const bisaGulir = el.scrollHeight > window.innerHeight + 80;
-    if (typeof IntersectionObserver === "undefined" || !bisaGulir) {
-      elemen.forEach((e, i) => {
-        pewaktu.push(window.setTimeout(() => e.classList.add("tampil"), 80 + Math.min(i * 45, 1400)));
-      });
-    } else {
-      const io = new IntersectionObserver(
-        (daftar) => {
-          for (const x of daftar) {
-            if (!x.isIntersecting) continue;
-            x.target.classList.add("tampil");
-            io.unobserve(x.target);
-          }
-        },
-        { threshold: 0.01, rootMargin: "0px 0px -24px 0px" },
-      );
-      elemen.forEach((e) => io.observe(e));
-      pengamat = io;
-    }
-
-    return () => {
-      window.removeEventListener("scroll", gulir);
-      cancelAnimationFrame(raf);
-      pengamat?.disconnect();
-      pewaktu.forEach((t) => window.clearTimeout(t));
-      root.style.removeProperty("--gulir");
-      root.style.removeProperty("--progres");
-    };
-  }, [akar, aktif]);
-}
-
 export function useUndangan(data: DataUndangan, palet: Palet): Vals {
   const tamu = data.mode === "tamu";
   const [undanganTerbuka, setUndanganTerbuka] = useState(false);
+  const gulirHalus = useGulirHalus();
 
   const [sekarang, setSekarang] = useState(data.sekarang);
   const adaHitung = data.hitung !== null;
@@ -416,9 +365,7 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
       const tujuan = event.currentTarget.hash.slice(1);
       setUndanganTerbuka(true);
       if (adaMusik && !musikMain) putar();
-      requestAnimationFrame(() => {
-        document.getElementById(tujuan)?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
+      gulirHalus(tujuan, !undanganTerbuka);
     },
     adaMusik,
     toggleMusik,

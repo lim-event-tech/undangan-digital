@@ -51,7 +51,7 @@ export function BagianCover({ cover }: { cover: PhotoInfo | null }) {
     <KartuBagian
       id="sampul"
       judul="Sampul"
-      deskripsi="Foto utama yang pertama dilihat tamu. JPG atau PNG, dikompres otomatis."
+      deskripsi="Foto untuk pratinjau tautan undangan. Sampul halaman memakai judul dan ornamen. JPG atau PNG, dikompres otomatis."
       aksi={
         <span className="rounded-full bg-krem px-2.5 py-0.5 text-xs font-medium text-emas-tua">
           Wajib

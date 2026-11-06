@@ -1,0 +1,43 @@
+.event-definisi-dekorasi { position:absolute; overflow:hidden; pointer-events:none; }
+.event-dekorasi { position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:1; color:var(--event-aksen); }
+.event-dekorasi > svg { position:absolute; display:block; overflow:visible; animation-play-state:paused; }
+.event-dekorasi-untai { top:10px; width:54px; height:122px; opacity:.38; transform-origin:50% 0; animation:event-dekorasi-ayun 7s ease-in-out infinite; }
+.event-dekorasi-ragam { top:26px; width:86px; height:86px; opacity:.3; transform-origin:50% 65%; animation:event-dekorasi-sulur 9s ease-in-out infinite; animation-delay:-3s; }
+.event-dekorasi-kanan { right:15px; }
+.event-dekorasi-kiri { left:15px; animation-delay:-2.5s; }
+.event-dekorasi-tengah .event-dekorasi-ragam { top:62px; width:52px; height:52px; }
+.event-dekorasi-tengah ~ .event-bagian > .event-kepala { width:calc(100% - 72px); align-self:center; text-align:center; }
+.event-sampul > .event-dekorasi { z-index:0; }
+.event-sampul .event-dekorasi-untai { top:14px; width:74px; height:166px; opacity:.5; }
+.event-sampul .event-dekorasi-ragam { top:24px; width:90px; height:90px; opacity:.27; }
+.tpl-keraton .event-dekorasi-untai { animation-duration:6.5s; }
+.tpl-keraton .event-dekorasi-ragam { animation-name:event-dekorasi-medali; animation-duration:12s; }
+.tpl-bintang .event-dekorasi-untai { animation-name:event-dekorasi-rasi; animation-duration:7s; transform-origin:center; opacity:.52; }
+.tpl-bintang .event-dekorasi-ragam { animation-name:event-dekorasi-rasi; animation-duration:9s; transform-origin:center; opacity:.45; }
+.tpl-pasundan .event-dekorasi-untai { animation-duration:8s; opacity:.3; }
+.tpl-pasundan .event-dekorasi-ragam { animation-name:event-dekorasi-kipas; animation-duration:10s; transform-origin:50% 70%; opacity:.24; }
+.tpl-melati .event-meterai > .event-hiasan { animation:event-dekorasi-apung 6s ease-in-out infinite; }
+.tpl-pasundan .event-meterai > .event-hiasan { transform-origin:50% 70%; animation:event-dekorasi-kipas 9s ease-in-out infinite; }
+.undangan-template[data-terbuka=false] .event-sampul .event-dekorasi > svg,
+.dalam-layar > .event-dekorasi > svg { animation-play-state:running; will-change:transform; }
+.undangan-template[data-jeda-gerak] *,
+.undangan-template[data-jeda-gerak] *::before,
+.undangan-template[data-jeda-gerak] *::after { animation-play-state:paused !important; }
+@keyframes event-dekorasi-ayun { 0%,100% { transform:rotate(-6deg); } 50% { transform:rotate(6deg); } }
+@keyframes event-dekorasi-sulur { 0%,100% { transform:translate(0,3px) rotate(-4deg); } 50% { transform:translate(4px,-5px) rotate(4deg); } }
+@keyframes event-dekorasi-medali { 0%,100% { transform:translateY(5px) rotate(-7deg); } 50% { transform:translateY(-5px) rotate(7deg); } }
+@keyframes event-dekorasi-rasi { 0%,100% { transform:translateY(5px); opacity:.3; } 50% { transform:translateY(-7px); opacity:.65; } }
+@keyframes event-dekorasi-kipas { 0%,100% { transform:translateY(3px) rotate(-5deg); } 50% { transform:translateY(-4px) rotate(5deg); } }
+@keyframes event-dekorasi-apung { 0%,100% { transform:translateY(3px); } 50% { transform:translateY(-4px); } }
+@media(max-width:350px) {
+  .event-dekorasi-untai { width:28px; height:63px; }
+  .event-dekorasi-ragam { top:16px; width:54px; height:54px; }
+  .event-dekorasi-tengah .event-dekorasi-ragam { top:16px; width:42px; height:42px; }
+  .event-dekorasi-tengah ~ .event-bagian > .event-kepala { width:100%; }
+  .event-sampul .event-dekorasi-untai { width:58px; height:130px; }
+  .event-sampul .event-dekorasi-ragam { width:70px; height:70px; }
+}
+@media(max-height:500px) {
+  .event-sampul .event-dekorasi-untai { width:24px; height:54px; top:8px; opacity:.3; }
+  .event-sampul .event-dekorasi-ragam { width:42px; height:42px; top:8px; opacity:.17; }
+}

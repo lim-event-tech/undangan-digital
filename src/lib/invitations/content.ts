@@ -9,7 +9,7 @@ export const CONTENT_LIMITS = {
 export const MAX_PENGISI_ACARA = 12;
 export type IdentitasEvent = { jenis: string; subjudul: string; deskripsi: string };
 export type Penyelenggara = { nama: string; namaEo: string };
-export type PengisiAcara = { id: string; nama: string; peran: string; instansi: string; profil: string };
+export type PengisiAcara = { id: string; nama: string; peran: string; instansi: string; profil: string; fotoId?: string };
 export type InformasiPeserta = { dressCode: string; ketentuan: string; petunjukLokasi: string };
 export type Kontak = { nama: string; telepon: string; email: string };
 
@@ -22,12 +22,11 @@ export type MusikSettings = { aktif: boolean };
 export type CheckinSettings = { aktif: boolean };
 
 export type BagianId =
-  | "sampul" | "pembuka" | "tentang" | "salam" | "penyelenggara" | "hitung"
+  | "sampul" | "tentang" | "salam" | "penyelenggara" | "hitung"
   | "acara" | "agenda" | "pengisi" | "informasi" | "galeri" | "rsvp" | "kontak" | "ucapan" | "penutup";
 
 export const BAGIAN: readonly { id: BagianId; label: string; tetap: boolean; wajib: boolean }[] = [
   { id: "sampul", label: "Sampul", tetap: true, wajib: true },
-  { id: "pembuka", label: "Pembuka", tetap: false, wajib: false },
   { id: "tentang", label: "Tentang event", tetap: false, wajib: false },
   { id: "salam", label: "Sambutan", tetap: false, wajib: false },
   { id: "acara", label: "Waktu dan lokasi", tetap: false, wajib: false },
@@ -105,7 +104,7 @@ export function readContent(raw: unknown): InvitationContent {
     if (typeof item.nama !== "string" || !item.nama.trim() || !isUuid(item.id) || seen.has(item.id.toLowerCase()) || pengisiAcara.length >= MAX_PENGISI_ACARA) continue;
     const id = item.id.toLowerCase();
     seen.add(id);
-    pengisiAcara.push({ id, nama: text(item.nama, 120), peran: text(item.peran, 120), instansi: text(item.instansi, 120), profil: text(item.profil, 400) });
+    pengisiAcara.push({ id, nama: text(item.nama, 120), peran: text(item.peran, 120), instansi: text(item.instansi, 120), profil: text(item.profil, 400), ...(isUuid(item.fotoId) ? { fotoId: item.fotoId.toLowerCase() } : {}) });
   }
   return {
     identitas: { jenis: text(identitas.jenis, 60), subjudul: text(identitas.subjudul, 160), deskripsi: text(identitas.deskripsi, 1200) },

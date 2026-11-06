@@ -1,27 +1,36 @@
 .tpl-keraton {
+  --event-utama:#f0d8a6; --event-teks:#f6eddb; --event-muted:#d9cfb8; --event-label:#e2c68e;
   --event-tekstur-luar:repeating-linear-gradient(45deg,#d5b77b16 0 1px,transparent 1px 24px),repeating-linear-gradient(-45deg,#d5b77b10 0 1px,transparent 1px 24px);
-  --event-utama:#183e33; --event-teks:#454a3d; --event-muted:#5d604d; --event-label:#6d552e;
-  --event-kertas:#fbf5e7; --event-lembut:#efe6d2; --event-latar:#10372e; --event-garis:#ccbb93; --event-border:#8a764b; --event-aksen:#957138;
-  --event-ink:#183e33; --event-on-ink:#fbf1d9; --event-sans:'Jost',sans-serif; --event-serif:'Lora',serif; --event-radius:0px;
+  --event-kertas:#153d32; --event-kartu:#1b4438; --event-lembut:#1d493d; --event-latar:#0d2923; --event-garis:#70816a; --event-border:#b99b74; --event-aksen:#d5b77b;
+  --event-ink:#102f27; --event-on-ink:#f6eddb; --event-tombol-teks:#183e33; --event-sans:'Jost',sans-serif; --event-serif:'Cinzel',serif; --event-radius:0px;
 }
-.tpl-keraton .event-sampul { background:#153d32; --event-utama:#f0d8a6; --event-teks:#f6eddb; --event-muted:#e0cfad; --event-label:#e3c68d; --event-garis:#8b7852; --event-aksen:#d5b77b; --event-kertas:#153d32; --event-tombol-teks:#183e33; }
+.tpl-keraton .event-sampul { background:linear-gradient(160deg,#204d40,#153d32 65%); }
 .tpl-keraton .event-identitas h1 { font-family:'Cinzel',serif; text-transform:uppercase; font-size:calc(var(--ukuran-judul) * .96); letter-spacing:.015em; }
 .tpl-keraton .event-bingkai { inset:17px; border:1px solid #b99b60; outline:1px solid #b99b6044; outline-offset:-7px; border-radius:160px 160px 0 0; }
 .tpl-keraton .event-meterai { width:120px; height:86px; }
-.tpl-keraton .event-meterai > span { font-family:'Cinzel',serif; font-size:19px; padding-top:26px; }
 .tpl-keraton .event-meterai > .event-hiasan { opacity:.8; }
 .tpl-keraton .event-ornamen-atas { width:330px; top:-100px; left:-205px; opacity:.17; }
 .tpl-keraton .event-ornamen-bawah { width:330px; bottom:20px; right:-215px; opacity:.17; transform:rotate(0); }
 .tpl-keraton .event-kisi { position:absolute; inset:26px; border-top:1px solid #b99b6044; border-bottom:1px solid #b99b6044; }
-.tpl-keraton .event-pembuka { border-bottom:5px double #ccbb93; }
-.tpl-keraton .event-bagian > .event-kepala { text-align:center; }
-.tpl-keraton .event-kepala .event-pemisah { margin-inline:auto; }
-.tpl-keraton .event-kepala h2 { font-size:32px; }
-.tpl-keraton .event-agenda { border:1px solid #b69c64; border-radius:75px 75px 0 0; padding:32px 22px 26px; background:#fbf5e7; text-align:center; }
+.tpl-keraton .event-kepala h2 { font-size:28px; letter-spacing:.025em; line-height:1.4; }
+.tpl-keraton .event-agenda { border:1px solid #b69c64; border-radius:75px 75px 0 0; padding:32px 22px 26px; background:#1b4438; text-align:center; }
 .tpl-keraton .event-agenda .event-sesi-kepala { justify-content:center; }
 .tpl-keraton .event-agenda .event-aksi { align-items:center; }
 .tpl-keraton .event-sesi-kepala .event-nomor { font-family:'Cinzel',serif; }
-.tpl-keraton .event-salam { background:#efe6d2; }
-.tpl-keraton .event-profil { border:1px solid #ccbb93; border-top:4px solid #957138; background:#f5ecd9; }
-.tpl-keraton .event-profil h3 { font-size:25px; }
-.tpl-keraton .event-penutup { border-top:5px double #ccbb93; }
+.tpl-keraton .event-salam { background:#1a4236; }
+.tpl-keraton .event-profil { border:0; border-bottom:1px solid #70816a; background:none; padding-inline:12px; }
+.tpl-keraton .event-profil-inisial { border-radius:52px 52px 0 0; font-size:28px; }
+.tpl-keraton .event-profil-inisial::after { border-radius:63px 63px 0 0; animation:none; }
+.tpl-keraton .event-surat { border:3px double #b99b74; background:#173b30; }
+.tpl-keraton .event-surat .event-kepala h2 { font-size:24px; }
+.tpl-keraton .event-susunan .event-kepala h2 { font-size:26px; }
+.tpl-keraton .event-tentang .event-deskripsi { font-family:var(--event-sans); font-size:19px; }
+.tpl-keraton .event-rsvp .event-form { border:1px solid #b99b74; }
+.tpl-keraton .event-kontak .event-kepala h2 { font-size:32px; }
+.tpl-keraton .event-mitra { gap:28px; border-block:3px double #70816a; }
+.tpl-keraton .event-profil h3 { font-size:23px; }
+.tpl-keraton .event-penutup { background:linear-gradient(160deg,#204d40,#153d32 65%); border-top:5px double #70816a; }
+.tpl-keraton .event-agenda h3 { font-size:24px; }
+.tpl-keraton .event-hitung { background:#102f27; }
+.tpl-keraton .event-suasana-keraton .event-lapis-atas { width:180px; left:-110px; opacity:.23; rotate:10deg; }
+.tpl-keraton .event-suasana-keraton .event-lapis-bawah { width:190px; right:-120px; opacity:.23; rotate:-10deg; scale:-1 1; }

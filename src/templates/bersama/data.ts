@@ -98,7 +98,6 @@ export function siapkanData(view: InvitationView, template: TemplateKey = DEFAUL
   const logoEo = photos.find((p) => p.kind === "logo_eo");
   const tersedia: Record<BagianId, boolean> = {
     sampul: true,
-    pembuka: true,
     tentang: Boolean(content.identitas.deskripsi.trim()),
     salam: Boolean(content.sambutan.trim()),
     penyelenggara: Boolean(content.penyelenggara.nama.trim() || content.penyelenggara.namaEo.trim() || photos.some((p) => p.kind === "logo_penyelenggara" || p.kind === "logo_eo")),
@@ -129,7 +128,10 @@ export function siapkanData(view: InvitationView, template: TemplateKey = DEFAUL
     tglKota: tanggal ? [formatDate(tanggal), kota].filter(Boolean).join(", ") : kota,
     identitas: content.identitas,
     penyelenggara: content.penyelenggara,
-    pengisiAcara: content.pengisiAcara,
+    pengisiAcara: content.pengisiAcara.map(item => {
+      const p = photos.find(p => p.id === item.fotoId && p.kind === "pengisi_acara");
+      return { ...item, foto: p ? { src: foto(p.id), width: p.width || 400, height: p.height || 500 } : null };
+    }),
     informasiPeserta: content.informasiPeserta,
     kontak: content.kontak,
     kontakWhatsapp,

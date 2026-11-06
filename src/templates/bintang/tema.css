@@ -1,7 +1,7 @@
 .tpl-bintang {
+  --event-utama:#f0d49b; --event-teks:#e4e9f1; --event-muted:#c0cad9; --event-label:#deca9c;
   --event-tekstur-luar:radial-gradient(circle at 24px 32px,#f0d49b66 0 .8px,transparent 1.4px),radial-gradient(circle at 96px 110px,#c0cad944 0 .7px,transparent 1.3px);
   --event-tekstur-ukuran:210px 240px,170px 190px;
-  --event-utama:#f0d49b; --event-teks:#e4e9f1; --event-muted:#c0cad9; --event-label:#deca9c;
   --event-kertas:#111d32; --event-kartu:#1a2a44; --event-lembut:#182840; --event-latar:#091323; --event-garis:#526078; --event-border:#8897ac; --event-aksen:#d2b77d;
   --event-ink:#1a2a44; --event-on-ink:#f9eed5; --event-tombol-teks:#132038; --event-sans:'Jost',sans-serif; --event-serif:'Marcellus',serif; --event-radius:2px;
 }
@@ -9,11 +9,7 @@
 .tpl-bintang .event-identitas h1 { color:#fbf3e2; font-size:calc(var(--ukuran-judul) * 1.08); font-weight:400; }
 .tpl-bintang .event-bingkai { border:0; border-top:1px solid #a68c54; border-bottom:1px solid #a68c54; inset:22px; }
 .tpl-bintang .event-meterai { width:120px; height:83px; }
-.tpl-bintang .event-meterai > span { font-size:17px; border:1px solid #d2b77d88; background:#111d32; padding:10px 8px; border-radius:50%; }
 .tpl-bintang .event-meterai > .event-hiasan { opacity:.8; }
-.tpl-bintang .event-ornamen-atas { width:400px; top:-160px; left:-200px; opacity:.3; }
-.tpl-bintang .event-ornamen-bawah { width:360px; bottom:10px; right:-220px; opacity:.2; }
-.tpl-bintang .event-pembuka { background:#14233b; border-bottom:1px solid #526078; }
 .tpl-bintang .event-kepala h2 { color:#fbf3e2; font-weight:400; font-size:35px; }
 .tpl-bintang .event-tentang { background:#111d32; }
 .tpl-bintang .event-agenda { border:1px solid #6a7890; border-top:3px solid #d2b77d; background:#1a2a44; }
@@ -24,7 +20,18 @@
 .tpl-bintang .event-sesi-kepala .event-nomor { border-radius:50%; border-color:#a48b5d; }
 .tpl-bintang .event-agenda .event-tempat { border-top:1px dashed #6a7890; }
 .tpl-bintang .event-hitung { border-block:1px solid #526078; }
-.tpl-bintang .event-profil { background:linear-gradient(145deg,#273854,#182840); }
+.tpl-bintang .event-profil { background:none; padding-inline:10px; }
+.tpl-bintang .event-profil-inisial { border-style:dotted; }
+.tpl-bintang .event-profil-inisial::after { height:126px; width:126px; rotate:0deg; border-style:dotted; }
+.tpl-bintang .event-surat { border-radius:90px 90px 0 0; padding-top:60px; background:#111d32; }
+.tpl-bintang .event-tanda-surat { background:#182942; width:52px; height:52px; left:calc(50% - 26px); top:-26px; }
+.tpl-bintang .event-surat .event-kepala h2 { font-size:29px; }
+.tpl-bintang .event-susunan .event-kepala { border-left:0; border-bottom:1px solid #526078; padding:0 0 25px; }
+.tpl-bintang .event-rundown li::before { background:#d2b77d; opacity:.4; }
+.tpl-bintang .event-rsvp .event-form { border-radius:35px; border-top:3px solid #d2b77d; }
+.tpl-bintang .event-info { padding-block:28px; }
+.tpl-bintang .event-cincin-jam { opacity:.9; }
+.tpl-bintang .event-mitra { gap:30px; }
 .tpl-bintang .event-info { border-color:#526078; }
 .tpl-bintang .event-rsvp { background:#14233b; }
 .tpl-bintang .event-form { background:#1a2a44; }

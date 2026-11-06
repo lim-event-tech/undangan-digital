@@ -175,7 +175,7 @@ export const photo = pgTable(
     invitationId: uuid()
       .notNull()
       .references(() => invitation.id, { onDelete: "cascade" }),
-    kind: text({ enum: ["cover", "galeri", "logo_penyelenggara", "logo_eo"] }).notNull(),
+    kind: text({ enum: ["cover", "galeri", "logo_penyelenggara", "logo_eo", "pengisi_acara"] }).notNull(),
     sortOrder: integer().notNull().default(0),
     fileName: text().notNull(),
     contentType: text().notNull(),

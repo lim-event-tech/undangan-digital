@@ -1,7 +1,7 @@
 import { asc, eq, sql } from "drizzle-orm";
 import { invitation, templateRegistry } from "@/db/schema";
 import type { AppDb } from "@/db/types";
-import { DEFAULT_TEMPLATE, isTemplateKey, templateInfo, type TemplateKey } from "@/templates/registry";
+import { DEFAULT_TEMPLATE, isTemplateKey, namaTemplate, templateInfo, type TemplateKey } from "@/templates/registry";
 
 export const RIBBONS = ["Baru", "Populer", "Unggulan"] as const;
 export type Ribbon = (typeof RIBBONS)[number];
@@ -23,7 +23,7 @@ export type CatalogEntry = {
 };
 
 export async function listTemplateCatalog(db: AppDb): Promise<CatalogEntry[]> {
-  return db
+  const rows = await db
     .select({
       key: templateRegistry.key,
       label: templateRegistry.label,
@@ -35,6 +35,7 @@ export async function listTemplateCatalog(db: AppDb): Promise<CatalogEntry[]> {
     })
     .from(templateRegistry)
     .orderBy(asc(templateRegistry.sortOrder), asc(templateRegistry.key));
+  return rows.map(row => ({ ...row, label: namaTemplate(row.key, row.label) }));
 }
 
 export type UpdateTemplateResult = { ok: true } | { ok: false; error: "label" | "tidak-ada" };
@@ -81,7 +82,7 @@ export async function moveTemplate(
 }
 
 export async function listVisibleTemplates(db: AppDb) {
-  return db
+  const rows = await db
     .select({
       key: templateRegistry.key,
       label: templateRegistry.label,
@@ -90,6 +91,7 @@ export async function listVisibleTemplates(db: AppDb) {
     .from(templateRegistry)
     .where(eq(templateRegistry.visible, true))
     .orderBy(asc(templateRegistry.sortOrder), asc(templateRegistry.key));
+  return rows.map(row => ({ ...row, label: namaTemplate(row.key, row.label) }));
 }
 
 export type PilihanKatalog = { key: TemplateKey; label: string; ribbon: string | null };
@@ -107,7 +109,7 @@ export async function listSelectableTemplates(
     if (isTemplateKey(row.key)) result.push({ key: row.key, label: row.label, ribbon: row.ribbon });
   }
   if (currentKey && isTemplateKey(currentKey) && !result.some((t) => t.key === currentKey)) {
-    const label = all.find((t) => t.key === currentKey)?.label ?? templateInfo(currentKey).label;
+    const label = namaTemplate(currentKey, all.find((t) => t.key === currentKey)?.label);
     result.unshift({ key: currentKey, label, ribbon: null });
   }
   if (result.length === 0) {

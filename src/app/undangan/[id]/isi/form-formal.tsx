@@ -1,6 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useInvitationAction } from "@/components/invitation-context";
+import type { PhotoInfo } from "@/lib/photos/service";
+import { FotoPengisi } from "./foto-pengisi";
 import { pesanGalat, tombolTerang } from "@/components/ui";
 import { CONTENT_LIMITS, MAX_PENGISI_ACARA, type InvitationContent, type PengisiAcara } from "@/lib/invitations/content";
 import { FORMAL_FIELDS, type SimpleFormalGroup } from "@/lib/invitations/formal-form";
@@ -41,8 +44,9 @@ export function AksiBaris({ index, count, nama, move, remove }: { index: number;
   </div>;
 }
 
-export function FormPengisi({ pengisi }: { pengisi: PengisiAcara[] }) {
+export function FormPengisi({ pengisi, photos }: { pengisi: PengisiAcara[]; photos: PhotoInfo[] }) {
   const action = useMemo(() => simpanFormalAction.bind(null, "pengisiAcara"), []);
+  const save = useInvitationAction(action);
   const { formRef, status, errors, formError, formProps } = useAutoSave(action);
   const [items, setItems] = useState(pengisi);
   function update(next: PengisiAcara[]) {
@@ -60,6 +64,7 @@ export function FormPengisi({ pengisi }: { pengisi: PengisiAcara[] }) {
       {items.map((item, index) => <fieldset key={item.id} className="flex min-w-0 flex-col gap-3 rounded-lg border border-garis p-4">
         <legend className="px-1 text-sm">Pengisi acara {index + 1}</legend>
         <input type="hidden" name="id" value={item.id} />
+        <FotoPengisi id={item.id} foto={photos.find(photo => photo.id === item.fotoId && photo.kind === "pengisi_acara") ?? null} beforeUpload={async () => Boolean(formRef.current && (await save(new FormData(formRef.current))).ok)} />
         {(["nama", "peran", "instansi", "profil"] as const).map((key) => {
           const props = { name: key, label: { nama: "Nama", peran: "Peran atau jabatan", instansi: "Instansi", profil: "Profil singkat" }[key], defaultValue: item[key], error: errors[`${key}-${index}`], maxLength: key === "profil" ? CONTENT_LIMITS.profil : CONTENT_LIMITS.nama };
           return key === "profil" ? <BidangArea key={key} {...props} rows={3} /> : <BidangTeks key={key} {...props} required={key === "nama"} />;

@@ -61,7 +61,7 @@ export function UnggahLogo({ foto, jenis }: { foto: PhotoInfo | null; jenis: "lo
   }
   return <div className="flex min-w-0 flex-col gap-3 rounded-lg border border-garis p-4">
     <h3 className="m-0 text-sm font-medium">{label}</h3>
-    {foto ? <Image src={`/foto/${foto.id}`} alt={label} width={foto.width || 180} height={foto.height || 100} unoptimized className="mx-auto h-auto max-h-25 w-auto max-w-full bg-white object-contain" /> : <p className="m-0 text-sm text-redup">Belum ada logo</p>}
+    {foto ? <Image src={`/foto/${foto.id}`} alt={label} width={foto.width || 180} height={foto.height || 100} unoptimized className="mx-auto h-auto max-h-25 w-auto max-w-full object-contain" /> : <p className="m-0 text-sm text-redup">Belum ada logo</p>}
     <p className="m-0 text-xs text-redup">Opsional. JPG, PNG, atau WebP, maksimal 3 MB. Transparansi dipertahankan.</p>
     <label className={LABEL_UNGGAH}>
       {mengunggah ? "Mengunggah..." : foto ? `Ganti ${label.toLowerCase()}` : `Unggah ${label.toLowerCase()}`}

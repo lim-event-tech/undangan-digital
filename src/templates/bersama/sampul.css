@@ -2,7 +2,7 @@
   --tinggi-viewport: 100vh;
   height: var(--tinggi-sampul, var(--tinggi-viewport));
   min-height: 0;
-  padding: max(28px, env(safe-area-inset-top, 0px)) max(28px, env(safe-area-inset-right, 0px)) calc(112px + env(safe-area-inset-bottom, 0px)) max(28px, env(safe-area-inset-left, 0px));
+  padding: max(28px, env(safe-area-inset-top, 0px)) max(28px, env(safe-area-inset-right, 0px)) var(--ruang-aksi,calc(112px + env(safe-area-inset-bottom, 0px))) max(28px, env(safe-area-inset-left, 0px));
   justify-content: center;
 }
 
@@ -84,7 +84,7 @@ html.js .undangan-template[data-terbuka="false"] .undangan-lanjutan {
 }
 
 @media (max-height: 380px) {
-  .sampul-undangan { padding: 12px 22px 72px; }
+  .sampul-undangan { padding: 12px 22px var(--ruang-aksi,104px); }
   .sampul-konten { gap: 5px; }
   .sampul-aksi { bottom: 10px; }
 }

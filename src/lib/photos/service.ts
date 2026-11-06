@@ -9,7 +9,7 @@ import {
   type ImageType,
 } from "@/lib/images";
 
-export type PhotoKind = "cover" | "galeri" | "logo_penyelenggara" | "logo_eo";
+export type PhotoKind = "cover" | "galeri" | "logo_penyelenggara" | "logo_eo" | "pengisi_acara";
 
 export const SINGLE_PHOTO_KINDS: readonly PhotoKind[] = ["cover", "logo_penyelenggara", "logo_eo"];
 

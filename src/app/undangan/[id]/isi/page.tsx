@@ -109,7 +109,7 @@ export default async function IsiUndanganPage({ params }: PageProps<"/undangan/[
       <FormSambutan sambutan={content.sambutan} />
       <BagianAcara acara={events} tanggalMinimal={tanggalMinimal} />
       <FormHitungMundur pengaturan={content.hitungMundur} />
-      <FormPengisi pengisi={content.pengisiAcara} />
+      <FormPengisi pengisi={content.pengisiAcara} photos={photos} />
       <FormFormal group="informasiPeserta" value={content.informasiPeserta} />
       <FormFormal group="kontak" value={content.kontak} />
       <BagianGaleri foto={galeri} />

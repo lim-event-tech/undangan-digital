@@ -1,28 +1,55 @@
-.tpl-melati {
-  --event-tekstur-luar:repeating-linear-gradient(0deg,#2844340c 0 1px,transparent 1px 5px),repeating-linear-gradient(90deg,#fbf8f033 0 1px,transparent 1px 4px);
-  --event-utama:#284434; --event-teks:#3f4c40; --event-muted:#52634e; --event-label:#496044;
-  --event-kertas:#fbf8f0; --event-lembut:#edf0e5; --event-latar:#d8ded1; --event-garis:#c7cdb7; --event-border:#6b7e60; --event-aksen:#8a7845;
-  --event-ink:#284434; --event-on-ink:#f8f5e9; --event-sans:'Jost',sans-serif; --event-serif:'Cormorant Garamond',serif; --event-radius:0px;
+﻿.tpl-melati {
+  --event-utama:#edd3a4; --event-teks:#f0e4d8; --event-muted:#d6c3ba; --event-label:#e5c99d;
+  --event-tekstur-luar:repeating-linear-gradient(45deg,#d4ae6c0c 0 1px,transparent 1px 22px),repeating-linear-gradient(-45deg,#d4ae6c08 0 1px,transparent 1px 22px);
+  --event-kertas:#38262c; --event-kartu:#463039; --event-lembut:#51363e; --event-latar:#251c21; --event-garis:#836650; --event-border:#bb9869; --event-aksen:#d1ac72;
+  --event-ink:#241b21; --event-on-ink:#f8e9d9; --event-tombol-teks:#38262c; --event-sans:'Jost',sans-serif; --event-serif:'EB Garamond',serif; --event-radius:2px;
 }
-.tpl-melati .event-sampul { background:linear-gradient(115deg,#e5e9dc55,transparent 55%),var(--event-kertas); }
-.tpl-melati .event-bingkai { inset:22px; border-right:0; border-bottom:0; }
-.tpl-melati .event-identitas,.tpl-melati .event-detail-sampul,.tpl-melati .event-tamu { text-align:left; padding-inline:8px; }
-.tpl-melati .event-identitas h1 { font-weight:500; font-size:calc(var(--ukuran-judul) * 1.2); }
-.tpl-melati .event-meterai { align-self:flex-start; margin-left:8px; }
-.tpl-melati .event-ornamen-atas { width:290px; left:-160px; top:-40px; }
-.tpl-melati .event-ornamen-bawah { width:250px; right:-145px; bottom:90px; }
-.tpl-melati .event-pembuka { background:#edf0e5; border-bottom:1px solid #c7cdb7; }
-.tpl-melati .event-tentang { background:var(--event-kertas); }
-.tpl-melati .event-agenda { display:grid; grid-template-columns:44px minmax(0,1fr); column-gap:18px; padding:25px 0 0; border:0; border-top:1px solid #8a7845; background:transparent; }
-.tpl-melati .event-sesi-kepala { grid-column:1; grid-row:1 / span 4; flex-direction:column; align-items:flex-start; gap:8px; margin:0; border-right:1px solid #c7cdb7; }
-.tpl-melati .event-sesi-kepala .event-nomor { border:0; font-size:32px; justify-content:flex-start; }
-.tpl-melati .event-sesi-kepala .event-label { font-size:12px; letter-spacing:.02em; }
-.tpl-melati .event-agenda > :not(.event-sesi-kepala) { grid-column:2; }
-.tpl-melati .event-salam .event-prosa::first-letter { float:left; font:500 52px/.95 'Cormorant Garamond',serif; color:#284434; padding:4px 7px 0 0; }
-.tpl-melati .event-profil { border-top:0; border-left:2px solid #8a7845; background:#edf0e5; }
-.tpl-melati .event-profil-nomor { font-style:italic; }
-.tpl-melati .event-penutup { border-top:1px solid #c7cdb7; background:linear-gradient(#fbf8f0,#edf0e5); }
+.tpl-melati .event-sampul { background:radial-gradient(ellipse at 50% 8%,#71434b66,transparent 65%),linear-gradient(165deg,#432c33,#2c2127); }
+.tpl-melati .event-bingkai { inset:22px; border:1px solid #bd9a65; border-top:0; border-bottom:0; }
+.tpl-melati .event-bingkai::before,.tpl-melati .event-bingkai::after { content:''; position:absolute; left:0; right:0; height:16px; border-block:1px solid #bd9a6580; }
+.tpl-melati .event-bingkai::before { top:0; }
+.tpl-melati .event-bingkai::after { bottom:0; }
+.tpl-melati .event-meterai { width:110px; height:74px; }
+.tpl-melati .event-meterai > .event-hiasan { opacity:.9; }
+.tpl-melati .event-identitas h1 { font-size:calc(var(--ukuran-judul) * 1.1); font-weight:400; letter-spacing:-.015em; }
+.tpl-melati .event-subjudul { max-width:29ch; font-size:14px; }
+.tpl-melati .event-detail-sampul { border-top:1px solid #ac865f; padding-top:14px; }
+.tpl-melati .event-tanggal { font-size:20px; }
+.tpl-melati .event-nama-tamu { font-size:25px; }
+.event-senja-sampul { position:absolute; left:0; bottom:75px; width:100%; height:200px; color:var(--event-aksen); opacity:.14; }
+.tpl-melati .event-kepala h2 { font-size:39px; font-weight:400; letter-spacing:-.02em; }
+.tpl-melati .event-pemisah { width:58px; height:1px; background:#c4a070; }
+.tpl-melati .event-tentang .event-kepala h2 { font-size:28px; }
+.tpl-melati .event-tentang .event-deskripsi { font-size:24px; line-height:1.7; }
+.tpl-melati .event-surat { padding:48px 25px 32px; border:3px double #9f7a59; background:#402b32; box-shadow:0 20px 32px #160d1420; }
+.tpl-melati .event-surat::after { inset:6px; border-color:#b6956a55; }
+.tpl-melati .event-surat .event-kepala h2 { font-size:32px; }
+.tpl-melati .event-tanda-surat { width:58px; height:50px; top:-26px; left:calc(50% - 29px); border-radius:30px 30px 0 0; background:#38262c; animation:none; }
+.tpl-melati .event-penanda-surat { font-size:21px; font-style:normal; }
+.tpl-melati .event-agenda { padding:32px 22px 26px; border:1px solid #a4815e; background:#402b32; text-align:center; border-radius:48px 48px 2px 2px; }
+.tpl-melati .event-sesi-kepala { justify-content:center; }
+.tpl-melati .event-nomor { border-radius:50%; border-color:#b38d60; }
+.tpl-melati .event-agenda h3 { font-size:30px; }
+.tpl-melati .event-agenda .event-aksi { align-items:center; }
+.tpl-melati .event-susunan .event-kepala { border-left:3px double #c4a070; }
+.tpl-melati .event-susunan .event-kepala h2 { font-size:34px; }
+.tpl-melati .event-rundown time { color:#e5c99d; }
+.tpl-melati .event-profil { padding:28px 12px; border-bottom:1px solid #8d6b53; background:none; }
+.tpl-melati .event-profil-inisial { width:94px; height:106px; border-radius:48px 48px 0 0; font-size:34px; }
+.tpl-melati .event-profil-inisial::after { width:108px; height:120px; border-radius:55px 55px 0 0; border-style:solid; opacity:.45; animation:none; }
+.tpl-melati .event-profil h3 { font-size:31px; }
+.tpl-melati .event-info h3 { color:#edd3a4; }
+.tpl-melati .event-rsvp .event-form { border-radius:90px 90px 2px 2px; border:1px solid #a4815e; padding-top:42px; background:#402b32; box-shadow:0 18px 38px #170d1222; }
+.tpl-melati .event-rsvp .event-kepala h2 { font-size:35px; }
+.tpl-melati .event-mitra { border-block:3px double #8d6b53; padding-block:18px; }
+.tpl-melati .event-cincin-jam { color:#d7b986; opacity:.7; }
+.tpl-melati .event-hitung .event-hitungan span { font-size:38px; }
+.tpl-melati .event-kontak .event-kepala h2 { font-size:39px; }
+.tpl-melati .event-kontak-isi { border-left:3px double #c4a070; }
 @media(max-width:350px) {
-  .tpl-melati .event-agenda { display:block; }
-  .tpl-melati .event-sesi-kepala { flex-direction:row; align-items:center; border:0; margin-bottom:16px; }
+  .tpl-melati .event-hitung .event-hitungan span { font-size:28px; }
+  .tpl-melati .event-jam-ruang { padding:22px; }
+  .tpl-melati .event-tentang .event-deskripsi { font-size:22px; }
+  .tpl-melati .event-kepala h2 { font-size:34px; }
 }
+@media(max-height:620px) { .event-senja-sampul { height:130px; opacity:.1; } }
