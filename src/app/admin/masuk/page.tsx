@@ -4,6 +4,7 @@ import { googleConfigured } from "@/lib/auth-options";
 import { getAdmin } from "@/lib/session";
 import { TombolGoogle } from "../../masuk/tombol-google";
 import { FormMasukAdmin } from "./form-masuk-admin";
+import { BrandLogo } from "@/components/brand-logo";
 
 export const metadata: Metadata = { title: "Masuk admin" };
 
@@ -24,7 +25,7 @@ export default async function MasukAdminPage({ searchParams }: PageProps<"/admin
       <div className="flex w-full max-w-md flex-col gap-6">
         <div className="flex flex-col items-center gap-2 text-center">
           <span className="text-xs tracking-[0.2em] text-emas uppercase">Admin global</span>
-          <span className="font-judul text-[32px] leading-none font-semibold">UndanganDigital</span>
+          <BrandLogo />
         </div>
         <div className="flex flex-col gap-6 rounded-[10px] border border-garis bg-white p-7 shadow-[0_1px_2px_rgba(42,38,34,0.04),0_12px_32px_-18px_rgba(42,38,34,0.22)]">
           <div className="flex flex-col gap-1.5">

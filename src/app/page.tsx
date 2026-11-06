@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Ikon } from "@/components/ikon";
+import { BrandLogo } from "@/components/brand-logo";
 import "./portal.css";
 
 export const metadata: Metadata = {
@@ -20,9 +21,8 @@ export default function Beranda() {
   return (
     <div className="portal-awal selalu-gerak">
       <header className="portal-header">
-        <Link className="portal-merek" href="/" aria-label="UndanganDigital, beranda">
-          <span className="portal-lambang"><Ikon nama="surat" ukuran={18} /></span>
-          <span>UndanganDigital</span>
+        <Link className="portal-merek" href="/" aria-label="LingkarIDE Manajemen, beranda UndanganDigital">
+          <BrandLogo height={40} />
         </Link>
         <Link className="portal-masuk" href="/masuk">Masuk <span aria-hidden="true">↗</span></Link>
       </header>
@@ -66,7 +66,7 @@ export default function Beranda() {
       </main>
 
       <footer className="portal-footer">
-        <span>UndanganDigital</span>
+        <BrandLogo height={28} />
         <p>Untuk tamu, buka tautan undangan yang dibagikan penyelenggara.</p>
       </footer>
     </div>

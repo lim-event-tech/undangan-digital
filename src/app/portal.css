@@ -13,8 +13,7 @@
 .portal-awal a { text-decoration: none; }
 .portal-awal a:focus-visible { outline: 2px solid #7d5f28; outline-offset: 5px; }
 .portal-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; max-width: 1440px; margin-inline: auto; padding: 24px 40px; }
-.portal-merek { display: inline-flex; align-items: center; gap: 10px; color: #2a2622; font: 500 25px/1.2 'Cormorant Garamond', Georgia, serif; white-space: nowrap; }
-.portal-lambang { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid #b69b63; border-radius: 50%; color: #7d5f28; }
+.portal-merek { display: inline-flex; align-items: center; color: #2a2622; }
 .portal-masuk { display: inline-flex; align-items: center; justify-content: center; gap: 14px; min-height: 44px; padding: 9px 17px; border: 1px solid #d9cdb6; border-radius: 7px; font-size: 13px; color: #3d3731; background: #fffdf8; white-space: nowrap; transition: border-color .2s, background .2s; }
 .portal-masuk:hover { border-color: #a8853f; background: #f3eddd; }
 .portal-main { display: flex; flex: 1; align-items: center; justify-content: center; padding: 44px 28px 54px; }
@@ -49,8 +48,6 @@
 @keyframes portal-tampil { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @media (max-width: 700px) {
   .portal-header { padding: 18px 20px; }
-  .portal-merek { font-size: 22px; gap: 8px; }
-  .portal-lambang { width: 32px; height: 32px; }
   .portal-main { padding: 30px 20px 36px; }
   .portal-isi { max-width: 470px; gap: 28px; }
   .portal-pilihan { grid-template-columns: minmax(0, 1fr); gap: 14px; }
@@ -62,7 +59,6 @@
 }
 @media (max-width: 360px) {
   .portal-header { padding-inline: 16px; gap: 10px; }
-  .portal-merek { font-size: 20px; }
   .portal-masuk { padding-inline: 12px; gap: 9px; font-size: 12px; }
   .portal-main { padding-inline: 16px; }
   .portal-jeda { display: block; }
@@ -71,8 +67,5 @@
 }
 @media (max-width: 300px) {
   .portal-header { padding-inline: 12px; gap: 6px; }
-  .portal-merek { font-size: 17px; gap: 6px; }
-  .portal-lambang { width: 24px; height: 24px; }
-  .portal-lambang svg { width: 14px; height: 14px; }
   .portal-masuk { padding-inline: 8px; gap: 6px; font-size: 11px; }
 }

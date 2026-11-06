@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Ikon } from "@/components/ikon";
+import { BrandLogo } from "@/components/brand-logo";
 import { SidebarNav, type ItemNav } from "@/components/sidebar-nav";
 import { TombolKeluar } from "@/components/tombol-keluar";
 import { can, type Permission } from "@/lib/admin/roles";
@@ -25,17 +25,9 @@ export function AdminShell({
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
       <aside className="flex flex-col gap-4 border-b border-garis bg-white p-4 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:overflow-y-auto lg:border-r lg:border-b-0">
-        <Link href="/admin" className="flex items-center gap-2 px-2 text-tinta no-underline">
-          <span
-            aria-hidden="true"
-            className="flex size-8 items-center justify-center rounded-full border border-[#c6a867] bg-white text-emas"
-          >
-            <Ikon nama="surat" ukuran={16} />
-          </span>
-          <span className="flex flex-col leading-tight">
-            <span className="font-judul text-[21px] font-medium">UndanganDigital</span>
-            <span className="text-[11px] tracking-[0.14em] text-redup uppercase">Admin global</span>
-          </span>
+        <Link href="/admin" aria-label="LingkarIDE Manajemen, admin UndanganDigital" className="flex flex-col items-start gap-2 px-2 text-tinta no-underline">
+          <BrandLogo height={36} />
+          <span className="text-[11px] tracking-[0.14em] text-redup uppercase">Admin global</span>
         </Link>
 
         <SidebarNav items={nav} />

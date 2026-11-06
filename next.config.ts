@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["baileys"],
   output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   images: {
-    localPatterns: [{ pathname: "/foto/**" }, { pathname: "/template/assets/**", search: "" }],
+    localPatterns: [{ pathname: "/foto/**" }, { pathname: "/template/assets/**", search: "" }, { pathname: "/brand/logolim.png", search: "" }],
     formats: ["image/webp"],
     minimumCacheTTL: 2592000,
   },
