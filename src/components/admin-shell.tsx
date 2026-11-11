@@ -18,6 +18,7 @@ export function AdminShell({
     { label: "Template", ikon: "templat", href: "/admin/template" },
     { label: "Pengaturan", ikon: "kunci", href: "/admin/pengaturan" },
     { label: "WhatsApp", ikon: "kirim", href: "/admin/whatsapp" },
+    { label: "Surel (SMTP)", ikon: "surat", href: "/admin/surel" },
     { label: "Tim & log audit", ikon: "berkas", href: "/admin/tim" },
     ...(can(admin, "tim") ? [{ label: "Peran & izin", ikon: "kunci" as const, href: "/admin/peran" }] : []),
   ];
