@@ -28,7 +28,7 @@ export function contohView(now: number): InvitationView {
       },
       { id: "contoh-lanjutan", key: "lanjutan", name: "Diskusi dan jejaring", sortOrder: 1, date: "2027-02-20", endDate: null, dayTimes: [], time: "13:00", endTime: "15:00", timezone: "WIB", venueName: "Aula Graha Puspa", address: ALAMAT, mapsUrl: PETA, response: null, agenda: [] },
     ],
-    photos: [], rsvp: { closed: false, deadline: "2027-02-15" },
+    photos: [], rsvp: { closed: false, deadline: "2027-02-15T09:59:00.000Z" },
     now,
   };
 }

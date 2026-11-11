@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { judulHalaman, tombolTerang } from "@/components/ui";
 import { db } from "@/db";
-import { dateFromDeadline, todayInZone } from "@/lib/datetime";
+import { dateFromDeadline, timeFromDeadline, todayInZone } from "@/lib/datetime";
 import { listEventDetails } from "@/lib/events/service";
 import { countGuests, firstGuestToken } from "@/lib/guests/service";
 import { readContent } from "@/lib/invitations/content";
@@ -110,6 +110,7 @@ export default async function IsiUndanganPage({ params }: PageProps<"/undangan/[
       <FormFormal group="kontak" value={content.kontak} />
       <FormRsvp
         batas={dateFromDeadline(invitation.rsvpDeadline)}
+        jam={timeFromDeadline(invitation.rsvpDeadline)}
         hariIni={tanggalMinimal.WIB}
         maksPeserta={invitation.defaultMaxAttendees}
       />

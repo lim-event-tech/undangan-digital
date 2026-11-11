@@ -9,7 +9,6 @@
 .tpl-bintang[data-warna=kustom] { --c-111d32:var(--event-kertas); --c-14233b:var(--event-lembut); --c-182942:var(--event-lembut); --c-1a2a44:var(--event-kartu); --c-34466866:color-mix(in srgb,var(--event-garis) 40%,transparent); --c-38476a88:color-mix(in srgb,var(--event-garis) 53.33%,transparent); --c-526078:var(--event-garis); --c-6a7890:var(--event-garis); --c-a48b5d:var(--event-aksen); --c-a68c54:var(--event-aksen); --c-d2b77d:var(--event-aksen); --c-fbf3e2:var(--event-teks); }
 .tpl-bintang .event-sampul { background:radial-gradient(ellipse at 50% -20%,var(--c-38476a88),transparent 75%),var(--c-111d32); }
 .tpl-bintang .event-identitas h1 { color:var(--c-fbf3e2); font-size:calc(var(--ukuran-judul) * 1.08); font-weight:400; }
-.tpl-bintang .event-bingkai { border:0; border-top:1px solid var(--c-a68c54); border-bottom:1px solid var(--c-a68c54); inset:22px; }
 .tpl-bintang .event-meterai { width:120px; height:83px; }
 .tpl-bintang .event-meterai > .event-hiasan { opacity:.8; }
 .tpl-bintang .event-kepala h2 { color:var(--c-fbf3e2); font-weight:400; font-size:35px; }

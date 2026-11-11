@@ -4,7 +4,7 @@ import Link from "next/link";
 import { judulHalaman, kartu, tombolTerang } from "@/components/ui";
 import { db } from "@/db";
 import { appBaseUrl, guestLink } from "@/lib/app-url";
-import { dateFromDeadline, formatDate, formatStamp } from "@/lib/datetime";
+import { formatDeadline, formatStamp } from "@/lib/datetime";
 import { countSent } from "@/lib/guests/sending";
 import { listGuests } from "@/lib/guests/service";
 import { readContent } from "@/lib/invitations/content";
@@ -54,9 +54,7 @@ export default async function KirimPage({ params, searchParams }: PageProps<"/un
   const pesanBawaan = (await getSettings(db)).pesanWaBawaan || DEFAULT_MESSAGE;
   const template = pickTemplate(tampil === "pengingat" ? "pengingat" : "undangan", content, pesanBawaan);
   const eventTitle = `${invitation.title}`;
-  const deadlineText = invitation.rsvpDeadline
-    ? formatDate(dateFromDeadline(invitation.rsvpDeadline))
-    : null;
+  const deadlineText = formatDeadline(invitation.rsvpDeadline);
   const phrase = deadlinePhrase(deadlineText);
 
   const jenisAntrean = pengingat ? "pengingat" : "undangan";

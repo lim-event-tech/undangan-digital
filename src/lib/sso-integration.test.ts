@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { session, user } from "@/db/schema";
 import { createTestDb, type TestDb } from "@/test/db";
 import { authOptions } from "./auth-options";
+import { saveSettings } from "./platform/service";
 import { lingkarideSso } from "./sso-plugin";
 import { forwardSsoRequest, ssoResponse } from "./sso-route";
 
@@ -71,20 +72,61 @@ describe("SSO admin LingkarIDE", () => {
     expect(await auth.api.getSession({ headers: new Headers({ cookie }) })).toBeNull();
   });
 
-  it.each([
-    ["baru@example.com", "sso_not_registered"],
-    ["pemilik@example.com", "sso_not_registered"],
-    ["blok@example.com", "sso_inactive"],
-  ])("menolak %s tanpa membuat sesi atau memberi peran baru", async (email, code) => {
+  it("memasukkan email yang tidak punya akun admin sebagai pengguna biasa tanpa peran admin", async () => {
     const auth = makeAuth();
-    const before = await db.select().from(session);
-    const response = await auth.handler(request(token(email)));
-    expect(response.headers.get("location")).toBe(`${origin}/admin/masuk?galat=${code}`);
-    expect(response.headers.getSetCookie()).toEqual([]);
-    expect(await db.select().from(session)).toHaveLength(before.length);
-    const [stored] = await db.select().from(user).where(eq(user.email, email));
-    if (email.startsWith("baru")) expect(stored).toBeUndefined();
-    if (email.startsWith("pemilik")) expect(stored.adminRole).toBeNull();
+    const response = ssoResponse(await auth.handler(request(token("pemilik@example.com"))));
+    expect(response.headers.get("location")).toBe(`${origin}/undangan`);
+    const cookie = response.headers.getSetCookie().map((value) => value.split(";")[0]).join("; ");
+    const current = await auth.api.getSession({ headers: new Headers({ cookie }) });
+    expect(current?.user.id).toBe("pemilik-sso");
+    expect(current?.user.adminRole ?? null).toBeNull();
+    expect(current?.user.name).toBe("Pemilik");
+    const [stored] = await db.select().from(user).where(eq(user.email, "pemilik@example.com"));
+    expect(stored.adminRole).toBeNull();
+    expect(stored.emailVerified).toBe(false);
+  });
+
+  it("membuat akun pengguna biasa untuk email baru dan memasukkannya ke /undangan", async () => {
+    const auth = makeAuth();
+    const response = ssoResponse(await auth.handler(request(token("Baru.Sales@Example.com"))));
+    expect(response.headers.get("location")).toBe(`${origin}/undangan`);
+    const [dibuat] = await db.select().from(user).where(eq(user.email, "baru.sales@example.com"));
+    expect(dibuat).toMatchObject({ name: "Nama dari LingkarIDE", status: "aktif", emailVerified: true });
+    expect(dibuat.adminRole).toBeNull();
+    const cookie = response.headers.getSetCookie().map((value) => value.split(";")[0]).join("; ");
+    expect((await auth.api.getSession({ headers: new Headers({ cookie }) }))?.user.id).toBe(dibuat.id);
+    const lagi = await auth.handler(request(token("baru.sales@example.com")));
+    expect(lagi.headers.get("location")).toBe(`${origin}/undangan`);
+    expect(await db.select().from(user).where(eq(user.email, "baru.sales@example.com"))).toHaveLength(1);
+  });
+
+  it("menolak membuat akun baru saat pendaftaran ditutup, tetapi tetap memasukkan akun yang sudah ada", async () => {
+    const auth = makeAuth();
+    await saveSettings(db, { daftarTerbuka: false });
+    try {
+      const sebelum = await db.select().from(session);
+      const ditolak = await auth.handler(request(token("tutup@example.com")));
+      expect(ditolak.headers.get("location")).toBe(`${origin}/admin/masuk?galat=sso_registration_closed`);
+      expect(ditolak.headers.getSetCookie()).toEqual([]);
+      expect(await db.select().from(user).where(eq(user.email, "tutup@example.com"))).toHaveLength(0);
+      expect(await db.select().from(session)).toHaveLength(sebelum.length);
+      const ada = await auth.handler(request(token("pemilik@example.com")));
+      expect(ada.headers.get("location")).toBe(`${origin}/undangan`);
+    } finally {
+      await saveSettings(db, { daftarTerbuka: true });
+    }
+  });
+
+  it("menolak akun yang diblokir, baik admin maupun pengguna biasa, tanpa sesi", async () => {
+    const auth = makeAuth();
+    await db.insert(user).values({ id: "pengguna-blok-sso", name: "Pengguna Blok", email: "pengguna-blok@example.com", status: "diblokir" });
+    for (const email of ["blok@example.com", "pengguna-blok@example.com"]) {
+      const before = await db.select().from(session);
+      const response = await auth.handler(request(token(email)));
+      expect(response.headers.get("location")).toBe(`${origin}/admin/masuk?galat=sso_inactive`);
+      expect(response.headers.getSetCookie()).toEqual([]);
+      expect(await db.select().from(session)).toHaveLength(before.length);
+    }
   });
 
   it("menolak token hilang, rusak, kedaluwarsa, dan referer asing", async () => {

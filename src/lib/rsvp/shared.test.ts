@@ -51,3 +51,25 @@ describe("isRsvpClosed", () => {
     expect(isRsvpClosed(new Date(Date.now() + 3_600_000))).toBe(false);
   });
 });
+
+describe("batas RSVP dengan jam", () => {
+  const now = new Date("2026-11-04T03:00:00.000Z");
+
+  it("memakai jam yang dipilih (WIB) dan berakhir di akhir menit itu, bawaan 23.59", () => {
+    expect(parseRsvpDeadline("2026-11-10", now, "17:30")).toEqual({ ok: true, deadline: new Date("2026-11-10T10:30:59.000Z") });
+    expect(parseRsvpDeadline("2026-11-10", now)).toEqual({ ok: true, deadline: new Date("2026-11-10T16:59:59.000Z") });
+  });
+
+  it("menolak jam tidak valid dan batas hari ini yang jamnya sudah lewat", () => {
+    expect(parseRsvpDeadline("2026-11-10", now, "25:00")).toEqual({ ok: false, error: "Jam tidak valid" });
+    expect(parseRsvpDeadline("2026-11-04", now, "09:00")).toEqual({ ok: false, error: "Batas waktu RSVP tidak boleh sudah lewat" });
+    expect(parseRsvpDeadline("2026-11-04", now, "11:00").ok).toBe(true);
+  });
+
+  it("menutup RSVP tepat setelah jam batas", () => {
+    const batas = parseRsvpDeadline("2026-11-10", now, "17:30");
+    if (!batas.ok || !batas.deadline) throw new Error("batas tidak ada");
+    expect(isRsvpClosed(batas.deadline, new Date("2026-11-10T10:30:59.000Z"))).toBe(false);
+    expect(isRsvpClosed(batas.deadline, new Date("2026-11-10T10:31:00.000Z"))).toBe(true);
+  });
+});

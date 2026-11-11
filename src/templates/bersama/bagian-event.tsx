@@ -22,7 +22,7 @@ export function buatBagian(tema: TemplateKey) {
         {hiasan && !poster ? <OrnamenEvent tema={tema} /> : null}
         {hiasan && !poster ? <DekorasiEvent id={dekorasiId} bagian="sampul" /> : null}
         {hiasan ? <div className="event-bingkai" aria-hidden="true" /> : null}
-        {poster ? <div className="event-poster"><Image src={poster.src} alt={`Poster ${v.judul}`} fill sizes="(max-width: 430px) 100vw, 430px" priority /></div> : null}
+        {poster ? <div className="event-poster"><Image src={poster.src} alt={`Poster ${v.judul}`} width={poster.width} height={poster.height} sizes="(max-width: 430px) 100vw, 430px" priority className="event-poster-gambar" /></div> : null}
         {v.sembunyikanTeksSampul ? <h1 className="event-sr">{v.judul}</h1> : (
           <div className="sampul-konten">
             {hiasan ? <div className="event-meterai" aria-hidden="true"><HiasanEvent tema={tema} /></div> : null}
@@ -35,7 +35,7 @@ export function buatBagian(tema: TemplateKey) {
           </div>
         )}
         <div className="sampul-aksi"><a className="event-tombol" href={`#${berikut}`} onClick={v.bukaUndangan} aria-expanded={v.undanganTerbuka} aria-controls={berikut}>Buka undangan <span aria-hidden="true">↗</span></a><span className="event-petunjuk-buka">{v.mode === "tamu" ? "Informasi acara & konfirmasi kehadiran" : "Pratinjau tampilan · Jawaban tidak disimpan"}</span></div>
-        {hiasan ? <Sambungan tema={tema} variasi={0} bagian="sampul" /> : null}
+        {hiasan && !poster ? <Sambungan tema={tema} variasi={0} bagian="sampul" /> : null}
       </section>
     );
   }

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { dateFromDeadline } from "@/lib/datetime";
 import { listEventDetails } from "@/lib/events/service";
 import { readContent } from "@/lib/invitations/content";
 import { listPhotos } from "@/lib/photos/service";
@@ -50,7 +49,7 @@ export default async function PratinjauPage({ params, searchParams }: PageProps<
     photos,
     rsvp: {
       closed: isRsvpClosed(invitation.rsvpDeadline),
-      deadline: dateFromDeadline(invitation.rsvpDeadline) || null,
+      deadline: invitation.rsvpDeadline ? invitation.rsvpDeadline.toISOString() : null,
     },
     now: now.getTime(),
   };

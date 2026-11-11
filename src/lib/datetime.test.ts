@@ -114,3 +114,16 @@ describe("batas waktu RSVP", () => {
     expect(dateFromDeadline(null)).toBe("");
   });
 });
+
+describe("batas dengan jam", () => {
+  it("membaca kembali tanggal, jam WIB, dan teks tampilan dari satu batas", async () => {
+    const { deadlineFromDateTime, timeFromDeadline, dateFromDeadline, formatDeadline } = await import("./datetime");
+    const batas = deadlineFromDateTime("2026-11-05", "08:05");
+    expect(batas.toISOString()).toBe("2026-11-05T01:05:59.000Z");
+    expect(dateFromDeadline(batas)).toBe("2026-11-05");
+    expect(timeFromDeadline(batas)).toBe("08:05");
+    expect(formatDeadline(batas)).toBe("5 November 2026, pukul 08.05 WIB");
+    expect(formatDeadline(null)).toBeNull();
+    expect(timeFromDeadline(null)).toBe("");
+  });
+});

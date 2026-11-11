@@ -1,6 +1,6 @@
 import { normalizePhone } from "@/lib/phone";
 import { buildIcs, calendarSlots, googleCalendarUrl } from "@/lib/calendar";
-import { formatDate, formatDateRange, formatDayLabel, formatDots, formatLongDate, formatLongDateRange, formatTime } from "@/lib/datetime";
+import { formatDate, formatDateRange, formatDeadline, formatDayLabel, formatDots, formatLongDate, formatLongDateRange, formatTime } from "@/lib/datetime";
 import { dayWindow, eventDays, timeOptions } from "@/lib/events/days";
 import type { BagianId } from "@/lib/invitations/content";
 import type { InvitationView } from "@/templates/types";
@@ -133,7 +133,7 @@ export function siapkanData(view: InvitationView): DataUndangan {
     acara,
     jawaban,
     rsvpTutup: view.rsvp.closed,
-    batasRsvp: view.rsvp.deadline ? formatDate(view.rsvp.deadline) : null,
+    batasRsvp: view.rsvp.deadline ? formatDeadline(new Date(view.rsvp.deadline)) : null,
     kalender,
     poster: poster ? { src: foto(poster.id), width: poster.width || 1080, height: poster.height || 1920 } : null,
     sembunyikanTeksSampul: Boolean(poster) && content.sampul.sembunyikanTeks,

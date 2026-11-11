@@ -30,7 +30,7 @@ function Pesan({ galat, sukses, teks }: { galat: { errors?: Record<string, strin
   );
 }
 
-export function FormBatasAdmin({ id, batas, hariIni, boleh }: { id: string; batas: string; hariIni: string; boleh: boolean }) {
+export function FormBatasAdmin({ id, batas, jam, hariIni, boleh }: { id: string; batas: string; jam: string; hariIni: string; boleh: boolean }) {
   const { aksi, memproses, galat, sukses } = useForm(ubahBatasAction);
   return (
     <form action={aksi} className="flex flex-col gap-2.5">
@@ -47,12 +47,23 @@ export function FormBatasAdmin({ id, batas, hariIni, boleh }: { id: string; bata
           className={kolom}
         />
       </label>
-      {galat?.errors?.batas ? (
+      <label className={labelKolom}>
+        Jam batas (WIB)
+        <input
+          name="batasJam"
+          type="time"
+          defaultValue={jam || "23:59"}
+          disabled={!boleh}
+          aria-invalid={galat?.errors?.batasJam ? true : undefined}
+          className={kolom}
+        />
+      </label>
+      {galat?.errors?.batas || galat?.errors?.batasJam ? (
         <p role="alert" className={`m-0 ${pesanGalat}`}>
-          {galat.errors.batas}
+          {galat.errors.batas ?? galat.errors.batasJam}
         </p>
       ) : null}
-      <p className="m-0 text-xs text-redup">Kosongkan bila tanpa batas. Berakhir di akhir hari WIB.</p>
+      <p className="m-0 text-xs text-redup">Kosongkan tanggal bila tanpa batas. Konfirmasi ditutup pada jam yang dipilih.</p>
       <Pesan galat={galat} sukses={sukses} teks="Batas RSVP diperbarui." />
       {boleh ? (
         <div>

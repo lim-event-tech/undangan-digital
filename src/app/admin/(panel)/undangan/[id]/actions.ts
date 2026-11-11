@@ -11,7 +11,7 @@ import {
   getInvitationAdmin,
   setInvitationStatusAdmin,
 } from "@/lib/admin/queries";
-import { dateFromDeadline } from "@/lib/datetime";
+import { formatDeadline } from "@/lib/datetime";
 import { parseRsvpDeadline } from "@/lib/rsvp/shared";
 import { SAVED, type SaveResult } from "@/lib/save-result";
 import { isUuid } from "@/lib/uuid";
@@ -56,8 +56,9 @@ export async function ubahBatasAction(
   const admin = await requireAdmin("ubah-undangan");
 
   const text = field(formData, "batas").trim();
-  const parsed = parseRsvpDeadline(text);
-  if (!parsed.ok) return { ok: false, errors: { batas: parsed.error } };
+  const jamText = field(formData, "batasJam").trim() || "23:59";
+  const parsed = parseRsvpDeadline(text, new Date(), jamText);
+  if (!parsed.ok) return { ok: false, errors: parsed.error === "Jam tidak valid" ? { batasJam: parsed.error } : { batas: parsed.error } };
   const detail = await getInvitationAdmin(db, id);
   if (!detail) return NOT_FOUND;
 
@@ -67,7 +68,7 @@ export async function ubahBatasAction(
     category: "undangan",
     action: "Mengubah batas RSVP",
     target: `/u/${detail.slug}`,
-    detail: `${dateFromDeadline(detail.rsvpDeadline) || "tanpa batas"} menjadi ${text || "tanpa batas"}`,
+    detail: `${formatDeadline(detail.rsvpDeadline) ?? "tanpa batas"} menjadi ${formatDeadline(parsed.deadline) ?? "tanpa batas"}`,
   });
   refresh(id);
   return SAVED;

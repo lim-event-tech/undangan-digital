@@ -8,7 +8,6 @@
 .tpl-keraton[data-warna=kustom] { --c-153d32:var(--event-kertas); --c-173b30:var(--event-kertas); --c-1a4236:var(--event-kartu); --c-1b4438:var(--event-kartu); --c-204d40:var(--event-lembut); --c-70816a:var(--event-garis); --c-b69c64:var(--event-border); --c-b99b60:var(--event-border); --c-b99b6044:color-mix(in srgb,var(--event-border) 26.67%,transparent); --c-b99b74:var(--event-border); }
 .tpl-keraton .event-sampul { background:linear-gradient(160deg,var(--c-204d40),var(--c-153d32) 65%); }
 .tpl-keraton .event-identitas h1 { font-family:'Cinzel',serif; text-transform:uppercase; font-size:calc(var(--ukuran-judul) * .96); letter-spacing:.015em; }
-.tpl-keraton .event-bingkai { inset:17px; border:1px solid var(--c-b99b60); outline:1px solid var(--c-b99b6044); outline-offset:-7px; border-radius:160px 160px 0 0; }
 .tpl-keraton .event-meterai { width:120px; height:86px; }
 .tpl-keraton .event-meterai > .event-hiasan { opacity:.8; }
 .tpl-keraton .event-ornamen-atas { width:330px; top:-100px; left:-205px; opacity:.17; }

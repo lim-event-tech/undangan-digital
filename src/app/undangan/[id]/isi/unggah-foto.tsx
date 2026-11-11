@@ -52,7 +52,6 @@ function ContohUkuranPoster() {
         <div className="absolute inset-[5px] rounded-[16px] border border-garis" />
         <div className="absolute top-[3.5%] right-[7%] bottom-[19%] left-[7%] flex flex-col items-center justify-center rounded-sm border-2 border-dashed border-emas bg-emas/10 px-1 text-center">
           <span className="text-[11px] font-semibold text-emas-tua">Area poster</span>
-          <span className="mt-1 text-[10px] leading-tight text-redup">Rasio sekitar 1 : 2</span>
         </div>
         <div className="absolute right-[7%] bottom-[8%] left-[7%] flex h-[7%] items-center justify-center rounded-sm bg-tinta text-[10px] font-medium text-white">
           Buka undangan
@@ -84,13 +83,7 @@ export function BagianPoster({ poster, sampul }: { poster: PhotoInfo | null; sam
       <div className="flex flex-wrap items-start gap-6">
         <ContohUkuranPoster />
         <div className="flex min-w-0 flex-1 basis-60 flex-col items-start gap-4">
-          <div className="flex flex-col gap-1 text-sm leading-relaxed text-redup-2">
-            <p className="m-0">
-              Ukuran yang disarankan: <strong className="font-medium text-tinta">1000 × 2000 px</strong> (potret, rasio 1 : 2).
-              Di HP berukuran 390 × 844 px, area poster kira-kira 348 × 700 px.
-            </p>
-            <p className="m-0">JPG, PNG, atau WebP, dikompres otomatis dan maksimal 3 MB.</p>
-          </div>
+          <p className="m-0 text-sm leading-relaxed text-redup-2">JPG, PNG, atau WebP, dikompres otomatis dan maksimal 3 MB.</p>
           {poster ? (
             <div className="flex items-start gap-4">
               <Image

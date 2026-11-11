@@ -5,7 +5,6 @@ import { after } from "next/server";
 import { cache } from "react";
 import { db } from "@/db";
 import { appBaseUrl } from "@/lib/app-url";
-import { dateFromDeadline } from "@/lib/datetime";
 import { GENERIC_TITLE, buildInvitationMeta } from "@/lib/invitation-meta";
 import { isLinkCrawler, markOpened } from "@/lib/guests/sending";
 import { findGuestPage, type GuestPage } from "@/lib/rsvp/service";
@@ -94,7 +93,7 @@ export default async function UndanganTamuPage({ params }: PageProps<"/[token]">
     photos,
     rsvp: {
       closed: isRsvpClosed(invitation.rsvpDeadline),
-      deadline: dateFromDeadline(invitation.rsvpDeadline) || null,
+      deadline: invitation.rsvpDeadline ? invitation.rsvpDeadline.toISOString() : null,
     },
     now: now.getTime(),
   };

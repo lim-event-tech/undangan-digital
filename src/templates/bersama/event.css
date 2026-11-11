@@ -27,7 +27,10 @@
 }
 .event-hiasan { display: block; width: 158px; max-width: 100%; height: auto; color: var(--event-aksen); flex-shrink: 0; }
 .event-sampul { display: flex; align-items: center; position: relative; overflow: hidden; text-align: center; background: var(--event-kertas); color: var(--event-teks); }
-.event-bingkai { position: absolute; pointer-events: none; inset: 17px; border: 1px solid var(--event-garis); z-index: 1; }
+.event-bingkai { position: absolute; pointer-events: none; inset: 21px; border: 1px solid var(--event-aksen); outline: 1px solid color-mix(in srgb, var(--event-aksen) 29%, transparent); outline-offset: -6px; z-index: 1; }
+.event-bingkai::before, .event-bingkai::after { content: ""; position: absolute; width: 12px; height: 12px; border: 1px solid var(--event-aksen); background: var(--bidang, var(--event-kertas)); rotate: 45deg; left: calc(50% - 6px); }
+.event-bingkai::before { top: -7px; }
+.event-bingkai::after { bottom: -7px; }
 .event-meterai { width: 100px; height: 76px; position: relative; display: grid; place-items: center; color: var(--event-utama); }
 .event-meterai > .event-hiasan { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .5; }
 .event-identitas { width: 100%; }

@@ -1,6 +1,6 @@
 import type { AppDb } from "@/db/types";
 import { guestLink } from "@/lib/app-url";
-import { dateFromDeadline, formatDate } from "@/lib/datetime";
+import { formatDeadline } from "@/lib/datetime";
 import { listGuests } from "@/lib/guests/service";
 import { readContent } from "@/lib/invitations/content";
 import type { Invitation } from "@/lib/invitations/service";
@@ -105,9 +105,7 @@ export async function queueBlast(
   const settings = await getSettings(db);
   const template = pickTemplate(kind, content, settings.pesanWaBawaan);
   const eventTitle = `${invitation.title}`;
-  const deadlineText = invitation.rsvpDeadline
-    ? formatDate(dateFromDeadline(invitation.rsvpDeadline))
-    : null;
+  const deadlineText = formatDeadline(invitation.rsvpDeadline);
   const phrase = deadlinePhrase(deadlineText);
 
   const jobs: NewJob[] = targets.map((g) => ({

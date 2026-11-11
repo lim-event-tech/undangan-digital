@@ -32,7 +32,7 @@ export function FormUndang({ penuh }: { penuh: boolean }) {
     <form action={aksi} className="flex flex-col gap-3">
       <label className={labelKolom}>
         Email anggota baru
-        <input name="email" type="email" required disabled={penuh} placeholder="nama@perusahaan.com" autoComplete="off" className={`${kolom} sm:max-w-md`} />
+        <input name="email" type="email" required disabled={penuh} placeholder="nama@gmail.com" autoComplete="off" className={`${kolom} sm:max-w-md`} />
       </label>
       <div className="flex flex-wrap items-center gap-3">
         <button type="submit" disabled={penuh || memproses} className={tombolGelap}>{memproses ? "Mengirim…" : "Kirim undangan"}</button>

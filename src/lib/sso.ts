@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 
 export class SsoError extends Error {
-  constructor(readonly reason: "unavailable" | "origin" | "invalid" | "expired" | "not_registered" | "inactive") {
+  constructor(readonly reason: "unavailable" | "origin" | "invalid" | "expired" | "registration_closed" | "inactive") {
     super(`sso_${reason}`);
   }
 }
@@ -58,7 +58,7 @@ export function readSsoPayload(token: string | null, referer: string | null) {
 }
 
 export const SSO_MESSAGES: Record<string, string> = {
-  sso_not_registered: "Akun LingkarIDE Anda belum terdaftar sebagai admin. Minta Super admin menambahkan email Anda di halaman Tim.",
+  sso_registration_closed: "Akun dengan email ini belum ada dan pendaftaran baru sedang ditutup. Hubungi admin.",
   sso_inactive: "Akun ini sedang diblokir. Hubungi Super admin.",
   sso_expired: "Sesi masuk dari LingkarIDE sudah kedaluwarsa. Buka lagi dari aplikasi LingkarIDE.",
   sso_invalid: "Token masuk dari LingkarIDE tidak valid. Buka lagi dari aplikasi LingkarIDE.",

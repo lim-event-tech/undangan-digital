@@ -50,7 +50,7 @@ export default async function MasukAdminPage({ searchParams }: PageProps<"/admin
           <TombolGoogle siap={googleConfigured()} admin />
         </div>
         <p className="m-0 text-center text-xs text-redup">
-          Admin dapat masuk dari aplikasi LingkarIDE, dengan email Google yang didaftarkan Super admin, atau dengan kata sandi. Lupa kata sandi? Minta Super admin menggantinya di halaman Tim.
+          Admin dapat masuk dari aplikasi LingkarIDE (email lain dari LingkarIDE masuk sebagai pengguna biasa), dengan email Google yang didaftarkan Super admin, atau dengan kata sandi. Lupa kata sandi? Minta Super admin menggantinya di halaman Tim.
         </p>
       </div>
     </div>

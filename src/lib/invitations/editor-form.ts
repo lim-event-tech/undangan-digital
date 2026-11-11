@@ -1,6 +1,6 @@
-import { dateFromDeadline } from "@/lib/datetime";
+import { dateFromDeadline, timeFromDeadline } from "@/lib/datetime";
 import { multiLine, singleLine } from "@/lib/form-text";
-import { parseRsvpDeadline, RSVP_MAX_ATTENDEES } from "@/lib/rsvp/shared";
+import { parseRsvpDeadline, RSVP_DEFAULT_TIME, RSVP_MAX_ATTENDEES } from "@/lib/rsvp/shared";
 import type { FieldErrors } from "@/lib/save-result";
 import { CONTENT_LIMITS } from "./content";
 import { parseInvitationTitle } from "./title";
@@ -57,12 +57,14 @@ export function parseRsvpForm(
   const errors: FieldErrors = {};
 
   const dateText = singleLine(formData, "batas");
-  const parsedDeadline = parseRsvpDeadline(dateText);
+  const timeText = singleLine(formData, "batasJam") || timeFromDeadline(currentDeadline) || RSVP_DEFAULT_TIME;
+  const parsedDeadline = parseRsvpDeadline(dateText, new Date(), timeText);
   let deadline = currentDeadline;
   if (parsedDeadline.ok) {
     deadline = parsedDeadline.deadline;
-  } else if (dateText !== dateFromDeadline(currentDeadline)) {
-    errors.batas = parsedDeadline.error;
+  } else if (dateText !== dateFromDeadline(currentDeadline) || timeText !== timeFromDeadline(currentDeadline)) {
+    if (parsedDeadline.error === "Jam tidak valid") errors.batasJam = parsedDeadline.error;
+    else errors.batas = parsedDeadline.error;
   }
 
   const attendees = parseCount(singleLine(formData, "maksPeserta"), "Maks. peserta", 1, RSVP_MAX_ATTENDEES);

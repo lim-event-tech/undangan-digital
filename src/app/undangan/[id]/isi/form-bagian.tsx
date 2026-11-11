@@ -86,11 +86,12 @@ export function FormPenutup({ penutup }: { penutup: string }) {
   );
 }
 
-export function FormRsvp({ batas, hariIni, maksPeserta }: { batas: string; hariIni: string; maksPeserta: number }) {
+export function FormRsvp({ batas, jam, hariIni, maksPeserta }: { batas: string; jam: string; hariIni: string; maksPeserta: number }) {
   const { formRef, status, errors, formError, formProps } = useAutoSave(simpanRsvpAction);
   return <KartuBagian id="rsvp" judul="Pengaturan RSVP" deskripsi="Batas peserta mencakup tamu utama dan pendamping. Nilai ini menjadi bawaan untuk tamu baru dan dapat diubah per tamu." aksi={<StatusSimpan status={status} />}>
     <form ref={formRef} {...formProps} className="grid gap-3.5 sm:grid-cols-2">
-      <BidangTeks label="Batas waktu RSVP" name="batas" type="date" min={hariIni} defaultValue={batas} hint="Kosongkan bila tanpa batas" error={errors.batas} />
+      <BidangTeks label="Batas tanggal RSVP" name="batas" type="date" min={hariIni} defaultValue={batas} hint="Kosongkan bila tanpa batas" error={errors.batas} />
+      <BidangTeks label="Batas jam RSVP (WIB)" name="batasJam" type="time" defaultValue={jam || "23:59"} hint="Konfirmasi ditutup pada jam ini" error={errors.batasJam} />
       <BidangTeks label="Maks. peserta per tamu" name="maksPeserta" type="number" inputMode="numeric" min={1} max={RSVP_MAX_ATTENDEES} required defaultValue={maksPeserta} error={errors.maksPeserta} />
       <div className="sm:col-span-2"><GalatForm pesan={formError} /></div>
     </form>

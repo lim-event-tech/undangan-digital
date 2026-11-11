@@ -35,7 +35,7 @@ describe("siapkanData", () => {
       tglBesar: "SABTU, 20 FEBRUARI 2027",
       tglKata: "Sabtu, dua puluh Februari 2027",
       tglKota: "20 Februari 2027, Bandung",
-      batasRsvp: "15 Februari 2027",
+      batasRsvp: "15 Februari 2027, pukul 16.59 WIB",
     });
     expect(data.acara[0]).toMatchObject({
       nama: "Sesi utama",

@@ -151,7 +151,7 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
     teksBatas: tutup
       ? "Batas waktu konfirmasi sudah lewat."
       : data.batasRsvp
-        ? `Mohon konfirmasi sebelum ${data.batasRsvp}. Jawaban bisa diubah sampai tanggal tersebut.`
+        ? `Mohon konfirmasi sebelum ${data.batasRsvp}. Jawaban bisa diubah sampai batas tersebut.`
         : "Mohon konfirmasi kehadiran Anda untuk setiap acara.",
     teksUbah: tutup
       ? "Batas waktu konfirmasi sudah lewat."

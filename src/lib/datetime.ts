@@ -112,6 +112,20 @@ export function deadlineFromDate(value: string): Date {
   return new Date(`${value}T23:59:59+07:00`);
 }
 
+export function deadlineFromDateTime(date: string, time: string): Date {
+  return new Date(`${date}T${time}:59+07:00`);
+}
+
+export function timeFromDeadline(deadline: Date | null): string {
+  if (!deadline) return "";
+  return new Date(deadline.getTime() + WIB_OFFSET_MS).toISOString().slice(11, 16);
+}
+
+export function formatDeadline(deadline: Date | null): string | null {
+  if (!deadline) return null;
+  return `${formatDate(dateFromDeadline(deadline))}, pukul ${timeFromDeadline(deadline).replace(":", ".")} WIB`;
+}
+
 export function dateFromDeadline(deadline: Date | null): string {
   if (!deadline) return "";
   return new Date(deadline.getTime() + WIB_OFFSET_MS).toISOString().slice(0, 10);
