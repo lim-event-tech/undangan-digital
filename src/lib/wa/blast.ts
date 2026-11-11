@@ -4,6 +4,7 @@ import { dateFromDeadline, formatDate } from "@/lib/datetime";
 import { listGuests } from "@/lib/guests/service";
 import { readContent } from "@/lib/invitations/content";
 import type { Invitation } from "@/lib/invitations/service";
+import { listPhotos } from "@/lib/photos/service";
 import { getSettings } from "@/lib/platform/service";
 import { getDashboard } from "@/lib/rsvp/dashboard";
 import { deadlinePhrase, pickTemplate, renderMessage } from "@/lib/whatsapp";
@@ -40,10 +41,11 @@ async function loadTargets(
   invitationId: string,
   kind: JobKind,
   now: Date,
+  addedBy?: string,
 ): Promise<TargetGuest[]> {
   const [guests, dashboard, queued] = await Promise.all([
-    listGuests(db, invitationId),
-    getDashboard(db, invitationId),
+    listGuests(db, invitationId, { addedBy }),
+    getDashboard(db, invitationId, {}, addedBy),
     queuedGuestIds(db, invitationId, kind),
   ]);
   const detail = new Map(dashboard.guests.map((g) => [g.id, g]));
@@ -64,8 +66,9 @@ export async function countTargets(
   invitationId: string,
   kind: JobKind,
   now: Date = new Date(),
+  addedBy?: string,
 ): Promise<number> {
-  return (await loadTargets(db, invitationId, kind, now)).length;
+  return (await loadTargets(db, invitationId, kind, now, addedBy)).length;
 }
 
 export type BlastResult = { ok: true; added: number } | { ok: false; error: string };
@@ -75,16 +78,30 @@ export async function queueBlast(
   invitation: Invitation,
   kind: JobKind,
   now: Date = new Date(),
+  options: { senderUserId?: string; addedBy?: string } = {},
 ): Promise<BlastResult> {
   if (invitation.status !== "terbit") {
     return { ok: false, error: "Undangan belum terbit, jadi link tamu belum bisa dibuka." };
   }
-  const targets = await loadTargets(db, invitation.id, kind, now);
+  const targets = await loadTargets(db, invitation.id, kind, now, options.addedBy);
   if (targets.length === 0) {
     return { ok: false, error: "Tidak ada tamu yang perlu dikirimi." };
   }
 
   const content = readContent(invitation.content);
+  let posterId: string | null = null;
+  if (kind === "undangan" && content.waPoster.kirim) {
+    const wanted = content.waPoster.sumber === "khusus" ? "poster_wa" : "cover";
+    posterId = (await listPhotos(db, invitation.id)).find((p) => p.kind === wanted)?.id ?? null;
+    if (!posterId) {
+      return {
+        ok: false,
+        error: content.waPoster.sumber === "khusus"
+          ? "Poster khusus WhatsApp belum diunggah. Unggah dulu atau matikan pilihan poster."
+          : "Poster di Isi undangan belum diunggah. Unggah dulu atau matikan pilihan poster.",
+      };
+    }
+  }
   const settings = await getSettings(db);
   const template = pickTemplate(kind, content, settings.pesanWaBawaan);
   const eventTitle = `${invitation.title}`;
@@ -96,9 +113,11 @@ export async function queueBlast(
   const jobs: NewJob[] = targets.map((g) => ({
     guestId: g.id,
     phone: g.phone,
+    posterId,
+    senderUserId: options.senderUserId ?? null,
     message: renderMessage(template, {
       nama: g.name,
-      link: guestLink(invitation.slug, g.token),
+      link: guestLink(g.token),
       batas_rsvp: phrase,
       event: eventTitle,
     }),

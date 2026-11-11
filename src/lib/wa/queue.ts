@@ -5,7 +5,7 @@ import { markReminded, markSent } from "@/lib/guests/sending";
 
 export type JobKind = "undangan" | "pengingat";
 
-export type NewJob = { guestId: string; phone: string; message: string };
+export type NewJob = { guestId: string; phone: string; message: string; posterId?: string | null; senderUserId?: string | null };
 
 export type ClaimedJob = {
   id: string;
@@ -14,6 +14,8 @@ export type ClaimedJob = {
   kind: JobKind;
   phone: string;
   message: string;
+  posterId: string | null;
+  senderUserId: string | null;
   createdAt: Date;
 };
 
@@ -51,6 +53,7 @@ export async function enqueueJobs(
 export async function claimNextJob(
   db: AppDb,
   skipInvitations: readonly string[] = [],
+  senderUserId?: string,
 ): Promise<ClaimedJob | null> {
   return db.transaction(async (tx) => {
     const [next] = await tx
@@ -59,6 +62,7 @@ export async function claimNextJob(
       .where(
         and(
           eq(waJob.status, "menunggu"),
+          senderUserId ? eq(waJob.senderUserId, senderUserId) : undefined,
           skipInvitations.length > 0 ? notInArray(waJob.invitationId, [...skipInvitations]) : undefined,
         ),
       )
@@ -77,6 +81,8 @@ export async function claimNextJob(
         kind: waJob.kind,
         phone: waJob.phone,
         message: waJob.message,
+        posterId: waJob.posterId,
+        senderUserId: waJob.senderUserId,
         createdAt: waJob.createdAt,
       });
     return row ?? null;
@@ -123,11 +129,11 @@ export async function isAlreadyHandled(db: AppDb, job: ClaimedJob): Promise<bool
   return row.lastRemindedAt !== null && row.lastRemindedAt >= job.createdAt;
 }
 
-export async function cancelPending(db: AppDb, invitationId: string): Promise<number> {
+export async function cancelPending(db: AppDb, invitationId: string, senderUserId?: string): Promise<number> {
   const rows = await db
     .update(waJob)
     .set({ status: "dibatalkan", error: "Dibatalkan oleh pengguna", processedAt: new Date() })
-    .where(and(eq(waJob.invitationId, invitationId), eq(waJob.status, "menunggu")))
+    .where(and(eq(waJob.invitationId, invitationId), eq(waJob.status, "menunggu"), senderUserId ? eq(waJob.senderUserId, senderUserId) : undefined))
     .returning({ id: waJob.id });
   return rows.length;
 }
@@ -164,6 +170,15 @@ export async function sentLastDay(
   return row?.total ?? 0;
 }
 
+export async function senderSentLastDay(db: AppDb, senderUserId: string, now: Date = new Date()): Promise<number> {
+  const since = new Date(now.getTime() - DAY_MS);
+  const [row] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(waJob)
+    .where(and(eq(waJob.status, "terkirim"), eq(waJob.senderUserId, senderUserId), gte(waJob.processedAt, since)));
+  return row?.total ?? 0;
+}
+
 export async function invitationsAtLimit(
   db: AppDb,
   limit: number,
@@ -179,11 +194,11 @@ export async function invitationsAtLimit(
   return rows.map((row) => row.invitationId);
 }
 
-export async function hasWaitingJobs(db: AppDb): Promise<boolean> {
+export async function hasWaitingJobs(db: AppDb, senderUserId?: string): Promise<boolean> {
   const [row] = await db
     .select({ id: waJob.id })
     .from(waJob)
-    .where(eq(waJob.status, "menunggu"))
+    .where(and(eq(waJob.status, "menunggu"), senderUserId ? eq(waJob.senderUserId, senderUserId) : undefined))
     .limit(1);
   return row !== undefined;
 }
@@ -192,6 +207,7 @@ async function summarize(
   db: AppDb,
   invitationId: string | null,
   now: Date,
+  senderUserId?: string,
 ): Promise<QueueSummary> {
   const since = new Date(now.getTime() - DAY_MS);
   const rows = await db
@@ -200,6 +216,7 @@ async function summarize(
     .where(
       and(
         invitationId ? eq(waJob.invitationId, invitationId) : undefined,
+        senderUserId ? eq(waJob.senderUserId, senderUserId) : undefined,
         sql`(${waJob.status} in ('menunggu', 'mengirim') or ${waJob.createdAt} >= ${since.toISOString()}::timestamptz)`,
       ),
     )
@@ -213,8 +230,12 @@ async function summarize(
   };
 }
 
-export function invitationSummary(db: AppDb, invitationId: string, now: Date = new Date()) {
-  return summarize(db, invitationId, now);
+export function invitationSummary(db: AppDb, invitationId: string, now: Date = new Date(), senderUserId?: string) {
+  return summarize(db, invitationId, now, senderUserId);
+}
+
+export function senderSummary(db: AppDb, senderUserId: string, now: Date = new Date()) {
+  return summarize(db, null, now, senderUserId);
 }
 
 export function platformSummary(db: AppDb, now: Date = new Date()) {
@@ -250,7 +271,7 @@ export type FailureRow = {
 
 export async function recentFailures(
   db: AppDb,
-  options: { invitationId?: string; limit?: number } = {},
+  options: { invitationId?: string; senderUserId?: string; limit?: number } = {},
 ): Promise<FailureRow[]> {
   const rows = await db
     .select({
@@ -268,6 +289,7 @@ export async function recentFailures(
       and(
         eq(waJob.status, "gagal"),
         options.invitationId ? eq(waJob.invitationId, options.invitationId) : undefined,
+        options.senderUserId ? eq(waJob.senderUserId, options.senderUserId) : undefined,
       ),
     )
     .orderBy(desc(waJob.processedAt))

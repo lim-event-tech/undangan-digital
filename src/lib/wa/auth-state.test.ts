@@ -66,3 +66,24 @@ describe("loadPostgresAuthState", () => {
     expect(state.creds.registered).toBe(false);
   });
 });
+
+describe("sesi per pengguna", () => {
+  it("memisahkan kredensial dan kunci tiap sesi serta hanya menghapus sesi yang diminta", async () => {
+    const satu = await loadPostgresAuthState(db, "pengguna-satu");
+    const dua = await loadPostgresAuthState(db, "pengguna-dua");
+    (satu.state.creds as { registered: boolean }).registered = true;
+    await satu.saveCreds();
+    await satu.state.keys.set({ session: { sama: Buffer.from([1]) } });
+    await dua.state.keys.set({ session: { sama: Buffer.from([2]) } });
+
+    expect(await hasStoredSession(db, "pengguna-satu")).toBe(true);
+    expect(await hasStoredSession(db, "pengguna-dua")).toBe(false);
+    expect([...(await satu.state.keys.get("session", ["sama"])).sama]).toEqual([1]);
+    expect([...(await dua.state.keys.get("session", ["sama"])).sama]).toEqual([2]);
+
+    await clearStoredSession(db, "pengguna-satu");
+    expect(await hasStoredSession(db, "pengguna-satu")).toBe(false);
+    expect([...(await dua.state.keys.get("session", ["sama"])).sama]).toEqual([2]);
+    await clearStoredSession(db, "pengguna-dua");
+  });
+});

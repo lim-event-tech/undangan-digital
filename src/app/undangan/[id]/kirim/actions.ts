@@ -4,8 +4,11 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { markReminded, markSent, markUnsent } from "@/lib/guests/sending";
 import { saveContentText } from "@/lib/invitations/editor";
+import { parseWaPosterForm } from "@/lib/invitations/section-form";
+import { deletePhoto } from "@/lib/photos/service";
 import { SAVED, type SaveResult } from "@/lib/save-result";
-import { requireInvitationById } from "@/lib/session";
+import { getGuest } from "@/lib/guests/service";
+import { requireInvitationAccess, requireInvitationById } from "@/lib/session";
 import { isUuid } from "@/lib/uuid";
 import { checkMessageTemplate } from "@/lib/whatsapp";
 import { queueBlast } from "@/lib/wa/blast";
@@ -27,6 +30,24 @@ export async function simpanPesanAction(invitationId: string, formData: FormData
   return SAVED;
 }
 
+export async function simpanPosterWaAction(invitationId: string, formData: FormData): Promise<SaveResult> {
+  const { invitation } = await requireInvitationById(invitationId);
+  const parsed = parseWaPosterForm(formData);
+  if (!parsed.ok) return { ok: false, errors: parsed.errors };
+  if (!(await saveContentText(db, invitation.id, parsed.input))) {
+    return { ok: false, formError: "Undangan tidak ditemukan." };
+  }
+  revalidatePath(`/undangan/${invitation.id}/kirim`);
+  return SAVED;
+}
+
+export async function hapusPosterWaAction(invitationId: string, formData: FormData): Promise<void> {
+  const { invitation } = await requireInvitationById(invitationId);
+  const id = formData.get("id");
+  if (typeof id === "string" && isUuid(id)) await deletePhoto(db, invitation.id, id);
+  revalidatePath(`/undangan/${invitation.id}/kirim`);
+}
+
 export async function simpanPengingatAction(invitationId: string, formData: FormData): Promise<SaveResult> {
   const { invitation } = await requireInvitationById(invitationId);
   const raw = formData.get("pesan");
@@ -41,23 +62,23 @@ export async function simpanPengingatAction(invitationId: string, formData: Form
 }
 
 export async function tandaiDiingatkanAction(invitationId: string, guestId: string): Promise<void> {
-  const { invitation } = await requireInvitationById(invitationId);
-  if (!isUuid(guestId)) return;
+  const { invitation, scope } = await requireInvitationAccess(invitationId);
+  if (!isUuid(guestId) || !(await getGuest(db, invitation.id, guestId, scope ?? undefined))) return;
   await markReminded(db, invitation.id, guestId);
   revalidatePath(`/undangan/${invitation.id}/kirim`);
 }
 
 export async function tandaiTerkirimAction(invitationId: string, guestId: string): Promise<void> {
-  const { invitation } = await requireInvitationById(invitationId);
-  if (!isUuid(guestId)) return;
+  const { invitation, scope } = await requireInvitationAccess(invitationId);
+  if (!isUuid(guestId) || !(await getGuest(db, invitation.id, guestId, scope ?? undefined))) return;
   await markSent(db, invitation.id, guestId);
   revalidatePath(`/undangan/${invitation.id}/kirim`);
 }
 
 export async function tandaiBelumTerkirimAction(invitationId: string, formData: FormData): Promise<void> {
-  const { invitation } = await requireInvitationById(invitationId);
+  const { invitation, scope } = await requireInvitationAccess(invitationId);
   const id = formData.get("id");
-  if (typeof id === "string" && isUuid(id)) await markUnsent(db, invitation.id, id);
+  if (typeof id === "string" && isUuid(id) && (await getGuest(db, invitation.id, id, scope ?? undefined))) await markUnsent(db, invitation.id, id);
   revalidatePath(`/undangan/${invitation.id}/kirim`);
 }
 
@@ -66,23 +87,38 @@ export type BlastState = { ok: true; added: number } | { ok: false; error: strin
 export async function kirimOtomatisAction(invitationId: string, _state: BlastState,
   formData: FormData,
 ): Promise<BlastState> {
-  const { invitation } = await requireInvitationById(invitationId);
+  const { invitation, user, scope } = await requireInvitationAccess(invitationId);
   const raw = formData.get("jenis");
   const kind: JobKind = raw === "pengingat" ? "pengingat" : "undangan";
 
   const config = await getWaConfig(db);
   if (!config.aktif) return { ok: false, error: "Kirim otomatis sedang dimatikan oleh admin." };
-  if (!getWaManager().ready()) {
-    return { ok: false, error: "WhatsApp pengirim belum terhubung. Hubungi admin atau kirim manual." };
+  if (!getWaManager().for(user.id).ready()) {
+    return { ok: false, error: "Nomor WhatsApp Anda belum terhubung. Tautkan dulu di bagian Nomor WhatsApp Anda, atau kirim manual." };
   }
 
-  const result = await queueBlast(db, invitation, kind);
+  const result = await queueBlast(db, invitation, kind, new Date(), { senderUserId: user.id, addedBy: scope ?? undefined });
   if (result.ok) revalidatePath(`/undangan/${invitation.id}/kirim`);
   return result;
 }
 
 export async function batalkanAntreanAction(invitationId: string): Promise<void> {
-  const { invitation } = await requireInvitationById(invitationId);
-  await cancelPending(db, invitation.id);
+  const { invitation, user, scope } = await requireInvitationAccess(invitationId);
+  await cancelPending(db, invitation.id, scope ? user.id : undefined);
   revalidatePath(`/undangan/${invitation.id}/kirim`);
+}
+
+export async function hubungkanSayaAction(invitationId: string): Promise<void> {
+  const { user } = await requireInvitationAccess(invitationId);
+  await getWaManager().for(user.id).connect();
+}
+
+export async function putuskanSayaAction(invitationId: string): Promise<void> {
+  const { user } = await requireInvitationAccess(invitationId);
+  await getWaManager().for(user.id).disconnect();
+}
+
+export async function keluarkanSayaAction(invitationId: string): Promise<void> {
+  const { user } = await requireInvitationAccess(invitationId);
+  await getWaManager().for(user.id).logout();
 }

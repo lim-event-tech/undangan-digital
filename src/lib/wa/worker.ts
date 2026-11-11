@@ -1,19 +1,23 @@
 import type { AppDb } from "@/db/types";
+import { getPhotoData } from "@/lib/photos/service";
 import type { WaConfig } from "./config";
 import {
   claimNextJob,
   finishJob,
   hasWaitingJobs,
   invitationsAtLimit,
+  senderSentLastDay,
   isAlreadyHandled,
   type JobResult,
 } from "./queue";
 
 export type SendOutcome = { ok: true } | { ok: false; error: string };
 
+export type WaPoster = { data: Buffer; contentType: string };
+
 export type WaSender = {
   ready(): boolean;
-  send(phone: string, text: string): Promise<SendOutcome>;
+  send(phone: string, text: string, poster?: WaPoster): Promise<SendOutcome>;
 };
 
 export type TickResult = "kosong" | "ditunda" | "dilewati" | "terkirim" | "gagal";
@@ -23,13 +27,23 @@ export async function processNext(
   sender: WaSender,
   config: WaConfig,
   now: Date = new Date(),
+  senderUserId?: string,
 ): Promise<TickResult> {
   if (!config.aktif || !sender.ready()) return "ditunda";
 
-  const limited = await invitationsAtLimit(db, config.batasHarian, now);
-  const job = await claimNextJob(db, limited);
-  if (!job) {
-    return limited.length > 0 && (await hasWaitingJobs(db)) ? "ditunda" : "kosong";
+  let job;
+  if (senderUserId) {
+    if ((await senderSentLastDay(db, senderUserId, now)) >= config.batasHarian) {
+      return (await hasWaitingJobs(db, senderUserId)) ? "ditunda" : "kosong";
+    }
+    job = await claimNextJob(db, [], senderUserId);
+    if (!job) return "kosong";
+  } else {
+    const limited = await invitationsAtLimit(db, config.batasHarian, now);
+    job = await claimNextJob(db, limited);
+    if (!job) {
+      return limited.length > 0 && (await hasWaitingJobs(db)) ? "ditunda" : "kosong";
+    }
   }
 
   if (await isAlreadyHandled(db, job)) {
@@ -39,7 +53,8 @@ export async function processNext(
 
   let outcome: SendOutcome;
   try {
-    outcome = await sender.send(job.phone, job.message);
+    const poster = job.posterId ? await getPhotoData(db, job.posterId) : null;
+    outcome = await sender.send(job.phone, job.message, poster ?? undefined);
   } catch (error) {
     outcome = { ok: false, error: error instanceof Error ? error.message : "Gagal dikirim" };
   }

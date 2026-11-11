@@ -1,11 +1,14 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
-import { guest, waJob } from "@/db/schema";
+import { guest, user, waJob } from "@/db/schema";
 import { listEventDetails } from "@/lib/events/service";
 import { createGuest } from "@/lib/guests/service";
 import { createTestDb, seedInvitation, type TestDb } from "@/test/db";
 import {
   cancelPending,
+  hasWaitingJobs,
+  senderSentLastDay,
+  senderSummary,
   claimNextJob,
   enqueueJobs,
   finishJob,
@@ -224,5 +227,44 @@ describe("antrean WhatsApp", () => {
     expect(job?.message).toBe("Y");
     expect(await claimNextJob(db, [x.invitation.id])).toBeNull();
     await finishJob(db, job!, { ok: true });
+  });
+});
+
+describe("antrean per nomor pengirim", () => {
+  async function dua(namaA: string, namaB: string) {
+    const { invitation, ownerId } = await seedInvitation(db);
+    const pengirimB = `pengirim-b-${ownerId}`;
+    await db.insert(user).values({ id: pengirimB, name: "Pengirim B", email: `${pengirimB}@example.com` });
+    const a = await newGuest(invitation.id, namaA, `+6281500${Math.floor(Math.random() * 900000 + 100000)}`);
+    const b = await newGuest(invitation.id, namaB, `+6281500${Math.floor(Math.random() * 900000 + 100000)}`);
+    await enqueueJobs(db, invitation.id, "undangan", [{ guestId: a.id, phone: a.phone, message: "A", senderUserId: ownerId }]);
+    await enqueueJobs(db, invitation.id, "undangan", [{ guestId: b.id, phone: b.phone, message: "B", senderUserId: pengirimB }]);
+    return { invitation, ownerId, pengirimB };
+  }
+
+  it("hanya mengambil pesan milik pengirimnya dan menghitung kuota per nomor", async () => {
+    await drain();
+    const { invitation, ownerId, pengirimB } = await dua("Tamu Owner", "Tamu B");
+    expect(await hasWaitingJobs(db, ownerId)).toBe(true);
+    const milikB = await claimNextJob(db, [], pengirimB);
+    expect(milikB).toMatchObject({ message: "B", senderUserId: pengirimB });
+    expect(await claimNextJob(db, [], pengirimB)).toBeNull();
+    await finishJob(db, milikB!, { ok: true });
+    expect(await senderSentLastDay(db, pengirimB)).toBe(1);
+    expect(await senderSentLastDay(db, ownerId)).toBe(0);
+    expect(await invitationSummary(db, invitation.id, new Date(), pengirimB)).toMatchObject({ terkirim: 1, menunggu: 0 });
+    expect(await invitationSummary(db, invitation.id, new Date(), ownerId)).toMatchObject({ terkirim: 0, menunggu: 1 });
+    expect(await senderSummary(db, ownerId)).toMatchObject({ menunggu: 1 });
+    await drain();
+  });
+
+  it("membatalkan antrean hanya milik satu pengirim", async () => {
+    await drain();
+    const { invitation, ownerId, pengirimB } = await dua("Tamu Owner 2", "Tamu B2");
+    expect(await cancelPending(db, invitation.id, ownerId)).toBe(1);
+    const sisa = await db.select().from(waJob).where(eq(waJob.invitationId, invitation.id));
+    expect(sisa.find((job) => job.senderUserId === pengirimB)?.status).toBe("menunggu");
+    expect(sisa.find((job) => job.senderUserId === ownerId)?.status).toBe("dibatalkan");
+    await drain();
   });
 });

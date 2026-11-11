@@ -8,10 +8,11 @@ import type { WASocket } from "baileys";
 import { db } from "@/db";
 import { clearStoredSession, hasStoredSession, loadPostgresAuthState } from "./auth-state";
 import { randomDelayMs } from "./config";
-import { getWaConfig, saveWaConfig } from "./config-service";
+import { getWaConfig } from "./config-service";
 import { phoneToJid } from "./jid";
 import { recoverInterrupted } from "./queue";
-import { processNext, type SendOutcome, type WaSender } from "./worker";
+import { listAutoConnectUsers, saveSessionState } from "./session-service";
+import { processNext, type SendOutcome, type WaPoster, type WaSender } from "./worker";
 
 export type WaStatus = "mati" | "menyambung" | "menunggu-qr" | "terhubung" | "keluar";
 
@@ -24,6 +25,7 @@ export type WaSnapshot = {
 };
 
 const POLL_IDLE_MS = 5000;
+const CAPTION_MAX = 1000;
 const RECONNECT_MIN_MS = 3000;
 const RECONNECT_MAX_MS = 60000;
 
@@ -49,15 +51,16 @@ function numberFromJid(jid: string | undefined): string | null {
   return digits ? `+${digits}` : null;
 }
 
-class WaManager implements WaSender {
+export class WaConnection implements WaSender {
   private socket: WASocket | null = null;
   private snapshotState: WaSnapshot = { status: "mati", qr: null, nomor: null, galat: null, sejak: null };
   private wanted = false;
   private retry = 0;
   private reconnectTimer: NodeJS.Timeout | null = null;
-  private workerRunning = false;
   private connecting = false;
   private generation = 0;
+
+  constructor(readonly userId: string) {}
 
   snapshot(): WaSnapshot {
     return { ...this.snapshotState };
@@ -71,21 +74,19 @@ class WaManager implements WaSender {
     this.snapshotState = { ...this.snapshotState, ...patch };
   }
 
-  async boot(): Promise<void> {
-    await recoverInterrupted(db);
-    this.startWorker();
-    const config = await getWaConfig(db);
-    if (config.sambungOtomatis && (await hasStoredSession(db))) await this.connect();
-  }
-
   async connect(): Promise<void> {
     if (this.connecting) return;
     const status = this.snapshotState.status;
     if (status === "menyambung" || status === "menunggu-qr" || status === "terhubung") return;
     this.wanted = true;
     this.retry = 0;
-    await saveWaConfig(db, { sambungOtomatis: true });
-    this.startWorker();
+    await saveSessionState(db, this.userId, { sambungOtomatis: true });
+    await this.open();
+  }
+
+  async restore(): Promise<void> {
+    if (!(await hasStoredSession(db, this.userId))) return;
+    this.wanted = true;
     await this.open();
   }
 
@@ -96,7 +97,7 @@ class WaManager implements WaSender {
     try {
       this.clearReconnect();
       this.update({ status: "menyambung", qr: null, galat: null });
-      const { state, saveCreds } = await loadPostgresAuthState(db);
+      const { state, saveCreds } = await loadPostgresAuthState(db, this.userId);
       const { version } = await fetchLatestBaileysVersion().catch(() => ({ version: undefined }));
       const socket = makeWASocket({
         ...(version ? { version } : {}),
@@ -122,13 +123,9 @@ class WaManager implements WaSender {
         if (qr) this.update({ status: "menunggu-qr", qr, galat: null });
         if (connection === "open") {
           this.retry = 0;
-          this.update({
-            status: "terhubung",
-            qr: null,
-            galat: null,
-            nomor: numberFromJid(socket.user?.id),
-            sejak: Date.now(),
-          });
+          const nomor = numberFromJid(socket.user?.id);
+          this.update({ status: "terhubung", qr: null, galat: null, nomor, sejak: Date.now() });
+          void saveSessionState(db, this.userId, { nomor });
         }
         if (connection === "close") {
           const code = (lastDisconnect?.error as { output?: { statusCode?: number } } | undefined)
@@ -152,8 +149,8 @@ class WaManager implements WaSender {
   private async handleClose(code: number | undefined, registered: boolean): Promise<void> {
     this.socket = null;
     if (code === DisconnectReason.loggedOut) {
-      await clearStoredSession(db);
-      await saveWaConfig(db, { sambungOtomatis: false });
+      await clearStoredSession(db, this.userId);
+      await saveSessionState(db, this.userId, { sambungOtomatis: false, nomor: null });
       this.wanted = false;
       this.update({
         status: "keluar",
@@ -166,7 +163,7 @@ class WaManager implements WaSender {
     }
     if (code === DisconnectReason.connectionReplaced) {
       this.wanted = false;
-      await saveWaConfig(db, { sambungOtomatis: false });
+      await saveSessionState(db, this.userId, { sambungOtomatis: false });
       this.update({
         status: "mati",
         qr: null,
@@ -216,7 +213,7 @@ class WaManager implements WaSender {
   async disconnect(): Promise<void> {
     this.wanted = false;
     this.clearReconnect();
-    await saveWaConfig(db, { sambungOtomatis: false });
+    await saveSessionState(db, this.userId, { sambungOtomatis: false });
     this.generation += 1;
     const socket = this.socket;
     this.socket = null;
@@ -243,12 +240,12 @@ class WaManager implements WaSender {
         this.socket = null;
       }
     }
-    await clearStoredSession(db);
-    await saveWaConfig(db, { sambungOtomatis: false });
+    await clearStoredSession(db, this.userId);
+    await saveSessionState(db, this.userId, { sambungOtomatis: false, nomor: null });
     this.update({ status: "keluar", qr: null, nomor: null, sejak: null, galat: null });
   }
 
-  async send(phone: string, text: string): Promise<SendOutcome> {
+  async send(phone: string, text: string, poster?: WaPoster): Promise<SendOutcome> {
     const socket = this.socket;
     if (!socket || !this.ready()) return { ok: false, error: "WhatsApp belum terhubung" };
     const lookup = await socket.onWhatsApp(phoneToJid(phone));
@@ -259,10 +256,44 @@ class WaManager implements WaSender {
       await socket.sendPresenceUpdate("composing", target.jid);
       await sleep(1500 + Math.random() * 2500);
       await socket.sendPresenceUpdate("paused", target.jid);
-      await socket.sendMessage(target.jid, { text });
+      if (poster && text.length <= CAPTION_MAX) {
+        await socket.sendMessage(target.jid, { image: poster.data, mimetype: poster.contentType, caption: text });
+      } else if (poster) {
+        await socket.sendMessage(target.jid, { image: poster.data, mimetype: poster.contentType });
+        await sleep(1500 + Math.random() * 1500);
+        await socket.sendMessage(target.jid, { text });
+      } else {
+        await socket.sendMessage(target.jid, { text });
+      }
       return { ok: true };
     } catch (error) {
       return { ok: false, error: error instanceof Error ? error.message : "Gagal dikirim" };
+    }
+  }
+}
+
+class WaHub {
+  private connections = new Map<string, WaConnection>();
+  private workerRunning = false;
+
+  for(userId: string): WaConnection {
+    let connection = this.connections.get(userId);
+    if (!connection) {
+      connection = new WaConnection(userId);
+      this.connections.set(userId, connection);
+    }
+    return connection;
+  }
+
+  has(userId: string): boolean {
+    return this.connections.has(userId);
+  }
+
+  async boot(): Promise<void> {
+    await recoverInterrupted(db);
+    this.startWorker();
+    for (const userId of await listAutoConnectUsers(db)) {
+      await this.for(userId).restore().catch(() => undefined);
     }
   }
 
@@ -273,23 +304,34 @@ class WaManager implements WaSender {
   }
 
   private async runWorker(): Promise<void> {
+    const nextAt = new Map<string, number>();
     for (;;) {
-      let wait = POLL_IDLE_MS;
+      let busy = false;
       try {
         const config = await getWaConfig(db);
-        const result = await processNext(db, this, config);
-        if (result === "terkirim" || result === "gagal") wait = randomDelayMs(config);
-        else if (result === "dilewati") wait = 500;
+        for (const connection of this.connections.values()) {
+          if (!connection.ready()) continue;
+          if ((nextAt.get(connection.userId) ?? 0) > Date.now()) continue;
+          let result: Awaited<ReturnType<typeof processNext>> = "kosong";
+          try {
+            result = await processNext(db, connection, config, new Date(), connection.userId);
+          } catch {
+            result = "kosong";
+          }
+          const wait = result === "terkirim" || result === "gagal" ? randomDelayMs(config) : result === "dilewati" ? 500 : POLL_IDLE_MS;
+          nextAt.set(connection.userId, Date.now() + wait);
+          if (result === "terkirim" || result === "gagal" || result === "dilewati") busy = true;
+        }
       } catch {
-        wait = POLL_IDLE_MS;
+        busy = false;
       }
-      await sleep(wait);
+      await sleep(busy ? 200 : 1000);
     }
   }
 }
 
-const globalForWa = globalThis as unknown as { waManager?: WaManager };
+const globalForWa = globalThis as unknown as { waHub?: WaHub };
 
-export function getWaManager(): WaManager {
-  return (globalForWa.waManager ??= new WaManager());
+export function getWaManager(): WaHub {
+  return (globalForWa.waHub ??= new WaHub());
 }

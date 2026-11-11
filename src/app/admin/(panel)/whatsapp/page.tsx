@@ -1,20 +1,28 @@
 import type { Metadata } from "next";
-import QRCode from "qrcode";
 import { Halaman, JudulAdmin, Notifikasi } from "@/components/admin-ui";
-import { kartu } from "@/components/ui";
+import { kartu, tombolBahaya, tombolTerang } from "@/components/ui";
 import { db } from "@/db";
 import { requireAdmin } from "@/lib/admin/guard";
 import { can } from "@/lib/admin/roles";
 import { formatStamp } from "@/lib/datetime";
 import { formatPhone } from "@/lib/phone";
 import { getWaConfig } from "@/lib/wa/config-service";
-import { getWaManager } from "@/lib/wa/manager";
+import { getWaManager, type WaStatus } from "@/lib/wa/manager";
 import { platformSummary, recentFailures } from "@/lib/wa/queue";
-import { FormPengaturanWa, FormUji } from "./form-whatsapp";
-import { PanelKoneksi } from "./panel-koneksi";
+import { listSessionRows } from "@/lib/wa/session-service";
+import { keluarkanPenggunaAction, putuskanPenggunaAction } from "./actions";
+import { FormPengaturanWa } from "./form-whatsapp";
 
 export const metadata: Metadata = { title: "WhatsApp" };
 export const dynamic = "force-dynamic";
+
+const LABEL: Record<WaStatus, string> = {
+  mati: "Terputus",
+  menyambung: "Menyambung",
+  "menunggu-qr": "Menunggu dipindai",
+  terhubung: "Terhubung",
+  keluar: "Belum ditautkan",
+};
 
 function Bagian({
   judul,
@@ -46,7 +54,7 @@ export default async function WhatsappAdminPage() {
       <JudulAdmin
         bagian="Platform"
         judul="WhatsApp"
-        keterangan="Satu nomor pengirim untuk semua pengguna. Pesan masuk antrean dan dikirim satu per satu dengan jeda."
+        keterangan="Setiap pengguna menautkan nomornya sendiri dari halaman Kirim undangan. Pesan masuk antrean dan dikirim satu per satu dengan jeda, memakai nomor orang yang menekan kirim."
       />
       {can(admin, "pengaturan") ? <Isi /> : (
         <Notifikasi jenis="info">Hanya Super admin yang bisa mengatur WhatsApp.</Notifikasi>
@@ -56,49 +64,76 @@ export default async function WhatsappAdminPage() {
 }
 
 async function Isi() {
-  const [config, summary, failures] = await Promise.all([
+  const [config, summary, failures, sessions] = await Promise.all([
     getWaConfig(db),
     platformSummary(db),
     recentFailures(db, { limit: 10 }),
+    listSessionRows(db),
   ]);
-  const snapshot = getWaManager().snapshot();
-  const qrImage = snapshot.qr
-    ? await QRCode.toDataURL(snapshot.qr, { margin: 1, width: 280, errorCorrectionLevel: "M" })
-    : null;
+  const hub = getWaManager();
 
   return (
     <>
       <Notifikasi jenis="info">
         Baileys adalah pustaka tidak resmi yang meniru WhatsApp Web. WhatsApp bisa membatasi atau
-        memblokir nomor yang mengirim pesan massal. Pakai nomor khusus (bukan nomor pribadi),
-        biarkan jeda antar pesan tetap lama, dan jangan jalankan lebih dari satu instance aplikasi.
+        memblokir nomor yang mengirim pesan massal. Sarankan pengguna memakai nomor khusus (bukan
+        nomor pribadi), biarkan jeda antar pesan tetap lama, dan jangan jalankan lebih dari satu
+        instance aplikasi.
       </Notifikasi>
 
       <Bagian
-        judul="Koneksi"
-        keterangan="Tautkan nomor pengirim dengan memindai QR dari menu Perangkat tertaut di WhatsApp. Sesi disimpan di database, jadi tersambung kembali sendiri setelah aplikasi dinyalakan ulang."
+        judul="Nomor pengirim pengguna"
+        keterangan="Sesi tersimpan di database dan tersambung kembali sendiri setelah aplikasi dinyalakan ulang. Anda bisa memutus atau mengeluarkan perangkat bila diperlukan."
       >
-        <PanelKoneksi
-          awal={{
-            status: snapshot.status,
-            nomor: snapshot.nomor,
-            galat: snapshot.galat,
-            sejak: snapshot.sejak,
-            qrImage,
-            antrean: summary,
-          }}
-        />
+        <dl className="m-0 grid grid-cols-3 gap-3">
+          {(
+            [
+              ["Menunggu", summary.menunggu + summary.mengirim],
+              ["Terkirim (24 jam)", summary.terkirim],
+              ["Gagal (24 jam)", summary.gagal],
+            ] as const
+          ).map(([label, nilai]) => (
+            <div key={label} className="rounded-[10px] bg-kertas p-3">
+              <dt className="text-xs text-redup">{label}</dt>
+              <dd className="m-0 mt-0.5 font-judul text-2xl font-medium">{nilai}</dd>
+            </div>
+          ))}
+        </dl>
+        {sessions.length === 0 ? (
+          <p className="m-0 text-sm text-redup-2">Belum ada pengguna yang menautkan nomor WhatsApp.</p>
+        ) : (
+          <ul className="m-0 flex list-none flex-col p-0">
+            {sessions.map((s) => {
+              const snapshot = hub.for(s.userId).snapshot();
+              return (
+                <li key={s.userId} className="flex flex-wrap items-center justify-between gap-3 border-t border-garis-halus py-3 first:border-t-0">
+                  <div className="flex min-w-0 flex-col">
+                    <span className="text-sm font-medium">{s.name}</span>
+                    <span className="text-[13px] text-redup">{s.email}{s.nomor ? ` · ${formatPhone(s.nomor)}` : ""}</span>
+                    <span className="text-[13px] text-redup-2">{LABEL[snapshot.status]}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <form action={putuskanPenggunaAction}>
+                      <input type="hidden" name="userId" value={s.userId} />
+                      <button type="submit" className={tombolTerang}>Putuskan</button>
+                    </form>
+                    <form action={keluarkanPenggunaAction}>
+                      <input type="hidden" name="userId" value={s.userId} />
+                      <button type="submit" className={tombolBahaya}>Keluarkan perangkat</button>
+                    </form>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </Bagian>
 
       <Bagian
         judul="Pengaturan pengiriman"
-        keterangan="Jeda antar pesan dan batas harian per pengguna melindungi nomor pengirim. Antrean memproses satu pesan sekali jalan, dan pengguna yang sudah mencapai batas dilewati sampai kuotanya pulih."
+        keterangan="Jeda antar pesan dan batas harian per nomor melindungi nomor pengirim. Antrean memproses satu pesan sekali jalan untuk tiap nomor, dan nomor yang sudah mencapai batas dilewati sampai kuotanya pulih."
       >
         <FormPengaturanWa config={config} />
-      </Bagian>
-
-      <Bagian judul="Uji kirim" keterangan="Kirim satu pesan singkat ke nomor Anda untuk memastikan semuanya berfungsi.">
-        <FormUji terhubung={snapshot.status === "terhubung"} />
       </Bagian>
 
       <Bagian judul="Gagal terkirim terbaru" keterangan="Sepuluh kegagalan terakhir dari semua pengguna.">

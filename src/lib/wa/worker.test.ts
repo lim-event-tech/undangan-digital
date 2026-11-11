@@ -1,8 +1,9 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
-import { guest, waJob } from "@/db/schema";
+import { guest, user, waJob } from "@/db/schema";
 import { listEventDetails } from "@/lib/events/service";
 import { createGuest } from "@/lib/guests/service";
+import { addPhoto, deletePhoto } from "@/lib/photos/service";
 import { createTestDb, seedInvitation, type TestDb } from "@/test/db";
 import { DEFAULT_WA_CONFIG, type WaConfig } from "./config";
 import { claimNextJob, enqueueJobs, finishJob, sentLastDay } from "./queue";
@@ -52,6 +53,35 @@ async function drain() {
     await finishJob(db, job, { skipped: "bersih" });
   }
 }
+
+describe("processNext dengan poster", () => {
+  it("mengirim poster yang tersimpan bersama pesan dan tetap mengirim teks bila poster sudah dihapus", async () => {
+    await drain();
+    const { invitation } = await seedInvitation(db);
+    const events = await listEventDetails(db, invitation.id);
+    const bytes = Buffer.alloc(64, 9);
+    bytes[0] = 0xff;
+    bytes[1] = 0xd8;
+    bytes[2] = 0xff;
+    const poster = await addPhoto(db, invitation.id, { kind: "poster_wa", fileName: "wa.jpg", bytes });
+    if (!poster.ok) throw new Error("poster gagal");
+    const g = await createGuest(db, invitation.id, { name: "Tamu Gambar", phone: "+6281600000099", groupName: null, eventIds: [events[0].id], maxAttendees: 2 });
+    await enqueueJobs(db, invitation.id, "undangan", [{ guestId: g.id, phone: g.phone, message: "Halo Tamu Gambar", posterId: poster.photo.id }]);
+
+    const diterima: { text: string; poster?: { data: Buffer; contentType: string } }[] = [];
+    const pengirim: WaSender = { ready: () => true, send: async (_phone, text, gambar) => { diterima.push({ text, poster: gambar }); return { ok: true }; } };
+    expect(await processNext(db, pengirim, config)).toBe("terkirim");
+    expect(diterima[0].text).toBe("Halo Tamu Gambar");
+    expect(diterima[0].poster?.data.equals(bytes)).toBe(true);
+    expect(diterima[0].poster?.contentType).toBe("image/jpeg");
+
+    const g2 = await createGuest(db, invitation.id, { name: "Tamu Dua", phone: "+6281600000098", groupName: null, eventIds: [events[0].id], maxAttendees: 2 });
+    await enqueueJobs(db, invitation.id, "undangan", [{ guestId: g2.id, phone: g2.phone, message: "Halo Tamu Dua", posterId: poster.photo.id }]);
+    await deletePhoto(db, invitation.id, poster.photo.id);
+    expect(await processNext(db, pengirim, config)).toBe("terkirim");
+    expect(diterima[1]).toEqual({ text: "Halo Tamu Dua", poster: undefined });
+  });
+});
 
 describe("processNext", () => {
   it("menunda saat kirim otomatis dimatikan atau WhatsApp belum siap", async () => {
@@ -125,6 +155,32 @@ describe("processNext", () => {
     await seedJob("Tamu H", "+6281600000052", first.invitation);
     expect(await processNext(db, fake, limited)).toBe("ditunda");
     expect(sent).toHaveLength(1);
+    await drain();
+  });
+});
+
+describe("processNext per nomor pengirim", () => {
+  it("hanya memproses pesan miliknya dan memakai batas harian nomor itu", async () => {
+    await drain();
+    const { invitation, ownerId } = await seedInvitation(db);
+    const lain = `nomor-lain-${ownerId}`;
+    await db.insert(user).values({ id: lain, name: "Nomor Lain", email: `${lain}@example.com` });
+    const events = await listEventDetails(db, invitation.id);
+    const buatTamu = (nama: string, phone: string) => createGuest(db, invitation.id, { name: nama, phone, groupName: null, eventIds: [events[0].id], maxAttendees: 1 });
+    const [a, b, c] = [await buatTamu("A", "+6281600000601"), await buatTamu("B", "+6281600000602"), await buatTamu("C", "+6281600000603")];
+    await enqueueJobs(db, invitation.id, "undangan", [{ guestId: a.id, phone: a.phone, message: "untuk-saya-1", senderUserId: ownerId }, { guestId: c.id, phone: c.phone, message: "untuk-saya-2", senderUserId: ownerId }]);
+    await enqueueJobs(db, invitation.id, "undangan", [{ guestId: b.id, phone: b.phone, message: "untuk-lain", senderUserId: lain }]);
+    const { fake, sent } = sender({ ok: true });
+    const batasSatu = { ...config, batasHarian: 1 };
+
+    expect(await processNext(db, fake, batasSatu, new Date(), ownerId)).toBe("terkirim");
+    expect(sent[0].text).toMatch(/^untuk-saya-/);
+    expect(await processNext(db, fake, batasSatu, new Date(), ownerId)).toBe("ditunda");
+    expect(await processNext(db, fake, batasSatu, new Date(), lain)).toBe("terkirim");
+    expect(sent[1].text).toBe("untuk-lain");
+    expect(await processNext(db, fake, config, new Date(), ownerId)).toBe("terkirim");
+    expect(await processNext(db, fake, config, new Date(), ownerId)).toBe("kosong");
+    expect(sent.map((s) => s.text).sort()).toEqual(["untuk-lain", "untuk-saya-1", "untuk-saya-2"]);
     await drain();
   });
 });

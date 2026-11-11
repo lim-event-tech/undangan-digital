@@ -2,10 +2,10 @@
 
 import { useActionState } from "react";
 import { Saklar } from "@/app/undangan/[id]/isi/bidang";
-import { kolom, labelKolom, pesanGalat, tombolGelap, tombolTerang } from "@/components/ui";
+import { kolom, labelKolom, pesanGalat, tombolGelap } from "@/components/ui";
 import type { SaveResult } from "@/lib/save-result";
 import { WA_LIMITS, type WaConfig } from "@/lib/wa/config";
-import { simpanWaAction, ujiKirimAction, type UjiResult } from "./actions";
+import { simpanWaAction } from "./actions";
 
 function Galat({ pesan }: { pesan?: string }) {
   if (!pesan) return null;
@@ -87,42 +87,6 @@ export function FormPengaturanWa({ config }: { config: WaConfig }) {
         {hasil && !hasil.ok && hasil.formError ? (
           <span role="alert" className={pesanGalat}>
             {hasil.formError}
-          </span>
-        ) : null}
-      </div>
-    </form>
-  );
-}
-
-export function FormUji({ terhubung }: { terhubung: boolean }) {
-  const [hasil, aksi, memproses] = useActionState<UjiResult, FormData>(ujiKirimAction, null);
-
-  return (
-    <form action={aksi} className="flex flex-col gap-3">
-      <label className={labelKolom}>
-        Nomor tujuan
-        <input
-          type="tel"
-          name="nomor"
-          inputMode="tel"
-          placeholder="0812xxxxxxxx"
-          disabled={!terhubung}
-          className={`${kolom} sm:max-w-xs`}
-        />
-      </label>
-      <div className="flex flex-wrap items-center gap-3">
-        <button type="submit" disabled={!terhubung || memproses} className={tombolTerang}>
-          {memproses ? "Mengirim…" : "Kirim pesan uji"}
-        </button>
-        {!terhubung ? <span className="text-sm text-redup">Hubungkan WhatsApp dulu.</span> : null}
-        {hasil?.ok ? (
-          <span role="status" className="text-sm font-medium text-hijau">
-            Pesan uji terkirim.
-          </span>
-        ) : null}
-        {hasil && !hasil.ok ? (
-          <span role="alert" className={pesanGalat}>
-            {hasil.error}
           </span>
         ) : null}
       </div>

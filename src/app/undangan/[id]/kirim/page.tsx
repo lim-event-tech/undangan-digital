@@ -8,9 +8,10 @@ import { dateFromDeadline, formatDate, formatStamp } from "@/lib/datetime";
 import { countSent } from "@/lib/guests/sending";
 import { listGuests } from "@/lib/guests/service";
 import { readContent } from "@/lib/invitations/content";
+import { listPhotos } from "@/lib/photos/service";
 import { getSettings } from "@/lib/platform/service";
 import { getDashboard } from "@/lib/rsvp/dashboard";
-import { requireInvitationById } from "@/lib/session";
+import { requireInvitationAccess } from "@/lib/session";
 import { DEFAULT_MESSAGE, deadlinePhrase, pickTemplate, renderMessage, whatsappLink } from "@/lib/whatsapp";
 import { formatPhone } from "@/lib/phone";
 import { countTargets } from "@/lib/wa/blast";
@@ -20,7 +21,10 @@ import { getWaManager } from "@/lib/wa/manager";
 import { invitationSummary, queuedGuestIds, recentFailures } from "@/lib/wa/queue";
 import { tandaiBelumTerkirimAction } from "./actions";
 import { FormPesan } from "./form-pesan";
+import QRCode from "qrcode";
+import { KoneksiWa } from "./koneksi-wa";
 import { PanelOtomatis } from "./panel-otomatis";
+import { PosterWa } from "./poster-wa";
 import { TombolKirim } from "./tombol-kirim";
 
 export const metadata: Metadata = { title: "Kirim undangan" };
@@ -35,7 +39,9 @@ function satu(value: string | string[] | undefined): string | undefined {
 }
 
 export default async function KirimPage({ params, searchParams }: PageProps<"/undangan/[id]/kirim">) {
-  const { invitation } = await requireInvitationById((await params).id);
+  const { invitation, user, role, scope } = await requireInvitationAccess((await params).id);
+  const pemilik = role === "pemilik";
+  const batas = scope ?? undefined;
   const sp = await searchParams;
   const q = satu(sp.q)?.slice(0, 100);
   const tampilParam = satu(sp.tampil);
@@ -55,20 +61,22 @@ export default async function KirimPage({ params, searchParams }: PageProps<"/un
 
   const jenisAntrean = pengingat ? "pengingat" : "undangan";
   const [all, counts, dashboard, waConfig, ringkasan, kegagalan, antre, targetOtomatis] = await Promise.all([
-    listGuests(db, invitation.id, { q }),
-    countSent(db, invitation.id),
-    getDashboard(db, invitation.id),
+    listGuests(db, invitation.id, { q, addedBy: batas }),
+    countSent(db, invitation.id, batas),
+    getDashboard(db, invitation.id, {}, batas),
     getWaConfig(db),
-    invitationSummary(db, invitation.id),
-    recentFailures(db, { invitationId: invitation.id, limit: 5 }),
+    invitationSummary(db, invitation.id, new Date(), batas),
+    recentFailures(db, { invitationId: invitation.id, senderUserId: batas, limit: 5 }),
     queuedGuestIds(db, invitation.id, jenisAntrean),
-    countTargets(db, invitation.id, jenisAntrean),
+    countTargets(db, invitation.id, jenisAntrean, new Date(), batas),
   ]);
-  const waSnapshot = getWaManager().snapshot();
+  const fotoList = await listPhotos(db, invitation.id);
+  const waSnapshot = getWaManager().for(user.id).snapshot();
+  const qrImage = waSnapshot.qr ? await QRCode.toDataURL(waSnapshot.qr, { margin: 1, width: 280, errorCorrectionLevel: "M" }) : null;
   const alasanOtomatis = !waConfig.aktif
-    ? "Kirim otomatis belum diaktifkan oleh admin. Untuk sementara kirim lewat tombol WhatsApp di daftar tamu."
+    ? "Kirim otomatis belum diaktifkan oleh admin. Untuk sementara kirim lewat tombol WhatsApp di daftar undangan."
     : waSnapshot.status !== "terhubung"
-      ? "WhatsApp pengirim sedang tidak terhubung. Hubungi admin, atau kirim lewat tombol WhatsApp di daftar tamu."
+      ? "Nomor WhatsApp Anda belum terhubung. Tautkan dulu di bagian Nomor WhatsApp Anda di atas, atau kirim lewat tombol WhatsApp di daftar undangan."
       : invitation.status !== "terbit"
         ? "Terbitkan undangan dulu sebelum mengirim."
         : null;
@@ -85,7 +93,7 @@ export default async function KirimPage({ params, searchParams }: PageProps<"/un
   const firstGuest = rows[0] ?? all[0];
   const sample = {
     nama: firstGuest?.name ?? "Bapak Hendra",
-    link: guestLink(invitation.slug, firstGuest?.token ?? "kode-tamu"),
+    link: guestLink(firstGuest?.token ?? "kode-tamu"),
     batas_rsvp: phrase,
     event: eventTitle,
   };
@@ -133,11 +141,32 @@ export default async function KirimPage({ params, searchParams }: PageProps<"/un
         </div>
       ) : null}
 
-      {pengingat ? (
+      {!pemilik ? (
+        <section aria-labelledby="judul-pesan-baca" className={`${kartu} flex flex-col gap-2 p-5 sm:p-6`}>
+          <h2 id="judul-pesan-baca" className="m-0 font-judul text-2xl font-medium">Pesan yang dikirim</h2>
+          <p className="m-0 text-sm text-redup">Isi pesan diatur oleh pemilik undangan. Contoh untuk tamu pertama Anda:</p>
+          <p className="m-0 rounded-[10px] bg-kertas p-4 text-sm leading-relaxed whitespace-pre-line">{renderMessage(template, sample)}</p>
+        </section>
+      ) : pengingat ? (
         <FormPesan key={`pesan-pengingat-${invitation.id}`} jenis="pengingat" saved={content.pesanPengingat} sample={sample} />
       ) : (
         <FormPesan key={`pesan-undangan-${invitation.id}`} saved={content.pesanWa} sample={sample} bawaan={pesanBawaan} />
       )}
+
+      {pengingat || !pemilik ? null : (
+        <PosterWa
+          key={`poster-wa-${invitation.id}`}
+          pengaturan={content.waPoster}
+          posterIsi={fotoList.find((p) => p.kind === "cover") ?? null}
+          posterWa={fotoList.find((p) => p.kind === "poster_wa") ?? null}
+        />
+      )}
+
+      <KoneksiWa
+        key={`koneksi-wa-${user.id}`}
+        tersedia={waConfig.aktif}
+        awal={{ status: waSnapshot.status, nomor: waSnapshot.nomor, galat: waSnapshot.galat, qrImage }}
+      />
 
       <PanelOtomatis
         key={`antrean-${invitation.id}-${jenisAntrean}`}
@@ -210,7 +239,7 @@ export default async function KirimPage({ params, searchParams }: PageProps<"/un
             {shown.map((g) => {
               const message = renderMessage(template, {
                 nama: g.name,
-                link: guestLink(invitation.slug, g.token),
+                link: guestLink(g.token),
                 batas_rsvp: phrase,
                 event: eventTitle,
               });

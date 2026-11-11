@@ -1,10 +1,11 @@
-import { eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { BufferJSON, initAuthCreds, proto } from "baileys";
 import type { AuthenticationState, SignalDataTypeMap } from "baileys";
 import { waAuth } from "@/db/schema";
 import type { AppDb } from "@/db/types";
 
 const CREDS_KEY = "creds";
+export const DEFAULT_SESSION = "platform";
 
 export type PostgresAuthState = {
   state: AuthenticationState;
@@ -19,11 +20,11 @@ export function deserialize<T>(raw: string): T {
   return JSON.parse(raw, BufferJSON.reviver) as T;
 }
 
-export async function loadPostgresAuthState(db: AppDb): Promise<PostgresAuthState> {
+export async function loadPostgresAuthState(db: AppDb, sessionId: string = DEFAULT_SESSION): Promise<PostgresAuthState> {
   const [stored] = await db
     .select({ value: waAuth.value })
     .from(waAuth)
-    .where(eq(waAuth.key, CREDS_KEY));
+    .where(and(eq(waAuth.sessionId, sessionId), eq(waAuth.key, CREDS_KEY)));
   const creds = stored ? deserialize<AuthenticationState["creds"]>(stored.value) : initAuthCreds();
 
   return {
@@ -37,7 +38,7 @@ export async function loadPostgresAuthState(db: AppDb): Promise<PostgresAuthStat
           const rows = await db
             .select({ key: waAuth.key, value: waAuth.value })
             .from(waAuth)
-            .where(inArray(waAuth.key, keys));
+            .where(and(eq(waAuth.sessionId, sessionId), inArray(waAuth.key, keys)));
           const found = new Map(rows.map((row) => [row.key, row.value]));
           for (const id of ids) {
             const raw = found.get(`${type}-${id}`);
@@ -69,14 +70,14 @@ export async function loadPostgresAuthState(db: AppDb): Promise<PostgresAuthStat
             for (let i = 0; i < upserts.length; i += 200) {
               await tx
                 .insert(waAuth)
-                .values(upserts.slice(i, i + 200))
+                .values(upserts.slice(i, i + 200).map((row) => ({ ...row, sessionId })))
                 .onConflictDoUpdate({
-                  target: waAuth.key,
+                  target: [waAuth.sessionId, waAuth.key],
                   set: { value: sql`excluded.value` },
                 });
             }
             for (let i = 0; i < removals.length; i += 200) {
-              await tx.delete(waAuth).where(inArray(waAuth.key, removals.slice(i, i + 200)));
+              await tx.delete(waAuth).where(and(eq(waAuth.sessionId, sessionId), inArray(waAuth.key, removals.slice(i, i + 200))));
             }
           });
         },
@@ -86,22 +87,22 @@ export async function loadPostgresAuthState(db: AppDb): Promise<PostgresAuthStat
       const value = serialize(creds);
       await db
         .insert(waAuth)
-        .values({ key: CREDS_KEY, value })
-        .onConflictDoUpdate({ target: waAuth.key, set: { value } });
+        .values({ sessionId, key: CREDS_KEY, value })
+        .onConflictDoUpdate({ target: [waAuth.sessionId, waAuth.key], set: { value } });
     },
   };
 }
 
-export async function hasStoredSession(db: AppDb): Promise<boolean> {
+export async function hasStoredSession(db: AppDb, sessionId: string = DEFAULT_SESSION): Promise<boolean> {
   const [stored] = await db
     .select({ value: waAuth.value })
     .from(waAuth)
-    .where(eq(waAuth.key, CREDS_KEY));
+    .where(and(eq(waAuth.sessionId, sessionId), eq(waAuth.key, CREDS_KEY)));
   if (!stored) return false;
   const creds = deserialize<{ registered?: boolean; me?: unknown }>(stored.value);
   return Boolean(creds.registered || creds.me);
 }
 
-export async function clearStoredSession(db: AppDb): Promise<void> {
-  await db.delete(waAuth);
+export async function clearStoredSession(db: AppDb, sessionId: string = DEFAULT_SESSION): Promise<void> {
+  await db.delete(waAuth).where(eq(waAuth.sessionId, sessionId));
 }
