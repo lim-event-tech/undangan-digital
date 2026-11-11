@@ -11,7 +11,8 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      { source: "/u/:slug/:token/:path*", destination: "/:slug/:token/:path*", permanent: true },
+      { source: "/u/:slug/:token/:path*", destination: "/:token/:path*", permanent: true },
+      { source: "/:slug([a-z0-9-]+)/:token([A-Za-z0-9_-]{16})/:path*", destination: "/:token/:path*", permanent: true },
       ...["isi", "tamu", "ringkasan", "kirim", "ucapan", "checkin", "template"].map((section) => ({
         source: `/undangan/${section}/:path*`, destination: "/undangan", permanent: false,
       })),
@@ -21,7 +22,7 @@ const nextConfig: NextConfig = {
     const noindex = { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" };
     return [
       {
-        source: "/:slug([a-z0-9-]+)/:token([A-Za-z0-9_-]{16})/:path*",
+        source: "/:token([A-Za-z0-9_-]{8}|[A-Za-z0-9_-]{16})/:path*",
         headers: [noindex, { key: "Referrer-Policy", value: "no-referrer" }],
       },
       { source: "/petugas/:path*", headers: [noindex, { key: "Referrer-Policy", value: "no-referrer" }] },

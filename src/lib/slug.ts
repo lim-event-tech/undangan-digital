@@ -15,6 +15,7 @@ export const RESERVED_SLUGS = new Set([
   "pratinjau",
   "static",
   "template",
+  "terima",
   "u",
   "undangan",
   "www",

@@ -6,11 +6,9 @@ afterEach(() => {
 });
 
 describe("link tamu", () => {
-  it("memakai slug langsung di belakang domain tanpa awalan /u", () => {
+  it("memakai token langsung di belakang domain tanpa slug", () => {
     vi.stubEnv("BETTER_AUTH_URL", "https://undangan.example.com/");
-    expect(guestPath("raka-dan-nadia", "AbCdEfGh12345678")).toBe("/raka-dan-nadia/AbCdEfGh12345678");
-    expect(guestLink("raka-dan-nadia", "AbCdEfGh12345678")).toBe(
-      "https://undangan.example.com/raka-dan-nadia/AbCdEfGh12345678",
-    );
+    expect(guestPath("AbCd1234")).toBe("/AbCd1234");
+    expect(guestLink("AbCd1234")).toBe("https://undangan.example.com/AbCd1234");
   });
 });

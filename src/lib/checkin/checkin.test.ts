@@ -43,7 +43,6 @@ async function setup() {
 
   const answer = (token: string, attending: "ya" | "tidak", adults = "2", children = "1") =>
     submitRsvp(db, {
-      slug: seeded.invitation.slug,
       token,
       read: () => ({ attending, attendeeCount: String(Number(adults) + Number(children)),  note: "" }),
     });
@@ -55,9 +54,12 @@ async function setup() {
 describe("kode check-in", () => {
   it("membuat dan membaca kode dengan bentuk yang ketat", () => {
     const token = "AbCdEfGhIjKlMnOp";
-    const code = checkinCode("raka-dan-nadia", token);
-    expect(code).toBe(`UD1.raka-dan-nadia.${token}`);
-    expect(parseCheckinCode(` ${code}\n`)).toEqual({ slug: "raka-dan-nadia", token });
+    const code = checkinCode(token);
+    expect(code).toBe(`UD2.${token}`);
+    expect(parseCheckinCode(` ${code}\n`)).toEqual({ token });
+    expect(parseCheckinCode("UD2.AbCd1234")).toEqual({ token: "AbCd1234" });
+    expect(parseCheckinCode(`UD1.raka-dan-nadia.${token}`)).toEqual({ token });
+    for (const rusak of ["UD2.pendek", "UD2.AbCd1234.ekstra", "UD3.AbCd1234", "UD2.undangan", "UD1.AbCd1234", "UD1.Slug Salah.AbCd1234"]) expect(parseCheckinCode(rusak), rusak).toBeNull();
   });
 
   it("menolak kode rusak", () => {
@@ -73,7 +75,7 @@ describe("kode check-in", () => {
   });
 
   it("menggambar QR sebagai SVG", async () => {
-    const svg = await qrSvg(checkinCode("raka-dan-nadia", "AbCdEfGhIjKlMnOp"));
+    const svg = await qrSvg(checkinCode("AbCdEfGh"));
     expect(svg.startsWith("<svg")).toBe(true);
     expect(svg).toContain("</svg>");
   });
@@ -116,7 +118,7 @@ describe("kunci petugas", () => {
 describe("pemindaian", () => {
   it("memasukkan tamu yang hadir dan menandai pemindaian kedua sebagai sudah masuk", async () => {
     const ctx = await setup();
-    const code = checkinCode(ctx.invitation.slug, ctx.hadir.token);
+    const code = checkinCode(ctx.hadir.token);
     const first = await scanCheckin(db, ctx.invitation, code, new Date("2026-12-12T01:00:00.000Z"));
     expect(first.result).toBe("masuk");
     if (first.result === "masuk") {
@@ -133,23 +135,23 @@ describe("pemindaian", () => {
   it("menolak QR dari undangan lain, kode rusak, dan tamu tak dikenal", async () => {
     const ctx = await setup();
     const other = await setup();
-    expect((await scanCheckin(db, ctx.invitation, checkinCode(other.invitation.slug, other.hadir.token))).result).toBe(
-      "undangan-lain",
+    expect((await scanCheckin(db, ctx.invitation, checkinCode(other.hadir.token))).result).toBe(
+      "tidak-dikenal",
     );
     expect((await scanCheckin(db, ctx.invitation, "bukan-kode")).result).toBe("kode-tidak-valid");
     expect(
-      (await scanCheckin(db, ctx.invitation, checkinCode(ctx.invitation.slug, "TokenTakDikenal1"))).result,
+      (await scanCheckin(db, ctx.invitation, checkinCode("TokenTakDikenal1"))).result,
     ).toBe("tidak-dikenal");
     expect(
-      (await scanCheckin(db, ctx.invitation, checkinCode(ctx.invitation.slug, other.hadir.token))).result,
+      (await scanCheckin(db, ctx.invitation, checkinCode(other.hadir.token))).result,
     ).toBe("tidak-dikenal");
   });
 
   it("tidak memasukkan tamu yang menolak atau belum menjawab tanpa konfirmasi petugas", async () => {
     const ctx = await setup();
-    const refused = await scanCheckin(db, ctx.invitation, checkinCode(ctx.invitation.slug, ctx.tidak.token));
+    const refused = await scanCheckin(db, ctx.invitation, checkinCode(ctx.tidak.token));
     expect(refused.result).toBe("belum-konfirmasi");
-    const pending = await scanCheckin(db, ctx.invitation, checkinCode(ctx.invitation.slug, ctx.belum.token));
+    const pending = await scanCheckin(db, ctx.invitation, checkinCode(ctx.belum.token));
     expect(pending.result).toBe("belum-konfirmasi");
     expect((await checkinCounts(db, ctx.invitation.id)).inside).toBe(0);
 

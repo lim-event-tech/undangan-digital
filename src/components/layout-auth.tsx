@@ -21,7 +21,7 @@ export function LayoutAuth({
             <span className="font-medium text-emas italic">satu dashboard.</span>
           </h2>
           <p className="m-0 text-base leading-relaxed text-redup-2">
-            Susun daftar tamu, bagikan link pribadi untuk tiap tamu, dan lihat siapa saja yang
+            Susun daftar undangan, bagikan link pribadi untuk tiap tamu, dan lihat siapa saja yang
             sudah menjawab.
           </p>
         </div>

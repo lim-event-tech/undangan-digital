@@ -66,7 +66,7 @@ describe("createGuest dan listGuests", () => {
         eventIds: [utama.id, lanjutan.id],
       }),
     );
-    expect(created.token).toMatch(/^[A-Za-z0-9_-]{16}$/);
+    expect(created.token).toMatch(/^[A-Za-z0-9_-]{8}$/);
 
     const rows = await listGuests(db, invitation.id);
     expect(rows).toHaveLength(1);

@@ -140,15 +140,15 @@ export async function undoCheckIn(
 
 export async function scanCheckin(
   db: AppDb,
-  invitation: { id: string; slug: string },
+  invitation: { id: string },
   code: string,
   now: Date = new Date(),
+  addedBy?: string,
 ): Promise<ScanResult> {
   const parsed = parseCheckinCode(code);
   if (!parsed) return { result: "kode-tidak-valid" };
-  if (parsed.slug !== invitation.slug) return { result: "undangan-lain" };
 
-  const found = await loadGuest(db, invitation.id, eq(guest.token, parsed.token));
+  const found = await loadGuest(db, invitation.id, and(eq(guest.token, parsed.token), addedBy ? eq(guest.addedBy, addedBy) : undefined)!);
   if (!found) return { result: "tidak-dikenal" };
   if (found.checkedInAt) return { result: "sudah-masuk", guest: found };
   if (!found.attending) return { result: "belum-konfirmasi", guest: found };
@@ -173,9 +173,10 @@ export async function forceCheckIn(
 export async function listCheckinGuests(
   db: AppDb,
   invitationId: string,
-  filters: { q?: string; onlyAttending?: boolean; limit?: number } = {},
+  filters: { q?: string; onlyAttending?: boolean; limit?: number; addedBy?: string } = {},
 ): Promise<(CheckinGuest & { token: string })[]> {
   const conditions = [eq(guest.invitationId, invitationId)];
+  if (filters.addedBy) conditions.push(eq(guest.addedBy, filters.addedBy));
   const needle = filters.q?.trim().replace(/[%_\\]/g, "\\$&");
   if (needle) conditions.push(or(ilike(guest.name, `%${needle}%`), ilike(guest.phone, `%${needle}%`))!);
   if (filters.onlyAttending) conditions.push(sql`${ATTENDING}`);
@@ -204,7 +205,7 @@ export type CheckinCounts = {
   other: number;
 };
 
-export async function checkinCounts(db: AppDb, invitationId: string): Promise<CheckinCounts> {
+export async function checkinCounts(db: AppDb, invitationId: string, addedBy?: string): Promise<CheckinCounts> {
   const [row] = await db
     .select({
       confirmed: sql<number>`(count(*) filter (where ${ATTENDING}))::int`,
@@ -213,7 +214,7 @@ export async function checkinCounts(db: AppDb, invitationId: string): Promise<Ch
       other: sql<number>`(count(*) filter (where ${guest.checkedInAt} is not null and not ${ATTENDING}))::int`,
     })
     .from(guest)
-    .where(eq(guest.invitationId, invitationId));
+    .where(and(eq(guest.invitationId, invitationId), addedBy ? eq(guest.addedBy, addedBy) : undefined));
   return row ?? { confirmed: 0, inside: 0, insidePeople: 0, other: 0 };
 }
 

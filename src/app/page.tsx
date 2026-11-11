@@ -54,7 +54,7 @@ export default function Beranda() {
               </div>
               <div className="portal-kartu-isi">
                 <h2 id="portal-kelola-judul">Kelola undangan</h2>
-                <p id="portal-kelola-deskripsi">Lanjutkan pengelolaan isi, daftar tamu, dan RSVP.</p>
+                <p id="portal-kelola-deskripsi">Lanjutkan pengelolaan isi, daftar undangan, dan RSVP.</p>
               </div>
             </Link>
           </div>

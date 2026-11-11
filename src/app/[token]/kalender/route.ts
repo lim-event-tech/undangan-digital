@@ -2,21 +2,21 @@ import { db } from "@/db";
 import { appBaseUrl } from "@/lib/app-url";
 import { buildIcs, calendarSlots } from "@/lib/calendar";
 import { findGuestPage } from "@/lib/rsvp/service";
-import { looksLikeGuestToken, looksLikeSlug } from "@/lib/token";
+import { looksLikeGuestToken } from "@/lib/token";
 import { currentClientKey, tokenGuard } from "@/lib/token-guard-instance";
 
 const NOT_FOUND = () => new Response(null, { status: 404 });
 
-export async function GET(_request: Request, ctx: RouteContext<"/[slug]/[token]/kalender">) {
-  const { slug, token } = await ctx.params;
+export async function GET(_request: Request, ctx: RouteContext<"/[token]/kalender">) {
+  const { token } = await ctx.params;
   const key = await currentClientKey();
   if (tokenGuard.isBlocked(key)) return new Response(null, { status: 429 });
 
-  if (!looksLikeSlug(slug) || !looksLikeGuestToken(token)) {
+  if (!looksLikeGuestToken(token)) {
     tokenGuard.recordFailure(key);
     return NOT_FOUND();
   }
-  const page = await findGuestPage(db, slug, token);
+  const page = await findGuestPage(db, token);
   if (!page) {
     tokenGuard.recordFailure(key);
     return NOT_FOUND();
@@ -30,6 +30,7 @@ export async function GET(_request: Request, ctx: RouteContext<"/[slug]/[token]/
       name: e.name,
       date: e.date,
       time: e.time,
+      endDate: e.endDate,
       endTime: e.endTime,
       timezone: e.timezone,
       venueName: e.venueName,
@@ -44,7 +45,7 @@ export async function GET(_request: Request, ctx: RouteContext<"/[slug]/[token]/
   return new Response(ics, {
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
-      "Content-Disposition": `attachment; filename="undangan-${slug}.ics"`,
+      "Content-Disposition": `attachment; filename="undangan.ics"`,
       "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff",
       "X-Robots-Tag": "noindex, nofollow",

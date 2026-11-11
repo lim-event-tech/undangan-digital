@@ -4,21 +4,21 @@ import { qrSvg } from "@/lib/checkin/qr";
 import { isGuestAttending } from "@/lib/checkin/service";
 import { readContent } from "@/lib/invitations/content";
 import { findGuestRow } from "@/lib/rsvp/service";
-import { looksLikeGuestToken, looksLikeSlug } from "@/lib/token";
+import { looksLikeGuestToken } from "@/lib/token";
 import { currentClientKey, tokenGuard } from "@/lib/token-guard-instance";
 
 const NOT_FOUND = () => new Response(null, { status: 404 });
 
-export async function GET(_request: Request, ctx: RouteContext<"/[slug]/[token]/qr">) {
-  const { slug, token } = await ctx.params;
+export async function GET(_request: Request, ctx: RouteContext<"/[token]/qr">) {
+  const { token } = await ctx.params;
   const key = await currentClientKey();
   if (tokenGuard.isBlocked(key)) return new Response(null, { status: 429 });
 
-  if (!looksLikeSlug(slug) || !looksLikeGuestToken(token)) {
+  if (!looksLikeGuestToken(token)) {
     tokenGuard.recordFailure(key);
     return NOT_FOUND();
   }
-  const row = await findGuestRow(db, slug, token);
+  const row = await findGuestRow(db, token);
   if (!row) {
     tokenGuard.recordFailure(key);
     return NOT_FOUND();
@@ -26,7 +26,7 @@ export async function GET(_request: Request, ctx: RouteContext<"/[slug]/[token]/
   if (row.status !== "terbit" || !readContent(row.content).checkin.aktif) return NOT_FOUND();
   if (!(await isGuestAttending(db, row.guestId))) return NOT_FOUND();
 
-  const svg = await qrSvg(checkinCode(slug, token));
+  const svg = await qrSvg(checkinCode(token));
   return new Response(svg, {
     headers: {
       "Content-Type": "image/svg+xml; charset=utf-8",
