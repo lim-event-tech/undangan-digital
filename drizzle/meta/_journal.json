@@ -134,6 +134,13 @@
       "when": 1794359730203,
       "tag": "0018_wa_per_pengguna",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794376522833,
+      "tag": "0019_token_tamu_pendek",
+      "breakpoints": true
     }
   ]
 }

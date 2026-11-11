@@ -51,7 +51,10 @@ it("mengonversi kuota dan jawaban secara utuh serta menghitung maksimum jumlah p
     expect((await client.query("select max(adults)+max(children) as lama, max(adults+children) as baru from rsvp")).rows).toEqual([{ lama: 4, baru: 3 }]);
     await apply(client);
     expect((await client.query("select title,slug,status,default_max_attendees,content from invitation")).rows).toEqual([{ title: "Konferensi Mitra", slug: "konferensi-mitra", status: "terbit", default_max_attendees: 40, content: { penyelenggara: { nama: "Instansi A", namaEo: "EO B" }, checkin: { aktif: false } } }]);
-    expect((await client.query("select max_attendees,token from guest")).rows).toEqual([{ max_attendees: 4, token: "AbCdEfGhIjKlMnOp" }]);
+    const guests = (await client.query<{ max_attendees: number; token: string }>("select max_attendees,token from guest")).rows;
+    expect(guests).toHaveLength(1);
+    expect(guests[0].max_attendees).toBe(4);
+    expect(guests[0].token).toMatch(/^[A-Za-z0-9_-]{8}$/);
     expect((await client.query("select attendee_count,note from rsvp order by event_id")).rows).toEqual([{ attendee_count: 2, note: "Catatan tetap" }, { attendee_count: 3, note: null }]);
     const db = drizzle(client, { schema, casing: "snake_case" });
     const dashboard = await getDashboard(db, INV);
