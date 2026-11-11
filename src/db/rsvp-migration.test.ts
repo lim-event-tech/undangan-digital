@@ -36,7 +36,12 @@ async function legacy() {
 
 async function apply(client: PGlite) {
   await client.exec("BEGIN");
-  try { await client.exec(migrationSql); await client.exec("COMMIT"); }
+  try {
+    await client.exec(migrationSql);
+    const journal = JSON.parse(readFileSync(path.join(folder, "meta/_journal.json"), "utf8")) as { entries: { tag: string }[] };
+    for (const entry of journal.entries.filter((entry) => entry.tag.slice(0, 4) > "0014")) await client.exec(readFileSync(path.join(folder, `${entry.tag}.sql`), "utf8"));
+    await client.exec("COMMIT");
+  }
   catch (error) { await client.exec("ROLLBACK"); throw error; }
 }
 

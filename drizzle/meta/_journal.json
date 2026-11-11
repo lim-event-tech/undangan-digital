@@ -106,6 +106,34 @@
       "when": 1793860788845,
       "tag": "0014_rsvp_peserta",
       "breakpoints": false
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1794356640179,
+      "tag": "0015_hari_acara_dan_kunjungan",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1794357036706,
+      "tag": "0016_poster_whatsapp",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794359448174,
+      "tag": "0017_tim_undangan",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794359730203,
+      "tag": "0018_wa_per_pengguna",
+      "breakpoints": true
     }
   ]
 }

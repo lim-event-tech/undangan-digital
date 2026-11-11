@@ -17,6 +17,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import type { AgendaItem } from "@/lib/events/agenda";
+import type { DayTime, Visit } from "@/lib/events/days";
 
 const bytea = customType<{ data: Buffer; driverData: Buffer | Uint8Array }>({
   dataType() {
@@ -153,6 +154,8 @@ export const event = pgTable(
     name: text().notNull(),
     sortOrder: integer().notNull().default(0),
     eventDate: date({ mode: "string" }),
+    eventEndDate: date({ mode: "string" }),
+    dayTimes: jsonb().$type<DayTime[]>().notNull().default([]),
     eventTime: time(),
     eventEndTime: time(),
     agenda: jsonb().$type<AgendaItem[]>().notNull().default([]),
@@ -175,7 +178,7 @@ export const photo = pgTable(
     invitationId: uuid()
       .notNull()
       .references(() => invitation.id, { onDelete: "cascade" }),
-    kind: text({ enum: ["cover", "galeri", "logo_penyelenggara", "logo_eo", "pengisi_acara"] }).notNull(),
+    kind: text({ enum: ["cover", "galeri", "logo_penyelenggara", "logo_eo", "pengisi_acara", "poster_wa"] }).notNull(),
     sortOrder: integer().notNull().default(0),
     fileName: text().notNull(),
     contentType: text().notNull(),
@@ -235,6 +238,7 @@ export const guest = pgTable(
     sentAt: timestamp({ withTimezone: true }),
     firstOpenedAt: timestamp({ withTimezone: true }),
     lastRemindedAt: timestamp({ withTimezone: true }),
+    addedBy: text().references(() => user.id, { onDelete: "set null" }),
     checkedInAt: timestamp({ withTimezone: true }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -242,8 +246,46 @@ export const guest = pgTable(
   (t) => [
     index("guest_invitation_idx").on(t.invitationId),
     index("guest_invitation_phone_idx").on(t.invitationId, t.phone),
+    index("guest_invitation_added_by_idx").on(t.invitationId, t.addedBy),
     check("guest_max_ck", sql`${t.maxAttendees} between 1 and 40`),
   ],
+);
+
+export const invitationMember = pgTable(
+  "invitation_member",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    invitationId: uuid()
+      .notNull()
+      .references(() => invitation.id, { onDelete: "cascade" }),
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    unique("invitation_member_unique").on(t.invitationId, t.userId),
+    index("invitation_member_user_idx").on(t.userId),
+  ],
+);
+
+export const invitationInvite = pgTable(
+  "invitation_invite",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    invitationId: uuid()
+      .notNull()
+      .references(() => invitation.id, { onDelete: "cascade" }),
+    email: text().notNull(),
+    tokenHash: text().notNull().unique(),
+    invitedBy: text().references(() => user.id, { onDelete: "set null" }),
+    expiresAt: timestamp({ withTimezone: true }).notNull(),
+    acceptedAt: timestamp({ withTimezone: true }),
+    acceptedBy: text().references(() => user.id, { onDelete: "set null" }),
+    revokedAt: timestamp({ withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("invitation_invite_invitation_idx").on(t.invitationId)],
 );
 
 export const guestEvent = pgTable(
@@ -275,6 +317,7 @@ export const rsvp = pgTable(
     attending: boolean().notNull(),
     attendeeCount: integer().notNull().default(0),
     note: text(),
+    visits: jsonb().$type<Visit[]>().notNull().default([]),
     respondedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: updatedAt(),
   },
@@ -337,9 +380,23 @@ export const platformSetting = pgTable("platform_setting", {
   updatedAt: updatedAt(),
 });
 
-export const waAuth = pgTable("wa_auth", {
-  key: text().primaryKey(),
-  value: text().notNull(),
+export const waAuth = pgTable(
+  "wa_auth",
+  {
+    sessionId: text().notNull().default("platform"),
+    key: text().notNull(),
+    value: text().notNull(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [primaryKey({ columns: [t.sessionId, t.key] })],
+);
+
+export const waSession = pgTable("wa_session", {
+  userId: text()
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  sambungOtomatis: boolean().notNull().default(false),
+  nomor: text(),
   updatedAt: updatedAt(),
 });
 
@@ -356,6 +413,8 @@ export const waJob = pgTable(
     kind: text({ enum: ["undangan", "pengingat"] }).notNull(),
     phone: text().notNull(),
     message: text().notNull(),
+    posterId: uuid().references(() => photo.id, { onDelete: "set null" }),
+    senderUserId: text().references(() => user.id, { onDelete: "set null" }),
     status: text({ enum: ["menunggu", "mengirim", "terkirim", "gagal", "dibatalkan"] })
       .notNull()
       .default("menunggu"),
@@ -366,6 +425,7 @@ export const waJob = pgTable(
   (t) => [
     index("wa_job_status_idx").on(t.status, t.createdAt),
     index("wa_job_invitation_idx").on(t.invitationId),
+    index("wa_job_sender_idx").on(t.senderUserId, t.status, t.createdAt),
     uniqueIndex("wa_job_active_unique")
       .on(t.guestId, t.kind)
       .where(sql`${t.status} in ('menunggu', 'mengirim')`),
