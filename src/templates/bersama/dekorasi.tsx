@@ -14,8 +14,8 @@ export const DefinisiDekorasi = memo(function DefinisiDekorasi({ tema, id }: { t
 });
 
 export const DekorasiEvent = memo(function DekorasiEvent({ id, bagian }: { id: string; bagian: BagianId }) {
-  const tengah = ["sampul", "salam", "acara", "pengisi", "hitung", "rsvp", "penyelenggara", "galeri", "penutup"].includes(bagian);
-  const jenis = ["tentang", "agenda", "pengisi", "hitung", "penyelenggara", "kontak", "galeri", "ucapan"].includes(bagian) ? "ragam" : "untai";
+  const tengah = ["sampul", "salam", "acara", "pengisi", "rsvp", "penyelenggara", "penutup"].includes(bagian);
+  const jenis = ["tentang", "agenda", "pengisi", "penyelenggara", "kontak"].includes(bagian) ? "ragam" : "untai";
   const sisi = tengah ? ["kiri", "kanan"] : ["kanan"];
   const lebar = jenis === "untai" ? 80 : 160;
   return <div className={`event-dekorasi event-dekorasi-${tengah ? "tengah" : "tepi"}`} aria-hidden="true">

@@ -26,15 +26,12 @@ it("agenda dan data formal mengikuti undangan serta sesi yang ditujukan kepada t
   if (!logo.ok) throw new Error("Logo tidak tersimpan");
   expect((await getPhotoData(db, logo.photo.id))?.data).toEqual(png);
   expect((await listPhotos(db, sibling.id))).toEqual([]);
-  expect(await publishInvitation(db, inv.id)).toMatchObject({ ok: false, reason: "belum-lengkap" });
-  await addPhoto(db, inv.id, { kind: "cover", fileName: "cover.png", bytes: png });
   expect(await publishInvitation(db, inv.id)).toEqual({ ok: true });
   const guest = await createGuest(db, inv.id, { name: "Tamu satu sesi", phone: "+6281200000101", groupName: null, eventIds: [sessions[0].id], maxAttendees: 1,  });
-  const page = await findGuestPage(db, inv.slug, guest.token);
+  const page = await findGuestPage(db, guest.token);
   expect(page?.events).toHaveLength(1);
   expect(page?.events[0].agenda[0].judul).toBe("Agenda 0");
   expect(JSON.stringify(page?.events)).not.toContain("Agenda 1");
   expect(page?.invitation.content.kontak.nama).toBe("Panitia A");
-  expect(await findGuestPage(db, sibling.slug, guest.token)).toBeNull();
   expect(await updateEvent(db, sibling.id, sessions[0].id, { ...sessions[0], agenda: [] })).toBeNull();
 });

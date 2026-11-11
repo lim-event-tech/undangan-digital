@@ -55,12 +55,11 @@ async function statusOf(invitationId: string) {
 }
 
 describe("getMissingForPublish", () => {
-  it("menyebut foto cover serta tanggal, jam, dan link Maps tiap acara", async () => {
+  it("menyebut tanggal, jam, dan link Maps tiap acara tanpa mewajibkan poster", async () => {
     const { invitation: created } = await seedInvitation(db);
     const missing = await getMissingForPublish(db, created.id);
     expect(missing.map((m) => m.label)).toEqual([
       "Nama penyelenggara",
-      "Foto cover",
       "Tanggal Acara utama",
       "Jam Acara utama",
       "Link Maps Acara utama",
@@ -69,7 +68,7 @@ describe("getMissingForPublish", () => {
       "Link Maps Sesi lanjutan",
     ]);
     expect(missing[0].anchor).toBe("penyelenggara");
-    expect(missing[2].anchor).toMatch(/^acara-[0-9a-f-]{36}$/);
+    expect(missing[1].anchor).toMatch(/^acara-[0-9a-f-]{36}$/);
   });
 
   it("kosong setelah semua field wajib terisi", async () => {
@@ -124,7 +123,7 @@ describe("publishInvitation", () => {
 describe("konten undangan", () => {
   it("menyimpan judul event tanpa menimpa teks sambutan", async () => {
     const { invitation: created } = await seedInvitation(db, { title: "Raka" });
-    await saveContentText(db, created.id, { identitas: { jenis: "Seminar", subjudul: "", deskripsi: "" }, sambutan: "Selamat datang" });
+    await saveContentText(db, created.id, { identitas: { jenis: "Seminar", deskripsi: "" }, sambutan: "Selamat datang" });
     await saveTitle(db, created.id, {
       title: "Rakai",
     });
@@ -133,13 +132,13 @@ describe("konten undangan", () => {
     expect(row.title).toBe("Rakai");
     expect(row.slug).toBe("raka");
     expect(readContent(row.content)).toMatchObject({
-      identitas: { jenis: "Seminar", subjudul: "", deskripsi: "" }, sambutan: "Selamat datang", ucapan: { tampil: false, tahan: false }, susunan: DEFAULT_SUSUNAN,
+      identitas: { jenis: "Seminar", deskripsi: "" }, sambutan: "Selamat datang", sampul: { sembunyikanTeks: false }, tampilan: { hiasan: true, warna: null, font: "bawaan" }, susunan: DEFAULT_SUSUNAN,
     });
   });
 
   it("memperbarui satu bagian teks tanpa menghapus bagian lain", async () => {
     const { invitation: created } = await seedInvitation(db);
-    await saveContentText(db, created.id, { identitas: { jenis: "Seminar", subjudul: "", deskripsi: "" }, sambutan: "Sambutan" });
+    await saveContentText(db, created.id, { identitas: { jenis: "Seminar", deskripsi: "" }, sambutan: "Sambutan" });
     await saveContentText(db, created.id, { penutup: "Terima kasih" });
     await saveContentText(db, created.id, { sambutan: "Sambutan baru" });
 
@@ -169,19 +168,18 @@ describe("konten undangan", () => {
 describe("readContent", () => {
   it("memberi nilai kosong untuk data yang rusak atau tidak ada", () => {
     const empty = {
-      identitas: { jenis: "", subjudul: "", deskripsi: "" },
+      identitas: { jenis: "", deskripsi: "" },
       penyelenggara: { nama: "", namaEo: "" },
       pengisiAcara: [],
-      informasiPeserta: { dressCode: "", ketentuan: "", petunjukLokasi: "" },
       kontak: { nama: "", telepon: "", email: "" },
       sambutan: "",
       penutup: "",
       pesanWa: "",
       pesanPengingat: "",
-      ucapan: { tampil: false, tahan: false },
-      hitungMundur: { aktif: true, detik: true },
-      musik: { aktif: false },
       checkin: { aktif: true },
+      waPoster: { kirim: false, sumber: "sama" },
+      sampul: { sembunyikanTeks: false },
+      tampilan: { hiasan: true, warna: null, font: "bawaan" },
       susunan: DEFAULT_SUSUNAN,
     };
     expect(readContent({})).toEqual(empty);

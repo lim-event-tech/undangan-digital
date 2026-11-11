@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   const kind = formData.get("jenis");
   if (
     !(file instanceof File) ||
-    (kind !== "cover" && kind !== "galeri" && kind !== "logo_penyelenggara" && kind !== "logo_eo" && kind !== "pengisi_acara")
+    (kind !== "cover" && kind !== "poster_wa" && kind !== "logo_penyelenggara" && kind !== "logo_eo" && kind !== "pengisi_acara")
   ) {
     return fail("Data unggahan tidak lengkap.", 400);
   }

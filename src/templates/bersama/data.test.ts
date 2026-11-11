@@ -7,7 +7,7 @@ import { siapkanData } from "./data";
 const SEKARANG = Date.parse("2026-11-01T05:00:00Z");
 
 function tamu(ubah: Partial<InvitationView> = {}): InvitationView {
-  return { ...contohView(SEKARANG), mode: "tamu", slug: "gathering-komunitas", token: "AbCdEfGhIjKlMnOp", ...ubah };
+  return { ...contohView(SEKARANG), mode: "tamu", token: "AbCdEfGh", ...ubah };
 }
 
 describe("siapkanData", () => {
@@ -44,13 +44,12 @@ describe("siapkanData", () => {
       tempat: "Aula Graha Puspa",
     });
     expect(data.acara[0].kalender).toMatch(/^https:\/\/calendar\.google\.com\//);
-    expect(data.hitung).toEqual({ target: Date.parse("2027-02-20T02:00:00Z"), detik: true });
   });
 
   it("memberi tautan kalender dan QR hanya untuk tamu sungguhan", () => {
     const asli = siapkanData(tamu());
-    expect(asli.kalender).toBe("/gathering-komunitas/AbCdEfGhIjKlMnOp/kalender");
-    expect(asli.qr).toBe("/gathering-komunitas/AbCdEfGhIjKlMnOp/qr");
+    expect(asli.kalender).toBe("/AbCdEfGh/kalender");
+    expect(asli.qr).toBe("/AbCdEfGh/qr");
 
     const contoh = siapkanData(contohView(SEKARANG));
     expect(contoh.kalender).toMatch(/^data:text\/calendar;charset=utf-8,BEGIN%3AVCALENDAR/);
@@ -68,57 +67,66 @@ describe("siapkanData", () => {
     const content = readContent({
       ...view.content,
       sambutan: "",
-      identitas: {}, penyelenggara: {}, pengisiAcara: [], informasiPeserta: {}, kontak: {},
-      hitungMundur: { aktif: false, detik: true },
+      identitas: {}, penyelenggara: {}, pengisiAcara: [], kontak: {},
       susunan: { urutan: ["rsvp", "acara", "pembuka"], sembunyi: ["pembuka"] },
     });
     const data = siapkanData({ ...view, content, events: view.events.map((e) => ({ ...e, agenda: [] })) });
-    expect(data.urutan).toEqual(["sampul", "rsvp", "ucapan", "acara", "penutup"]);
-    expect(data.hitung).toBeNull();
+    expect(data.urutan).toEqual(["sampul", "rsvp", "acara", "penutup"]);
     expect(data).not.toHaveProperty("rekening");
   });
 
-  it("menyusun galeri menurut ukuran asli dan memakai aset ilustrasi hanya di mode contoh", () => {
-    expect(siapkanData(tamu()).galeri).toEqual([]);
-    const contoh = siapkanData(contohView(SEKARANG));
-    expect(contoh.galeri).toHaveLength(4);
-    expect(contoh.galeri[0]).toMatchObject({ src: "/template/assets/melati.webp", rasio: "1051 / 1400" });
-    expect(contoh.lajurGaleri).toHaveLength(2);
+  it("menyiapkan poster hanya dari foto cover dan menyembunyikan tulisan sampul hanya bila poster ada", () => {
+    const view = tamu();
+    const poster = { id: "40000000-0000-4000-8000-000000000001", kind: "cover" as const, sortOrder: 0, fileName: "poster.jpg", sizeBytes: 900, width: 1000, height: 2000 };
+    const sembunyi = readContent({ ...view.content, sampul: { sembunyikanTeks: true } });
 
-    const photos = [
-      { id: "a", width: 1600, height: 1067 },
-      { id: "b", width: 1200, height: 1600 },
-      { id: "c", width: null, height: null },
-    ].map((p, i) => ({ ...p, kind: "galeri" as const, sortOrder: i, fileName: `${p.id}.jpg`, sizeBytes: 10 }));
-    const data = siapkanData(tamu({ photos: [...photos, { ...photos[0], id: "p", kind: "cover" }] }));
-    expect(data.galeri.map((g) => g.src)).toEqual(["/foto/a", "/foto/b", "/foto/c"]);
-    expect(data.galeri.map((g) => g.rasio)).toEqual(["1600 / 1067", "1200 / 1600", "3 / 4"]);
-    expect(data.lajurGaleri).toEqual([[0, 2], [1]]);
-    expect(data.galeri[0].sizes).toContain("50vw");
+    const tanpaPoster = siapkanData({ ...view, content: sembunyi });
+    expect(tanpaPoster.poster).toBeNull();
+    expect(tanpaPoster.sembunyikanTeksSampul).toBe(false);
 
-    const satu = siapkanData(tamu({ photos: [photos[0]] }));
-    expect(satu.lajurGaleri).toEqual([[0]]);
-    expect(satu.galeri[0].sizes).toContain("100vw");
+    const denganPoster = siapkanData({ ...view, content: sembunyi, photos: [poster] });
+    expect(denganPoster.poster).toEqual({ src: `/foto/${poster.id}`, width: 1000, height: 2000 });
+    expect(denganPoster.sembunyikanTeksSampul).toBe(true);
+
+    const teksTampil = siapkanData({ ...view, photos: [poster] });
+    expect(teksTampil.poster).not.toBeNull();
+    expect(teksTampil.sembunyikanTeksSampul).toBe(false);
+    expect(siapkanData({ ...view, photos: [{ ...poster, kind: "logo_eo" }] }).poster).toBeNull();
   });
 
-  it("mengutamakan ilustrasi tema pada contoh dan tidak mengisi galeri pengguna", () => {
-    expect(siapkanData(tamu(), "bintang").galeri).toEqual([]);
-    expect(siapkanData(contohView(SEKARANG), "bintang").galeri[0].src).toBe("/template/assets/bintang.webp");
+  it("meneruskan pengaturan tampilan dan bagian lama tidak pernah muncul", () => {
+    const view = tamu();
+    const warna = { kertas: "#fbf6ea", teks: "#3d3426", utama: "#8a6420", aksen: "#b8934a" };
+    const content = readContent({ ...view.content, tampilan: { hiasan: false, warna, font: "cinzel-jost" } });
+    const data = siapkanData({ ...view, content });
+    expect(data.tampilan).toEqual({ hiasan: false, warna, font: "cinzel-jost" });
+    expect(siapkanData(view).tampilan).toEqual({ hiasan: true, warna: null, font: "bawaan" });
+    for (const lama of ["hitung", "galeri", "ucapan", "informasi"]) expect(data.urutan).not.toContain(lama);
+    for (const lama of ["hitung", "galeri", "ucapan", "musik", "informasiPeserta"]) expect(data).not.toHaveProperty(lama);
   });
 
-  it("mendahulukan jadwal, agenda, dan informasi peserta sebelum konfirmasi pada susunan bawaan", () => {
+  it("mendahulukan jadwal dan agenda sebelum konfirmasi pada susunan bawaan", () => {
     const { urutan } = siapkanData(contohView(SEKARANG));
     expect(urutan.indexOf("acara")).toBeLessThan(urutan.indexOf("agenda"));
-    expect(urutan.indexOf("agenda")).toBeLessThan(urutan.indexOf("informasi"));
-    expect(urutan.indexOf("informasi")).toBeLessThan(urutan.indexOf("rsvp"));
-    expect(urutan.indexOf("rsvp")).toBeLessThan(urutan.indexOf("galeri"));
+    expect(urutan.indexOf("agenda")).toBeLessThan(urutan.indexOf("rsvp"));
+  });
+
+  it("menyiapkan hari, jam khusus, dan pilihan jam datang untuk acara beberapa hari", () => {
+    const view = tamu();
+    view.events[0] = { ...view.events[0], endDate: "2027-02-22", time: "09:00", endTime: "11:00", dayTimes: [{ date: "2027-02-21", start: "13:00", end: "14:00" }] };
+    const acara = siapkanData(view).acara[0];
+    expect(acara.tgl).toBe("Sabtu, 20 Februari 2027 – Senin, 22 Februari 2027");
+    expect(acara.hari.map((h) => h.date)).toEqual(["2027-02-20", "2027-02-21", "2027-02-22"]);
+    expect(acara.hari[0]).toMatchObject({ label: "Sabtu, 20 Februari", mulai: "09:00", jam: "09.00–11.00 WIB", opsi: ["09:00", "09:30", "10:00", "10:30", "11:00"] });
+    expect(acara.hari[1]).toMatchObject({ mulai: "13:00", jam: "13.00–14.00 WIB", opsi: ["13:00", "13:30", "14:00"] });
+    expect(siapkanData(view).tglPanjang).toBe("20–22 Februari 2027");
   });
 
   it("mengambil jawaban RSVP tamu dan memakai teks penutup bawaan", () => {
     const view = tamu();
-    view.events[0] = { ...view.events[0], response: { attending: true, attendeeCount: 3,  note: "Halo" } };
+    view.events[0] = { ...view.events[0], response: { attending: true, attendeeCount: 3, note: "Halo", visits: [{ date: "2027-02-20", time: "09:30" }] } };
     const data = siapkanData(view);
-    expect(data.jawaban).toEqual({ "contoh-utama": { hadir: true, peserta: 3, pesan: "Halo" } });
+    expect(data.jawaban).toEqual({ "contoh-utama": { hadir: true, peserta: 3, pesan: "Halo", kunjungan: [{ date: "2027-02-20", time: "09:30" }] } });
     expect(siapkanData({ ...view, content: readContent({ ...view.content, penutup: "" }) }).penutup).toMatch(/^Merupakan kehormatan/);
   });
 });

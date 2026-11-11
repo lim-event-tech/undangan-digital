@@ -7,17 +7,11 @@ import { CONTENT_LIMITS, MAX_PENGISI_ACARA, type InvitationContent, type Pengisi
 export const FORMAL_FIELDS = {
   identitas: [
     { key: "jenis", label: "Jenis event", max: CONTENT_LIMITS.jenis, area: false, placeholder: "Seminar, rapat kerja, peluncuran produk…" },
-    { key: "subjudul", label: "Subjudul", max: CONTENT_LIMITS.subjudul, area: false, placeholder: "Tema atau fokus kegiatan" },
     { key: "deskripsi", label: "Deskripsi event", max: CONTENT_LIMITS.deskripsi, area: true, placeholder: "Tujuan kegiatan dan informasi utama untuk peserta" },
   ],
   penyelenggara: [
     { key: "nama", label: "Nama penyelenggara", max: CONTENT_LIMITS.nama, area: false, placeholder: "Instansi atau perusahaan pemilik acara" },
     { key: "namaEo", label: "Nama event organizer", max: CONTENT_LIMITS.nama, area: false, placeholder: "EO yang mengelola acara, bila ada" },
-  ],
-  informasiPeserta: [
-    { key: "dressCode", label: "Dress code", max: CONTENT_LIMITS.dressCode, area: false, placeholder: "Contoh: Busana formal atau batik" },
-    { key: "ketentuan", label: "Ketentuan kehadiran", max: CONTENT_LIMITS.ketentuan, area: true, placeholder: "Ketentuan yang perlu diketahui peserta" },
-    { key: "petunjukLokasi", label: "Petunjuk lokasi", max: CONTENT_LIMITS.petunjukLokasi, area: true, placeholder: "Akses masuk, registrasi, atau informasi parkir" },
   ],
   kontak: [
     { key: "nama", label: "Nama PIC", max: CONTENT_LIMITS.nama, area: false, placeholder: "Nama panitia yang dapat dihubungi" },

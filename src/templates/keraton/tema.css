@@ -3,34 +3,35 @@
   --event-tekstur-luar:repeating-linear-gradient(45deg,#d5b77b16 0 1px,transparent 1px 24px),repeating-linear-gradient(-45deg,#d5b77b10 0 1px,transparent 1px 24px);
   --event-kertas:#153d32; --event-kartu:#1b4438; --event-lembut:#1d493d; --event-latar:#0d2923; --event-garis:#70816a; --event-border:#b99b74; --event-aksen:#d5b77b;
   --event-ink:#102f27; --event-on-ink:#f6eddb; --event-tombol-teks:#183e33; --event-sans:'Jost',sans-serif; --event-serif:'Cinzel',serif; --event-radius:0px;
+  --c-153d32:#153d32; --c-173b30:#173b30; --c-1a4236:#1a4236; --c-1b4438:#1b4438; --c-204d40:#204d40; --c-70816a:#70816a; --c-b69c64:#b69c64; --c-b99b60:#b99b60; --c-b99b6044:#b99b6044; --c-b99b74:#b99b74;
 }
-.tpl-keraton .event-sampul { background:linear-gradient(160deg,#204d40,#153d32 65%); }
+.tpl-keraton[data-warna=kustom] { --c-153d32:var(--event-kertas); --c-173b30:var(--event-kertas); --c-1a4236:var(--event-kartu); --c-1b4438:var(--event-kartu); --c-204d40:var(--event-lembut); --c-70816a:var(--event-garis); --c-b69c64:var(--event-border); --c-b99b60:var(--event-border); --c-b99b6044:color-mix(in srgb,var(--event-border) 26.67%,transparent); --c-b99b74:var(--event-border); }
+.tpl-keraton .event-sampul { background:linear-gradient(160deg,var(--c-204d40),var(--c-153d32) 65%); }
 .tpl-keraton .event-identitas h1 { font-family:'Cinzel',serif; text-transform:uppercase; font-size:calc(var(--ukuran-judul) * .96); letter-spacing:.015em; }
-.tpl-keraton .event-bingkai { inset:17px; border:1px solid #b99b60; outline:1px solid #b99b6044; outline-offset:-7px; border-radius:160px 160px 0 0; }
+.tpl-keraton .event-bingkai { inset:17px; border:1px solid var(--c-b99b60); outline:1px solid var(--c-b99b6044); outline-offset:-7px; border-radius:160px 160px 0 0; }
 .tpl-keraton .event-meterai { width:120px; height:86px; }
 .tpl-keraton .event-meterai > .event-hiasan { opacity:.8; }
 .tpl-keraton .event-ornamen-atas { width:330px; top:-100px; left:-205px; opacity:.17; }
 .tpl-keraton .event-ornamen-bawah { width:330px; bottom:20px; right:-215px; opacity:.17; transform:rotate(0); }
-.tpl-keraton .event-kisi { position:absolute; inset:26px; border-top:1px solid #b99b6044; border-bottom:1px solid #b99b6044; }
+.tpl-keraton .event-kisi { position:absolute; inset:26px; border-top:1px solid var(--c-b99b6044); border-bottom:1px solid var(--c-b99b6044); }
 .tpl-keraton .event-kepala h2 { font-size:28px; letter-spacing:.025em; line-height:1.4; }
-.tpl-keraton .event-agenda { border:1px solid #b69c64; border-radius:75px 75px 0 0; padding:32px 22px 26px; background:#1b4438; text-align:center; }
+.tpl-keraton .event-agenda { border:1px solid var(--c-b69c64); border-radius:75px 75px 0 0; padding:32px 22px 26px; background:var(--c-1b4438); text-align:center; }
 .tpl-keraton .event-agenda .event-sesi-kepala { justify-content:center; }
 .tpl-keraton .event-agenda .event-aksi { align-items:center; }
 .tpl-keraton .event-sesi-kepala .event-nomor { font-family:'Cinzel',serif; }
-.tpl-keraton .event-salam { background:#1a4236; }
-.tpl-keraton .event-profil { border:0; border-bottom:1px solid #70816a; background:none; padding-inline:12px; }
+.tpl-keraton .event-salam { background:var(--c-1a4236); }
+.tpl-keraton .event-profil { border:0; border-bottom:1px solid var(--c-70816a); background:none; padding-inline:12px; }
 .tpl-keraton .event-profil-inisial { border-radius:52px 52px 0 0; font-size:28px; }
 .tpl-keraton .event-profil-inisial::after { border-radius:63px 63px 0 0; animation:none; }
-.tpl-keraton .event-surat { border:3px double #b99b74; background:#173b30; }
+.tpl-keraton .event-surat { border:3px double var(--c-b99b74); background:var(--c-173b30); }
 .tpl-keraton .event-surat .event-kepala h2 { font-size:24px; }
 .tpl-keraton .event-susunan .event-kepala h2 { font-size:26px; }
 .tpl-keraton .event-tentang .event-deskripsi { font-family:var(--event-sans); font-size:19px; }
-.tpl-keraton .event-rsvp .event-form { border:1px solid #b99b74; }
+.tpl-keraton .event-rsvp .event-form { border:1px solid var(--c-b99b74); }
 .tpl-keraton .event-kontak .event-kepala h2 { font-size:32px; }
-.tpl-keraton .event-mitra { gap:28px; border-block:3px double #70816a; }
+.tpl-keraton .event-mitra { gap:28px; border-block:3px double var(--c-70816a); }
 .tpl-keraton .event-profil h3 { font-size:23px; }
-.tpl-keraton .event-penutup { background:linear-gradient(160deg,#204d40,#153d32 65%); border-top:5px double #70816a; }
+.tpl-keraton .event-penutup { background:linear-gradient(160deg,var(--c-204d40),var(--c-153d32) 65%); border-top:5px double var(--c-70816a); }
 .tpl-keraton .event-agenda h3 { font-size:24px; }
-.tpl-keraton .event-hitung { background:#102f27; }
 .tpl-keraton .event-suasana-keraton .event-lapis-atas { width:180px; left:-110px; opacity:.23; rotate:10deg; }
 .tpl-keraton .event-suasana-keraton .event-lapis-bawah { width:190px; right:-120px; opacity:.23; rotate:-10deg; scale:-1 1; }

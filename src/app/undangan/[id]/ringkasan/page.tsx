@@ -131,7 +131,7 @@ export default async function RingkasanPage({ params, searchParams }: PageProps<
             Tambahkan tamu atau impor dari Excel atau CSV. Jawaban RSVP mereka akan muncul di sini.
           </p>
           <Link href={`/undangan/${invitation.id}/tamu`} className={`${tombolTerang} no-underline`}>
-            Ke daftar tamu
+            Ke daftar undangan
           </Link>
         </div>
       ) : (

@@ -51,11 +51,11 @@ export async function kompresGambar(file: File, longestSide: number): Promise<Bl
 export async function unggahFoto(
   invitationId: string,
   file: File,
-  kind: "cover" | "galeri",
+  kind: "cover" | "poster_wa" = "cover",
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   let blob: Blob;
   try {
-    blob = await kompresGambar(file, kind === "cover" ? 2000 : 1600);
+    blob = await kompresGambar(file, 2000);
   } catch (error) {
     return {
       ok: false,

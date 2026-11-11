@@ -7,11 +7,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Ikon } from "@/components/ikon";
 import { pesanGalat, tombolTerang } from "@/components/ui";
-import { MAX_GALLERY_PHOTOS } from "@/lib/images";
+import type { SampulSettings } from "@/lib/invitations/tampilan";
 import type { PhotoInfo } from "@/lib/photos/service";
-import { hapusFotoAction } from "./actions";
+import { hapusFotoAction, simpanSampulAction } from "./actions";
+import { Saklar } from "./bidang";
 import { KartuBagian } from "./kartu-bagian";
 import { unggahFoto } from "./kompres";
+import { StatusSimpan, useAutoSave } from "./use-auto-save";
 
 const ACCEPT = "image/jpeg,image/png,image/webp";
 const LABEL_UNGGAH = `${tombolTerang} cursor-pointer focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-emas-muda`;
@@ -21,22 +23,17 @@ function ukuran(bytes: number): string {
   return `${Math.max(1, Math.round(bytes / 1000))} KB`;
 }
 
-function useUnggah(kind: "cover" | "galeri") {
+function useUnggah() {
   const invitationId = useInvitationId();
   const router = useRouter();
   const [mengunggah, setMengunggah] = useState(false);
   const [galat, setGalat] = useState<string | undefined>();
 
-  async function unggah(files: File[]) {
+  async function unggah(file: File) {
     setGalat(undefined);
     setMengunggah(true);
-    for (const file of files) {
-      const result = await unggahFoto(invitationId, file, kind);
-      if (!result.ok) {
-        setGalat(`${file.name}: ${result.error}`);
-        break;
-      }
-    }
+    const result = await unggahFoto(invitationId, file);
+    if (!result.ok) setGalat(`${file.name}: ${result.error}`);
     setMengunggah(false);
     router.refresh();
   }
@@ -44,56 +41,101 @@ function useUnggah(kind: "cover" | "galeri") {
   return { mengunggah, galat, unggah };
 }
 
-export function BagianCover({ cover }: { cover: PhotoInfo | null }) {
-  const { mengunggah, galat, unggah } = useUnggah("cover");
+function ContohUkuranPoster() {
+  return (
+    <figure className="m-0 flex w-44 shrink-0 flex-col items-center gap-2">
+      <div
+        className="relative aspect-[9/19] w-full rounded-[22px] border-2 border-tinta/70 bg-kertas"
+        role="img"
+        aria-label="Contoh ukuran poster pada halaman awal"
+      >
+        <div className="absolute inset-[5px] rounded-[16px] border border-garis" />
+        <div className="absolute top-[3.5%] right-[7%] bottom-[19%] left-[7%] flex flex-col items-center justify-center rounded-sm border-2 border-dashed border-emas bg-emas/10 px-1 text-center">
+          <span className="text-[11px] font-semibold text-emas-tua">Area poster</span>
+          <span className="mt-1 text-[10px] leading-tight text-redup">Rasio sekitar 1 : 2</span>
+        </div>
+        <div className="absolute right-[7%] bottom-[8%] left-[7%] flex h-[7%] items-center justify-center rounded-sm bg-tinta text-[10px] font-medium text-white">
+          Buka undangan
+        </div>
+      </div>
+      <figcaption className="text-center text-xs leading-snug text-redup">
+        Dari tepi atas bingkai sampai tepat di atas tombol Buka undangan.
+      </figcaption>
+    </figure>
+  );
+}
+
+export function BagianPoster({ poster, sampul }: { poster: PhotoInfo | null; sampul: SampulSettings }) {
+  const { mengunggah, galat, unggah } = useUnggah();
+  const hapus = useInvitationAction(hapusFotoAction);
+  const { formRef, status, formError, formProps } = useAutoSave(simpanSampulAction);
 
   return (
     <KartuBagian
       id="sampul"
-      judul="Sampul"
-      deskripsi="Foto untuk pratinjau tautan undangan. Sampul halaman memakai judul dan ornamen. JPG atau PNG, dikompres otomatis."
+      judul="Poster halaman awal"
+      deskripsi="Poster tampil di halaman awal undangan dan dipakai sebagai gambar pratinjau tautan. Opsional. Poster ditampilkan utuh tanpa dipotong; bila rasionya berbeda, akan ada ruang kosong di sisinya."
       aksi={
         <span className="rounded-full bg-krem px-2.5 py-0.5 text-xs font-medium text-emas-tua">
-          Wajib
+          Opsional
         </span>
       }
     >
-      <div className="flex flex-wrap items-start gap-5">
-        {cover ? (
-          <Image
-            src={`/foto/${cover.id}`}
-            alt="Foto cover undangan"
-            width={240}
-            height={320}
-            unoptimized
-            className="h-auto max-h-80 w-48 rounded-lg border border-garis object-cover"
-          />
-        ) : (
-          <div className="flex h-40 w-48 items-center justify-center rounded-lg border border-dashed border-garis-input bg-kertas px-3 text-center text-sm text-redup">
-            Foto cover belum ada
-          </div>
-        )}
-        <div className="flex flex-col items-start gap-2">
-          {cover ? (
-            <p className="m-0 text-sm text-redup-2">
-              {cover.fileName} · {ukuran(cover.sizeBytes)} · siap
+      <div className="flex flex-wrap items-start gap-6">
+        <ContohUkuranPoster />
+        <div className="flex min-w-0 flex-1 basis-60 flex-col items-start gap-4">
+          <div className="flex flex-col gap-1 text-sm leading-relaxed text-redup-2">
+            <p className="m-0">
+              Ukuran yang disarankan: <strong className="font-medium text-tinta">1000 × 2000 px</strong> (potret, rasio 1 : 2).
+              Di HP berukuran 390 × 844 px, area poster kira-kira 348 × 700 px.
             </p>
-          ) : null}
-          <label className={LABEL_UNGGAH} aria-disabled={mengunggah}>
-            <Ikon nama="unduh" ukuran={16} className="rotate-180" />
-            {mengunggah ? "Mengunggah…" : cover ? "Ganti foto cover" : "Unggah foto cover"}
-            <input
-              type="file"
-              accept={ACCEPT}
-              disabled={mengunggah}
-              className="sr-only"
-              onChange={(event) => {
-                const files = Array.from(event.target.files ?? []);
-                event.target.value = "";
-                if (files.length > 0) void unggah(files.slice(0, 1));
-              }}
-            />
-          </label>
+            <p className="m-0">JPG, PNG, atau WebP, dikompres otomatis dan maksimal 3 MB.</p>
+          </div>
+          {poster ? (
+            <div className="flex items-start gap-4">
+              <Image
+                src={`/foto/${poster.id}`}
+                alt="Poster halaman awal"
+                width={120}
+                height={240}
+                unoptimized
+                className="h-auto max-h-60 w-24 rounded-lg border border-garis object-contain"
+              />
+              <p className="m-0 text-sm text-redup-2">
+                {poster.fileName} · {ukuran(poster.sizeBytes)} · siap
+              </p>
+            </div>
+          ) : (
+            <p className="m-0 rounded-lg border border-dashed border-garis-input bg-kertas px-4 py-6 text-sm text-redup">
+              Belum ada poster. Halaman awal memakai judul dan hiasan template.
+            </p>
+          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <label className={LABEL_UNGGAH} aria-disabled={mengunggah}>
+              <Ikon nama="unduh" ukuran={16} className="rotate-180" />
+              {mengunggah ? "Mengunggah…" : poster ? "Ganti poster" : "Unggah poster"}
+              <input
+                type="file"
+                accept={ACCEPT}
+                disabled={mengunggah}
+                className="sr-only"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = "";
+                  if (file) void unggah(file);
+                }}
+              />
+            </label>
+            {poster ? (
+              <form action={hapus}>
+                <input type="hidden" name="id" value={poster.id} />
+                <button type="submit" className={tombolTerang}>
+                  <Ikon nama="sampah" ukuran={16} />
+                  Hapus poster
+                </button>
+              </form>
+            ) : null}
+          </div>
           {galat ? (
             <p role="alert" className={`m-0 ${pesanGalat}`}>
               {galat}
@@ -101,78 +143,19 @@ export function BagianCover({ cover }: { cover: PhotoInfo | null }) {
           ) : null}
         </div>
       </div>
-    </KartuBagian>
-  );
-}
-
-export function BagianGaleri({ foto }: { foto: PhotoInfo[] }) {
-  const hapusFotoActionForInvitation = useInvitationAction(hapusFotoAction);
-
-  const { mengunggah, galat, unggah } = useUnggah("galeri");
-  const penuh = foto.length >= MAX_GALLERY_PHOTOS;
-
-  return (
-    <KartuBagian
-      id="galeri"
-      judul="Galeri"
-      deskripsi={`${foto.length} dari ${MAX_GALLERY_PHOTOS} foto · dikompres otomatis`}
-      aksi={
-        <label
-          className={`${LABEL_UNGGAH} ${penuh || mengunggah ? "pointer-events-none opacity-45" : ""}`}
-          aria-disabled={penuh || mengunggah}
-        >
-          {mengunggah ? "Mengunggah…" : "+ Tambah foto"}
-          <input
-            type="file"
-            accept={ACCEPT}
-            multiple
-            disabled={penuh || mengunggah}
-            className="sr-only"
-            onChange={(event) => {
-              const files = Array.from(event.target.files ?? []);
-              event.target.value = "";
-              const sisa = MAX_GALLERY_PHOTOS - foto.length;
-              if (files.length > 0) void unggah(files.slice(0, sisa));
-            }}
-          />
-        </label>
-      }
-    >
-      {galat ? (
-        <p role="alert" className={`m-0 ${pesanGalat}`}>
-          {galat}
-        </p>
-      ) : null}
-      {foto.length === 0 ? (
-        <p className="m-0 rounded-lg border border-dashed border-garis-input bg-kertas px-4 py-8 text-center text-sm text-redup">
-          Belum ada foto galeri. Bagian ini disembunyikan dari undangan sampai ada foto.
-        </p>
-      ) : (
-        <ul className="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-3 md:grid-cols-4">
-          {foto.map((item, index) => (
-            <li key={item.id} className="relative">
-              <Image
-                src={`/foto/${item.id}`}
-                alt={`Foto galeri ${index + 1}`}
-                width={240}
-                height={240}
-                unoptimized
-                className="aspect-square w-full rounded-lg border border-garis object-cover"
-              />
-              <form action={hapusFotoActionForInvitation} className="absolute top-1.5 right-1.5">
-                <input type="hidden" name="id" value={item.id} />
-                <button
-                  type="submit"
-                  aria-label={`Hapus foto galeri ${index + 1}`}
-                  className="inline-flex size-9 items-center justify-center rounded-full bg-white/95 text-galat shadow-sm transition-colors hover:bg-galat-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emas-muda"
-                >
-                  <Ikon nama="sampah" ukuran={16} />
-                </button>
-              </form>
-            </li>
-          ))}
-        </ul>
-      )}
+      <form ref={formRef} {...formProps} className="flex flex-col divide-y divide-garis-halus border-t border-garis-halus pt-2">
+        <div className="flex items-center justify-between gap-3 pt-1">
+          <StatusSimpan status={status} />
+        </div>
+        <Saklar
+          label="Sembunyikan tulisan halaman awal"
+          hint={poster ? "Judul, tanggal, lokasi, dan nama tamu tidak ditampilkan di atas poster. Tombol Buka undangan tetap ada." : "Tersedia setelah poster diunggah."}
+          name="sembunyikanTeks"
+          defaultChecked={sampul.sembunyikanTeks}
+          disabled={!poster}
+        />
+        {formError ? <p role="alert" className={`m-0 ${pesanGalat}`}>{formError}</p> : null}
+      </form>
     </KartuBagian>
   );
 }

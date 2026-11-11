@@ -8,7 +8,7 @@ import {
   user,
 } from "@/db/schema";
 import type { AppDb } from "@/db/types";
-import { changeSlug, getMissingForPublish } from "@/lib/invitations/editor";
+import { getMissingForPublish } from "@/lib/invitations/editor";
 
 const WIB_HOURS = 7;
 
@@ -242,7 +242,6 @@ export type AdminInvitationDetail = AdminInvitationRow & {
   events: number;
   photos: number;
   checkedIn: number;
-  slugLocked: boolean;
   ownerStatus: "aktif" | "diblokir";
   ownerCreatedAt: Date;
   ownerMethods: string[];
@@ -273,7 +272,7 @@ export async function getInvitationAdmin(
       opened: COUNTS.opened,
       responded: COUNTS.responded,
       events: sql<number>`(select count(*)::int from event where event.invitation_id = ${invitation.id})`,
-      photos: sql<number>`(select count(*)::int from photo where photo.invitation_id = ${invitation.id} and photo.kind in ('cover', 'galeri'))`,
+      photos: sql<number>`(select count(*)::int from photo where photo.invitation_id = ${invitation.id} and photo.kind = 'cover')`,
       checkedIn: sql<number>`(select count(*)::int from guest where guest.invitation_id = ${invitation.id} and guest.checked_in_at is not null)`,
       createdAt: invitation.createdAt,
     })
@@ -294,7 +293,6 @@ export async function getInvitationAdmin(
 
   return {
     ...row,
-    slugLocked: row.sent > 0,
     ownerMethods: methods.map((m) => (m.providerId === "credential" ? "Email dan kata sandi" : "Google")),
     ownerLastActive: active[0]?.at ? new Date(active[0].at) : null,
     missing: missing.map((m) => m.label),
@@ -326,10 +324,6 @@ export async function setInvitationStatusAdmin(
 export async function adminDeleteInvitation(db: AppDb, id: string): Promise<boolean> {
   const rows = await db.delete(invitation).where(eq(invitation.id, id)).returning({ id: invitation.id });
   return rows.length > 0;
-}
-
-export async function adminChangeSlug(db: AppDb, id: string, slug: string) {
-  return changeSlug(db, id, slug, { ignoreLock: true });
 }
 
 export async function adminSetDeadline(

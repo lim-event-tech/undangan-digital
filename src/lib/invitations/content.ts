@@ -1,29 +1,24 @@
 import { isUuid } from "@/lib/uuid";
+import { readSampul, readTampilan, type SampulSettings, type TampilanSettings } from "./tampilan";
 
 export const CONTENT_LIMITS = {
   sambutan: 1200, penutup: 600, pesanWa: 1000, pesanPengingat: 1000,
-  jenis: 60, subjudul: 160, deskripsi: 1200, nama: 120, profil: 400,
-  dressCode: 160, ketentuan: 1200, petunjukLokasi: 600, email: 254,
+  jenis: 60, deskripsi: 1200, nama: 120, profil: 400, email: 254,
 } as const;
 
 export const MAX_PENGISI_ACARA = 12;
-export type IdentitasEvent = { jenis: string; subjudul: string; deskripsi: string };
+export type IdentitasEvent = { jenis: string; deskripsi: string };
 export type Penyelenggara = { nama: string; namaEo: string };
 export type PengisiAcara = { id: string; nama: string; peran: string; instansi: string; profil: string; fotoId?: string };
-export type InformasiPeserta = { dressCode: string; ketentuan: string; petunjukLokasi: string };
 export type Kontak = { nama: string; telepon: string; email: string };
-
-export type UcapanSettings = { tampil: boolean; tahan: boolean };
-
-export type HitungMundurSettings = { aktif: boolean; detik: boolean };
-
-export type MusikSettings = { aktif: boolean };
 
 export type CheckinSettings = { aktif: boolean };
 
+export type WaPosterSettings = { kirim: boolean; sumber: "sama" | "khusus" };
+
 export type BagianId =
-  | "sampul" | "tentang" | "salam" | "penyelenggara" | "hitung"
-  | "acara" | "agenda" | "pengisi" | "informasi" | "galeri" | "rsvp" | "kontak" | "ucapan" | "penutup";
+  | "sampul" | "tentang" | "salam" | "penyelenggara"
+  | "acara" | "agenda" | "pengisi" | "rsvp" | "kontak" | "penutup";
 
 export const BAGIAN: readonly { id: BagianId; label: string; tetap: boolean; wajib: boolean }[] = [
   { id: "sampul", label: "Sampul", tetap: true, wajib: true },
@@ -32,13 +27,9 @@ export const BAGIAN: readonly { id: BagianId; label: string; tetap: boolean; waj
   { id: "acara", label: "Waktu dan lokasi", tetap: false, wajib: false },
   { id: "agenda", label: "Agenda", tetap: false, wajib: false },
   { id: "pengisi", label: "Pengisi acara", tetap: false, wajib: false },
-  { id: "informasi", label: "Informasi peserta", tetap: false, wajib: false },
-  { id: "hitung", label: "Hitung mundur", tetap: false, wajib: false },
   { id: "rsvp", label: "Konfirmasi kehadiran", tetap: false, wajib: true },
   { id: "penyelenggara", label: "Penyelenggara", tetap: false, wajib: false },
   { id: "kontak", label: "Narahubung", tetap: false, wajib: false },
-  { id: "galeri", label: "Galeri", tetap: false, wajib: false },
-  { id: "ucapan", label: "Pesan tamu", tetap: false, wajib: false },
   { id: "penutup", label: "Penutup", tetap: true, wajib: true },
 ];
 
@@ -65,22 +56,19 @@ export type InvitationContent = {
   identitas: IdentitasEvent;
   penyelenggara: Penyelenggara;
   pengisiAcara: PengisiAcara[];
-  informasiPeserta: InformasiPeserta;
   kontak: Kontak;
   sambutan: string;
   penutup: string;
   pesanWa: string;
   pesanPengingat: string;
-  ucapan: UcapanSettings;
-  hitungMundur: HitungMundurSettings;
-  musik: MusikSettings;
   checkin: CheckinSettings;
+  waPoster: WaPosterSettings;
+  sampul: SampulSettings;
+  tampilan: TampilanSettings;
   susunan: Susunan;
 };
-export const DEFAULT_UCAPAN: UcapanSettings = { tampil: false, tahan: false };
-export const DEFAULT_HITUNG_MUNDUR: HitungMundurSettings = { aktif: true, detik: true };
-export const DEFAULT_MUSIK: MusikSettings = { aktif: false };
 export const DEFAULT_CHECKIN: CheckinSettings = { aktif: true };
+export const DEFAULT_WA_POSTER: WaPosterSettings = { kirim: false, sumber: "sama" };
 
 function text(value: unknown, max: number): string { return typeof value === "string" ? value.slice(0, max).trim() : ""; }
 function flag(value: unknown, fallback: boolean): boolean { return typeof value === "boolean" ? value : fallback; }
@@ -91,12 +79,9 @@ export function readContent(raw: unknown): InvitationContent {
   const source = record(raw);
   const identitas = record(source.identitas);
   const penyelenggara = record(source.penyelenggara);
-  const info = record(source.informasiPeserta);
   const kontak = record(source.kontak);
-  const ucapan = record(source.ucapan);
-  const hitung = record(source.hitungMundur);
-  const musik = record(source.musik);
   const checkin = record(source.checkin);
+  const waPoster = record(source.waPoster);
   const seen = new Set<string>();
   const pengisiAcara: PengisiAcara[] = [];
   for (const rawItem of Array.isArray(source.pengisiAcara) ? source.pengisiAcara : []) {
@@ -107,16 +92,16 @@ export function readContent(raw: unknown): InvitationContent {
     pengisiAcara.push({ id, nama: text(item.nama, 120), peran: text(item.peran, 120), instansi: text(item.instansi, 120), profil: text(item.profil, 400), ...(isUuid(item.fotoId) ? { fotoId: item.fotoId.toLowerCase() } : {}) });
   }
   return {
-    identitas: { jenis: text(identitas.jenis, 60), subjudul: text(identitas.subjudul, 160), deskripsi: text(identitas.deskripsi, 1200) },
+    identitas: { jenis: text(identitas.jenis, 60), deskripsi: text(identitas.deskripsi, 1200) },
     penyelenggara: { nama: text(penyelenggara.nama, 120), namaEo: text(penyelenggara.namaEo, 120) },
     pengisiAcara,
-    informasiPeserta: { dressCode: text(info.dressCode, 160), ketentuan: text(info.ketentuan, 1200), petunjukLokasi: text(info.petunjukLokasi, 600) },
     kontak: { nama: text(kontak.nama, 120), telepon: text(kontak.telepon, 20), email: text(kontak.email, 254) },
     sambutan: text(source.sambutan, CONTENT_LIMITS.sambutan), penutup: text(source.penutup, CONTENT_LIMITS.penutup),
     pesanWa: text(source.pesanWa, CONTENT_LIMITS.pesanWa), pesanPengingat: text(source.pesanPengingat, CONTENT_LIMITS.pesanPengingat),
-    ucapan: { tampil: flag(ucapan.tampil, DEFAULT_UCAPAN.tampil), tahan: flag(ucapan.tahan, DEFAULT_UCAPAN.tahan) },
-    hitungMundur: { aktif: flag(hitung.aktif, DEFAULT_HITUNG_MUNDUR.aktif), detik: flag(hitung.detik, DEFAULT_HITUNG_MUNDUR.detik) },
-    musik: { aktif: flag(musik.aktif, DEFAULT_MUSIK.aktif) }, checkin: { aktif: flag(checkin.aktif, DEFAULT_CHECKIN.aktif) },
+    checkin: { aktif: flag(checkin.aktif, DEFAULT_CHECKIN.aktif) },
+    waPoster: { kirim: flag(waPoster.kirim, DEFAULT_WA_POSTER.kirim), sumber: waPoster.sumber === "khusus" ? "khusus" : "sama" },
+    sampul: readSampul(source.sampul),
+    tampilan: readTampilan(source.tampilan),
     susunan: normalizeSusunan(record(source.susunan)),
   };
 }

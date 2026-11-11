@@ -1,19 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
-import { remaining } from "@/lib/countdown";
-import { WISH_MAX_LENGTH, WISH_PAGE_SIZE, cleanWish } from "@/lib/wishes/shared";
+import { useState, useTransition } from "react";
 import { submitRsvpAction } from "@/templates/rsvp-actions";
-import { kirimUcapanAction, muatUcapanAction } from "@/templates/ucapan-actions";
-import type {
-  DataUndangan,
-  HalamanUcapan,
-  Palet,
-  RsvpAcara,
-  StatusTamu,
-  UcapanData,
-  Vals,
-} from "./jenis";
+import type { DataUndangan, Palet, RsvpAcara, Vals } from "./jenis";
 import { inisialNama } from "./teks";
 import { useGulirHalus } from "./use-gulir";
 
@@ -21,10 +10,7 @@ type Pilihan = "ya" | "tidak";
 type Jumlah = number;
 
 const PESAN_PRATINJAU = "Mode pratinjau: jawaban tidak disimpan.";
-const PESAN_PRATINJAU_UCAPAN = "Mode pratinjau: pesan tamu tidak disimpan.";
 
-const dua = (n: number) => String(n).padStart(2, "0");
-const redup = (b: boolean) => (b ? "0.35" : "1");
 const batasi = (n: number, min: number, max: number) => Math.min(Math.max(n, min), max);
 
 function awalPilihan(data: DataUndangan): Record<string, Pilihan> {
@@ -32,6 +18,25 @@ function awalPilihan(data: DataUndangan): Record<string, Pilihan> {
   for (const a of data.acara) {
     const j = data.jawaban[a.id];
     if (j) hasil[a.id] = j.hadir ? "ya" : "tidak";
+  }
+  return hasil;
+}
+
+function awalHari(data: DataUndangan): Record<string, string[]> {
+  const hasil: Record<string, string[]> = {};
+  for (const a of data.acara) {
+    const j = data.jawaban[a.id];
+    if (j?.hadir && j.kunjungan.length > 0) hasil[a.id] = j.kunjungan.map((k) => k.date);
+  }
+  return hasil;
+}
+
+function awalJam(data: DataUndangan): Record<string, Record<string, string>> {
+  const hasil: Record<string, Record<string, string>> = {};
+  for (const a of data.acara) {
+    const j = data.jawaban[a.id];
+    if (!j?.hadir) continue;
+    hasil[a.id] = Object.fromEntries(j.kunjungan.flatMap((k) => (k.time ? [[k.date, k.time]] : [])));
   }
   return hasil;
 }
@@ -52,20 +57,10 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
   const [undanganTerbuka, setUndanganTerbuka] = useState(false);
   const gulirHalus = useGulirHalus();
 
-  const [sekarang, setSekarang] = useState(data.sekarang);
-  const adaHitung = data.hitung !== null;
-  useEffect(() => {
-    if (!adaHitung) return;
-    const awal = window.setTimeout(() => setSekarang(Date.now()), 0);
-    const timer = window.setInterval(() => setSekarang(Date.now()), 1000);
-    return () => {
-      window.clearTimeout(awal);
-      window.clearInterval(timer);
-    };
-  }, [adaHitung]);
-
   const [pilihan, setPilihan] = useState<Record<string, Pilihan>>(() => awalPilihan(data));
   const [jumlah, setJumlah] = useState<Record<string, Jumlah>>(() => awalJumlah(data));
+  const [hariDipilih, setHariDipilih] = useState<Record<string, string[]>>(() => awalHari(data));
+  const [jamDipilih, setJamDipilih] = useState<Record<string, Record<string, string>>>(() => awalJam(data));
   const [terkirim, setTerkirim] = useState(
     () => data.acara.length > 0 && data.acara.every((a) => data.jawaban[a.id]),
   );
@@ -84,17 +79,29 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
     const atur = (value: number) => setJumlah((lama) => ({ ...lama, [a.id]: value }));
     const y = pil === "ya" ? palet.on : palet.off;
     const t = pil === "tidak" ? palet.on : palet.off;
+    const semuaHari = a.hari.map((h) => h.date);
+    const terpilih = a.hari.length === 1 ? semuaHari : (hariDipilih[a.id] ?? semuaHari);
+    const hariPilihan = a.hari.map((h) => ({
+      ...h,
+      dipilih: terpilih.includes(h.date),
+      waktu: jamDipilih[a.id]?.[h.date] ?? h.mulai ?? "",
+      pilih: () => setHariDipilih((lama) => {
+        const sekarang = lama[a.id] ?? semuaHari;
+        return { ...lama, [a.id]: sekarang.includes(h.date) ? sekarang.filter((d) => d !== h.date) : [...sekarang, h.date] };
+      }),
+      ubahWaktu: (waktu: string) => setJamDipilih((lama) => ({ ...lama, [a.id]: { ...lama[a.id], [h.date]: waktu } })),
+    }));
     return {
-      ...a, ya: pil === "ya", tidak: pil === "tidak", yaBg: y.bg, yaFg: y.fg, yaBd: y.bd,
+      ...a, hariPilihan, banyakHari: a.hari.length > 1, ya: pil === "ya", tidak: pil === "tidak", yaBg: y.bg, yaFg: y.fg, yaBd: y.bd,
       tdBg: t.bg, tdFg: t.fg, tdBd: t.bd, tampilJumlah: pil === "ya", maksPeserta: maks, peserta,
       pilihYa: () => setPilihan((lama) => ({ ...lama, [a.id]: "ya" })),
       pilihTidak: () => setPilihan((lama) => ({ ...lama, [a.id]: "tidak" })),
       tambah: () => atur(Math.min(maks, peserta + 1)), kurang: () => atur(Math.max(1, peserta - 1)),
     };
   });
-  const lengkap = data.acara.length > 0 && data.acara.every((a) => pilihan[a.id]);
+  const lengkap = data.acara.length > 0 && data.acara.every((a) => pilihan[a.id]) && rsvpAcara.every((r) => !r.ya || !r.banyakHari || r.hariPilihan.some((h) => h.dipilih));
   const adaYa = rsvpAcara.some((r) => r.ya);
-  const ringkasan = rsvpAcara.map((r) => `${r.nama}: ${r.ya ? `${r.peserta} peserta` : "tidak hadir"}`).join(" \u00b7 ");
+  const ringkasan = rsvpAcara.map((r) => `${r.nama}: ${r.ya ? `${r.peserta} peserta` : "tidak hadir"}`).join(" · ");
 
   const kirimRsvp = () => {
     if (!lengkap || mengirimRsvp || tutup) return;
@@ -105,12 +112,16 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
       return;
     }
     const form = new FormData();
-    form.set("slug", data.slug);
     form.set("token", data.token);
     for (const r of rsvpAcara) {
       form.set(`hadir-${r.id}`, r.ya ? "ya" : "tidak");
       form.set(`peserta-${r.id}`, r.ya ? String(r.peserta) : "0");
       form.set(`pesan-${r.id}`, data.jawaban[r.id]?.pesan ?? "");
+      if (!r.ya) continue;
+      for (const h of r.hariPilihan.filter((item) => item.dipilih)) {
+        form.append(`hari-${r.id}`, h.date);
+        if (h.waktu) form.set(`jam-${r.id}-${h.date}`, h.waktu);
+      }
     }
     mulaiRsvp(async () => {
       try {
@@ -130,164 +141,6 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
     });
   };
 
-  const [halaman, setHalaman] = useState<HalamanUcapan>(
-    () => data.ucapan ?? { items: [], page: 1, totalPages: 1, total: 0 },
-  );
-  const [lokal, setLokal] = useState<UcapanData[] | null>(() => data.ucapan?.lokal ?? null);
-  const [teks, setTeks] = useState("");
-  const [pesanUcapan, setPesanUcapan] = useState<string | null>(null);
-  const [memuatUcapan, mulaiUcapan] = useTransition();
-
-  const tampilanHalaman: HalamanUcapan = lokal
-    ? {
-        items: lokal.slice((halaman.page - 1) * WISH_PAGE_SIZE, halaman.page * WISH_PAGE_SIZE),
-        page: halaman.page,
-        totalPages: Math.max(1, Math.ceil(lokal.length / WISH_PAGE_SIZE)),
-        total: lokal.length,
-      }
-    : halaman;
-  const halamanKe = Math.min(tampilanHalaman.page, tampilanHalaman.totalPages);
-  const statusTamu: StatusTamu = hadirTersimpan ? "hadir" : terkirim ? "tidak" : "belum";
-
-  const keHalaman = (tujuan: number) => {
-    if (tujuan < 1 || tujuan > tampilanHalaman.totalPages || memuatUcapan) return;
-    if (lokal) {
-      setHalaman((lama) => ({ ...lama, page: tujuan }));
-      return;
-    }
-    mulaiUcapan(async () => {
-      try {
-        const hasil = await muatUcapanAction({ slug: data.slug, token: data.token, halaman: tujuan });
-        if (hasil) setHalaman(hasil);
-      } catch {
-        setPesanUcapan("Pesan tamu belum bisa dimuat. Coba lagi.");
-      }
-    });
-  };
-
-  const kirimUcapan = () => {
-    const pesan = cleanWish(teks);
-    if (!pesan || memuatUcapan) return;
-    if (!tamu) {
-      const baru: UcapanData = {
-        id: `lokal-${Date.now()}`,
-        nama: data.namaTamu,
-        teks: pesan,
-        waktu: "Baru saja",
-        status: statusTamu,
-      };
-      setLokal((lama) => [baru, ...(lama ?? [])]);
-      setHalaman((lama) => ({ ...lama, page: 1 }));
-      setTeks("");
-      setPesanUcapan(PESAN_PRATINJAU_UCAPAN);
-      return;
-    }
-    mulaiUcapan(async () => {
-      try {
-        const hasil = await kirimUcapanAction({ slug: data.slug, token: data.token, pesan });
-        if (!hasil.ok) {
-          setPesanUcapan(hasil.pesan);
-          return;
-        }
-        setTeks("");
-        if (hasil.status === "ditahan") {
-          setPesanUcapan("Terima kasih. Pesan tamu Anda akan tampil setelah disetujui pengelola.");
-          return;
-        }
-        if (hasil.halaman) setHalaman(hasil.halaman);
-        setPesanUcapan("Terima kasih, pesan tamu Anda sudah terkirim.");
-      } catch {
-        setPesanUcapan("Koneksi terputus. Periksa internet Anda lalu coba lagi.");
-      }
-    });
-  };
-
-  const ucapan = tampilanHalaman.items.map((u, i) => {
-    const [badge, badgeBg, badgeFg] = palet.lencana[u.status];
-    return {
-      ...u,
-      inisial: inisialNama(u.nama),
-      avatar: palet.avatar[((halamanKe - 1) * WISH_PAGE_SIZE + i) % palet.avatar.length],
-      badge,
-      badgeBg,
-      badgeFg,
-    };
-  });
-
-  const [foto, setFoto] = useState(-1);
-  const galeri = data.galeri.map((g, i) => ({
-    ...g,
-    warna: palet.galeriWarna[i % palet.galeriWarna.length],
-    label: `foto ${i + 1}`,
-    buka: () => setFoto(i),
-  }));
-  const lajurGaleri = data.lajurGaleri.map((lajur) => lajur.map((i) => galeri[i]).filter(Boolean));
-  const jumlahFoto = galeri.length;
-  const fotoTerbuka = foto >= 0 && foto < jumlahFoto;
-  const asalFoto = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    if (!fotoTerbuka) return;
-    asalFoto.current = document.activeElement as HTMLElement | null;
-    document.querySelector<HTMLElement>("[data-tutup-foto]")?.focus();
-    const tombol = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setFoto(-1);
-      else if (e.key === "ArrowLeft") setFoto((f) => (f + jumlahFoto - 1) % jumlahFoto);
-      else if (e.key === "ArrowRight") setFoto((f) => (f + 1) % jumlahFoto);
-    };
-    window.addEventListener("keydown", tombol);
-    return () => {
-      window.removeEventListener("keydown", tombol);
-      asalFoto.current?.focus();
-    };
-  }, [fotoTerbuka, jumlahFoto]);
-
-  const audio = useRef<HTMLAudioElement | null>(null);
-  const [musikMain, setMusikMain] = useState(false);
-  const adaMusik = data.musik !== null;
-  useEffect(() => {
-    if (!adaMusik) return;
-    const sembunyi = () => {
-      if (document.hidden) audio.current?.pause();
-    };
-    document.addEventListener("visibilitychange", sembunyi);
-    return () => {
-      document.removeEventListener("visibilitychange", sembunyi);
-      audio.current?.pause();
-    };
-  }, [adaMusik]);
-  const putar = () => {
-    if (!data.musik) return;
-    if (!audio.current) {
-      const el = new Audio(data.musik);
-      el.loop = true;
-      el.addEventListener("play", () => setMusikMain(true));
-      el.addEventListener("pause", () => setMusikMain(false));
-      audio.current = el;
-    }
-    audio.current.play().catch(() => setMusikMain(false));
-  };
-  const toggleMusik = () => {
-    if (musikMain) audio.current?.pause();
-    else putar();
-  };
-
-  let hari = "00";
-  let jam = "00";
-  let menit = "00";
-  let detik = "00";
-  if (data.hitung) {
-    const sisa = remaining(new Date(data.hitung.target), new Date(sekarang));
-    hari = dua(sisa.days);
-    jam = dua(sisa.hours);
-    menit = dua(sisa.minutes);
-    detik = dua(sisa.seconds);
-  }
-  const tampilDetik = data.hitung?.detik ?? true;
-
-  const sisaKarakter = WISH_MAX_LENGTH - teks.length;
-  const bisaKirimUcapan = teks.trim().length > 0 && !memuatUcapan;
-
   return {
     ...data,
     judulBesar: data.judul.toUpperCase(),
@@ -305,12 +158,6 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
       : data.batasRsvp
         ? `Masih bisa diubah sampai ${data.batasRsvp}.`
         : "Jawaban masih bisa diubah.",
-    hari,
-    jam,
-    menit,
-    detik,
-    tampilDetik,
-    kolomHitung: tampilDetik ? "repeat(4, minmax(0, 1fr))" : "repeat(3, minmax(0, 1fr))",
     rsvpAcara,
     showForm: !terkirim && !tutup,
     showTerima: terkirim,
@@ -327,50 +174,12 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
     pesanRsvp,
     qrTampil:
       data.qr && terkirim && hadirTersimpan ? `${data.qr}?v=${versiQr}` : null,
-    teksUcapan: teks,
-    sisaKarakter,
-    maksUcapan: WISH_MAX_LENGTH,
-    placeholderUcapan: `Tulis pesan tamu untuk ${data.judul}`,
-    ucapanOpacity: bisaKirimUcapan ? "1" : "0.45",
-    ucapanNonaktif: !bisaKirimUcapan,
-    ketikUcapan: (e) => {
-      setTeks(e.target.value.slice(0, WISH_MAX_LENGTH));
-      setPesanUcapan(null);
-    },
-    kirimUcapan,
-    pesanUcapan,
-    ucapan,
-    adaUcapan: ucapan.length > 0,
-    jumlahUcapan: tampilanHalaman.total,
-    halamanKe,
-    totalHalaman: tampilanHalaman.totalPages,
-    sebelumOp: redup(halamanKe <= 1),
-    berikutOp: redup(halamanKe >= tampilanHalaman.totalPages),
-    sebelumNonaktif: halamanKe <= 1 || memuatUcapan,
-    berikutNonaktif: halamanKe >= tampilanHalaman.totalPages || memuatUcapan,
-    halSebelum: () => keHalaman(halamanKe - 1),
-    halBerikut: () => keHalaman(halamanKe + 1),
-    galeri,
-    lajurGaleri,
-    fotoBuka: fotoTerbuka,
-    fotoWarna: galeri[Math.max(0, foto)]?.warna ?? "",
-    fotoSrc: galeri[Math.max(0, foto)]?.src ?? "",
-    fotoLabel: `Foto ${foto + 1} dari ${jumlahFoto}`,
-    fotoTutup: () => setFoto(-1),
-    fotoSebelum: () => setFoto((f) => (f + jumlahFoto - 1) % jumlahFoto),
-    fotoBerikut: () => setFoto((f) => (f + 1) % jumlahFoto),
     undanganTerbuka,
     bukaUndangan: (event) => {
       event.preventDefault();
       const tujuan = event.currentTarget.hash.slice(1);
       setUndanganTerbuka(true);
-      if (adaMusik && !musikMain) putar();
       gulirHalus(tujuan, !undanganTerbuka);
     },
-    adaMusik,
-    toggleMusik,
-    musikMain,
-    musikDiam: !musikMain,
-    musikLabel: musikMain ? "Jeda musik" : "Putar musik",
   };
 }

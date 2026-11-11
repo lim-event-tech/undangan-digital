@@ -5,7 +5,7 @@ import { UndanganBintang } from "./bintang";
 import { UndanganKeraton } from "./keraton";
 import { UndanganMelati } from "./melati";
 import { UndanganPasundan } from "./pasundan";
-import { isTemplateKey, DEFAULT_TEMPLATE, type TemplateKey } from "./registry";
+import type { TemplateKey } from "./registry";
 import type { InvitationView } from "./types";
 
 const SKRIP_JS = "document.documentElement.classList.add('js')";
@@ -20,7 +20,7 @@ const KOMPONEN: Record<TemplateKey, (props: { data: DataUndangan }) => ReactElem
 
 export function renderTemplate(key: string, view: InvitationView): ReactElement {
   const Komponen = KOMPONEN[key as TemplateKey] ?? KOMPONEN.melati;
-  const data = siapkanData(view, isTemplateKey(key) ? key : DEFAULT_TEMPLATE);
+  const data = siapkanData(view);
   return (
     <>
       <script dangerouslySetInnerHTML={{ __html: SKRIP_JS }} />

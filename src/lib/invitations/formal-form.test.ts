@@ -11,10 +11,10 @@ const ID = "10000000-0000-4000-8000-000000000001";
 
 describe("data formal untuk EO", () => {
   it("merapikan identitas dan memisahkan pemilik acara dari EO", () => {
-    expect(parseFormalForm("identitas", form({ jenis: " Rapat   Kerja ", subjudul: "Tema", deskripsi: " Agenda\r\n\r\nDiskusi " }))).toEqual({ ok: true, input: { identitas: { jenis: "Rapat Kerja", subjudul: "Tema", deskripsi: "Agenda\n\nDiskusi" } } });
+    expect(parseFormalForm("identitas", form({ jenis: " Rapat   Kerja ", deskripsi: " Agenda\r\n\r\nDiskusi " }))).toEqual({ ok: true, input: { identitas: { jenis: "Rapat Kerja", deskripsi: "Agenda\n\nDiskusi" } } });
     expect(parseFormalForm("penyelenggara", form({ nama: "Instansi A", namaEo: "EO B" }))).toEqual({ ok: true, input: { penyelenggara: { nama: "Instansi A", namaEo: "EO B" } } });
   });
-  it.each(["identitas", "penyelenggara", "informasiPeserta", "kontak"])("mengizinkan bagian %s dikosongkan dalam draf", (group) => {
+  it.each(["identitas", "penyelenggara", "kontak"])("mengizinkan bagian %s dikosongkan dalam draf", (group) => {
     expect(parseFormalForm(group, form({})).ok).toBe(true);
   });
   it("menolak bagian asing dan nilai panjang sebelum menyimpan", () => {
@@ -45,10 +45,9 @@ describe("data formal untuk EO", () => {
   });
   it("membaca konten rusak dengan aman serta tidak menghidupkan bagian lama", () => {
     const content = readContent({ identitas: [], kontak: null, penyelenggara: "nama", pengisiAcara: [null, { id: ID, nama: "A" }, { id: ID, nama: "B" }], amplop: [{}], cerita: [{}], kutipan: "Lama" });
-    expect(content.identitas).toEqual({ jenis: "", subjudul: "", deskripsi: "" });
+    expect(content.identitas).toEqual({ jenis: "", deskripsi: "" });
     expect(content.kontak).toEqual({ nama: "", telepon: "", email: "" });
     expect(content.pengisiAcara).toHaveLength(1);
-    expect(content.ucapan.tampil).toBe(false);
     for (const key of ["amplop", "cerita", "kutipan"]) expect(content).not.toHaveProperty(key);
   });
 });

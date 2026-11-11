@@ -1,4 +1,4 @@
-import { formatStamp } from "@/lib/datetime";
+import { formatShortDay, formatStamp } from "@/lib/datetime";
 import { CSV_DELIMITER, safeCell, toCsv, type Rows } from "@/lib/export/table";
 import type { DashboardEvent, DashboardGuest, GuestStatus } from "./dashboard";
 
@@ -21,15 +21,20 @@ function stamp(value: Date | null): string {
   return value ? formatStamp(value) : "";
 }
 
-type Answer = { label: string; attendeeCount: number | string; note: string };
+type Answer = { label: string; attendeeCount: number | string; note: string; days: string };
 
 function eventAnswer(guest: DashboardGuest, eventId: string): Answer {
-  if (!guest.invitedEventIds.includes(eventId)) return { label: "Tidak diundang", attendeeCount: "", note: "" };
+  if (!guest.invitedEventIds.includes(eventId)) return { label: "Tidak diundang", attendeeCount: "", note: "", days: "" };
   const answer = guest.answers.find((a) => a.eventId === eventId);
-  if (!answer) return { label: "Belum menjawab", attendeeCount: "", note: "" };
+  if (!answer) return { label: "Belum menjawab", attendeeCount: "", note: "", days: "" };
   return answer.attending
-    ? { label: "Hadir", attendeeCount: answer.attendeeCount, note: answer.note }
-    : { label: "Tidak hadir", attendeeCount: "", note: answer.note };
+    ? {
+        label: "Hadir",
+        attendeeCount: answer.attendeeCount,
+        note: answer.note,
+        days: (answer.visits ?? []).map((v) => `${formatShortDay(v.date)}${v.time ? ` ${v.time.replace(":", ".")}` : ""}`).join("; "),
+      }
+    : { label: "Tidak hadir", attendeeCount: "", note: answer.note, days: "" };
 }
 
 export function buildRsvpRows(events: DashboardEvent[], guests: DashboardGuest[]): Rows {
@@ -46,6 +51,7 @@ export function buildRsvpRows(events: DashboardEvent[], guests: DashboardGuest[]
     ...events.flatMap((e) => [
       `${e.name}: jawaban`,
       `${e.name}: peserta`,
+      `${e.name}: hari dan jam datang`,
       `${e.name}: pesan`,
     ]),
   ];
@@ -62,7 +68,7 @@ export function buildRsvpRows(events: DashboardEvent[], guests: DashboardGuest[]
     stamp(g.respondedAt),
     ...events.flatMap((e) => {
       const answer = eventAnswer(g, e.id);
-      return [answer.label, answer.attendeeCount, answer.note];
+      return [answer.label, answer.attendeeCount, answer.days, answer.note];
     }),
   ]);
 

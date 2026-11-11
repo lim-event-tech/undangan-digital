@@ -106,7 +106,7 @@ describe("buildRsvpCsv", () => {
     expect(row[3]).toBe("Hadir");
     expect(row[4]).toBe("3");
     const utama = rows[0].indexOf("Utama: jawaban");
-    expect(row.slice(utama, utama + 3)).toEqual(["Hadir", "3", 'Sampai jumpa; "insya Allah"']);
+    expect(row.slice(utama, utama + 4)).toEqual(["Hadir", "3", "", 'Sampai jumpa; "insya Allah"']);
     const lanjutan = rows[0].indexOf("Sesi lanjutan: jawaban");
     expect(row[lanjutan]).toBe("Tidak hadir");
   });

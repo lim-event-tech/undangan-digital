@@ -13,9 +13,8 @@ import { KartuBagian } from "./kartu-bagian";
 import { StatusSimpan, useAutoSave } from "./use-auto-save";
 
 const TITLES: Record<SimpleFormalGroup, [string, string]> = {
-  identitas: ["Tentang event", "Jenis, tema, dan tujuan kegiatan. Semua isian ini opsional."],
+  identitas: ["Tentang event", "Jenis dan tujuan kegiatan. Semua isian ini opsional."],
   penyelenggara: ["Penyelenggara dan EO", "Penyelenggara adalah pemilik acara. EO adalah pihak yang mengelolanya. Nama penyelenggara wajib sebelum terbit."],
-  informasiPeserta: ["Informasi peserta", "Dress code, ketentuan kehadiran, dan petunjuk menuju lokasi. Bagian kosong disembunyikan."],
   kontak: ["Narahubung", "Kontak panitia yang tampil kepada tamu. Isi nama dan setidaknya satu kanal kontak, atau kosongkan seluruhnya."],
 };
 

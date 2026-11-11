@@ -24,11 +24,11 @@ export const PERMISSION_INFO: Record<Permission, { label: string; ket: string }>
   },
   "lihat-tamu": {
     label: "Melihat nama dan nomor tamu",
-    ket: "Membuka daftar tamu setiap undangan dan mengunduhnya.",
+    ket: "Membuka daftar undangan setiap undangan dan mengunduhnya.",
   },
   "kelola-undangan": {
     label: "Mengelola seluruh isi undangan",
-    ket: "Membuka undangan sebagai pengguna: isi, tamu, RSVP, pesan tamu, foto, musik, dan pengiriman.",
+    ket: "Membuka undangan sebagai pengguna: isi, tamu, RSVP, poster, dan pengiriman.",
   },
   "ubah-undangan": {
     label: "Mengubah slug dan batas RSVP",

@@ -13,7 +13,6 @@ import {
   parseSambutanForm,
 } from "@/lib/invitations/editor-form";
 import {
-  changeSlug,
   deleteInvitation,
   publishInvitation,
   saveContentText,
@@ -23,19 +22,15 @@ import {
 } from "@/lib/invitations/editor";
 import {
   parseCheckinForm,
-  parseHitungMundurForm,
-  parseMusikForm,
+  parseSampulForm,
   parseSusunanForm,
-  parseUcapanForm,
+  parseTampilanForm,
 } from "@/lib/invitations/section-form";
-import { deleteMusic } from "@/lib/music/service";
-import { getSettings } from "@/lib/platform/service";
 import { deletePhoto } from "@/lib/photos/service";
 import { parseFormalForm } from "@/lib/invitations/formal-form";
 import { SAVED, type SaveResult } from "@/lib/save-result";
 import { ACTING_COOKIE, getActing, requireInvitationById } from "@/lib/session";
 import { recordAudit } from "@/lib/admin/audit";
-import { checkCustomSlug } from "@/lib/slug";
 import { isUuid } from "@/lib/uuid";
 
 const NOT_FOUND: SaveResult = { ok: false, formError: "Undangan tidak ditemukan." };
@@ -79,15 +74,6 @@ export async function simpanFormalAction(group: string, invitationId: string, fo
   return SAVED;
 }
 
-export async function simpanUcapanAction(invitationId: string, formData: FormData): Promise<SaveResult> {
-  const { invitation } = await requireInvitationById(invitationId);
-  const parsed = parseUcapanForm(formData);
-  if (!parsed.ok) return { ok: false, errors: parsed.errors };
-  if (!(await saveContentText(db, invitation.id, parsed.input))) return NOT_FOUND;
-  revalidatePath(`/undangan/${invitation.id}/ucapan`);
-  return SAVED;
-}
-
 export async function simpanSusunanAction(invitationId: string, formData: FormData): Promise<SaveResult> {
   const { invitation } = await requireInvitationById(invitationId);
   const parsed = parseSusunanForm(formData);
@@ -96,17 +82,17 @@ export async function simpanSusunanAction(invitationId: string, formData: FormDa
   return SAVED;
 }
 
-export async function simpanHitungMundurAction(invitationId: string, formData: FormData): Promise<SaveResult> {
+export async function simpanSampulAction(invitationId: string, formData: FormData): Promise<SaveResult> {
   const { invitation } = await requireInvitationById(invitationId);
-  const parsed = parseHitungMundurForm(formData);
+  const parsed = parseSampulForm(formData);
   if (!parsed.ok) return { ok: false, errors: parsed.errors };
   if (!(await saveContentText(db, invitation.id, parsed.input))) return NOT_FOUND;
   return SAVED;
 }
 
-export async function simpanMusikAction(invitationId: string, formData: FormData): Promise<SaveResult> {
+export async function simpanTampilanAction(invitationId: string, formData: FormData): Promise<SaveResult> {
   const { invitation } = await requireInvitationById(invitationId);
-  const parsed = parseMusikForm(formData);
+  const parsed = parseTampilanForm(formData);
   if (!parsed.ok) return { ok: false, errors: parsed.errors };
   if (!(await saveContentText(db, invitation.id, parsed.input))) return NOT_FOUND;
   return SAVED;
@@ -118,39 +104,6 @@ export async function simpanCheckinAction(invitationId: string, formData: FormDa
   if (!parsed.ok) return { ok: false, errors: parsed.errors };
   if (!(await saveContentText(db, invitation.id, parsed.input))) return NOT_FOUND;
   revalidatePath(`/undangan/${invitation.id}/checkin`);
-  return SAVED;
-}
-
-export async function hapusMusikAction(invitationId: string) {
-  const { invitation } = await requireInvitationById(invitationId);
-  await deleteMusic(db, invitation.id);
-  revalidatePath(`/undangan/${invitation.id}/isi`);
-}
-
-export async function simpanSlugAction(invitationId: string, _state: SaveResult | null,
-  formData: FormData,
-): Promise<SaveResult> {
-  const { invitation } = await requireInvitationById(invitationId);
-  const checked = checkCustomSlug(field(formData, "slug"));
-  if (!checked.ok) return { ok: false, errors: { slug: checked.error } };
-  if ((await getSettings(db)).slugCadangan.includes(checked.slug)) {
-    return { ok: false, errors: { slug: "Link ini tidak bisa dipakai" } };
-  }
-
-  const result = await changeSlug(db, invitation.id, checked.slug);
-  if (!result.ok) {
-    if (result.reason === "terkunci") {
-      return {
-        ok: false,
-        formError: "Link sudah terkunci karena ada undangan yang ditandai terkirim.",
-      };
-    }
-    if (result.reason === "dipakai") {
-      return { ok: false, errors: { slug: "Link ini sudah dipakai undangan lain" } };
-    }
-    return NOT_FOUND;
-  }
-  revalidatePath("/undangan", "layout");
   return SAVED;
 }
 

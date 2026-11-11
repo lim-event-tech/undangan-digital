@@ -8,7 +8,6 @@ import { submitRsvp } from "@/lib/rsvp/service";
 import { createTestDb, seedInvitation, type TestDb } from "@/test/db";
 import { buildAuditCsv, listAudit, listAuditActors, recordAudit, SYSTEM_ACTOR } from "./audit";
 import {
-  adminChangeSlug,
   adminDeleteInvitation,
   adminSetDeadline,
   getAccountStats,
@@ -45,9 +44,8 @@ async function addGuest(invitationId: string, name: string, phone: string) {
   });
 }
 
-async function answer(invitationSlug: string, token: string, now?: Date) {
+async function answer(token: string, now?: Date) {
   return submitRsvp(db, {
-    slug: invitationSlug,
     token,
     read: () => ({ attending: "ya", attendeeCount: "2",  note: "" }),
     now,
@@ -257,7 +255,7 @@ describe("daftar undangan admin", () => {
     await db.update(invitation).set({ status: "terbit" }).where(eq(invitation.id, a.invitation.id));
     await markSent(db, a.invitation.id, g1.id);
     await markSent(db, a.invitation.id, g2.id);
-    await answer(a.invitation.slug, g1.token);
+    await answer(g1.token);
 
     const all = await listInvitationsAdmin(db, { sort: "terbaru" });
     const rowA = all.rows.find((r) => r.id === a.invitation.id)!;
@@ -310,11 +308,11 @@ describe("daftar undangan admin", () => {
       slug: seeded.invitation.slug,
       events: 2,
       guests: 0,
-      slugLocked: false,
       ownerStatus: "aktif",
       ownerMethods: ["Google"],
     });
-    expect(detail!.missing).toContain("Foto cover");
+    expect(detail!.missing).not.toContain("Foto cover");
+    expect(detail!.missing).toContain("Nama penyelenggara");
     expect(await getInvitationAdmin(db, "00000000-0000-4000-8000-000000000000")).toBeNull();
   });
 });
@@ -329,14 +327,10 @@ describe("tindakan admin atas undangan", () => {
     expect(await setInvitationStatusAdmin(db, "00000000-0000-4000-8000-000000000000", "tangguhkan")).toBeNull();
   });
 
-  it("mengubah slug walau terkunci, mengubah batas RSVP, dan menghapus permanen", async () => {
+  it("mengubah batas RSVP dan menghapus permanen", async () => {
     const seeded = await seedInvitation(db);
     const guest = await addGuest(seeded.invitation.id, "Tamu", "+6281700000001");
     await markSent(db, seeded.invitation.id, guest.id);
-    expect(await adminChangeSlug(db, seeded.invitation.id, "slug-baru-admin")).toEqual({
-      ok: true,
-      slug: "slug-baru-admin",
-    });
 
     const deadline = new Date("2026-12-31T16:59:59.000Z");
     expect(await adminSetDeadline(db, seeded.invitation.id, deadline)).toBe(true);
@@ -440,7 +434,6 @@ describe("statistik platform", () => {
       .set({ firstOpenedAt: new Date("2026-11-14T10:00:00.000Z") })
       .where(eq(guestTable.id, guest.id));
     await submitRsvp(fresh, {
-      slug: a.invitation.slug,
       token: guest.token,
       read: () => ({ attending: "ya", attendeeCount: "1",  note: "" }),
       now: new Date("2026-11-15T01:00:00.000Z"),

@@ -1,6 +1,8 @@
 import type { CSSProperties } from "react";
 import type { BagianId } from "@/lib/invitations/content";
+import type { WarnaKustom } from "@/lib/invitations/tampilan";
 import type { TemplateKey } from "@/templates/registry";
+import { paletBidang } from "./kustom";
 
 const WARNA: Record<TemplateKey, string[]> = {
   melati: ["#38262c", "#463039", "#2f2228", "#54383d", "#7a5059", "#241b21"],
@@ -8,18 +10,16 @@ const WARNA: Record<TemplateKey, string[]> = {
   bintang: ["#111d32", "#182942", "#0b172b", "#21334c", "#63718b", "#091323"],
   pasundan: ["#f8f1e8", "#efe1d2", "#f4e9dc", "#e9d7c1", "#b9906f", "#372c26"],
 };
-const BIDANG: Record<BagianId, number> = { sampul: 0, tentang: 0, salam: 1, acara: 2, agenda: 0, pengisi: 1, informasi: 2, hitung: 5, rsvp: 3, penyelenggara: 0, kontak: 2, galeri: 1, ucapan: 0, penutup: 2 };
+const BIDANG: Record<BagianId, number> = { sampul: 0, tentang: 0, salam: 1, acara: 2, agenda: 0, pengisi: 1, rsvp: 3, penyelenggara: 0, kontak: 2, penutup: 2 };
 
-export function gayaPanggung(tema: TemplateKey, bagian: BagianId, berikut?: BagianId): CSSProperties {
-  const palet = WARNA[tema];
-  const gelap = bagian === "hitung" && tema === "pasundan";
+export function gayaPanggung(tema: TemplateKey, bagian: BagianId, berikut?: BagianId, warna?: WarnaKustom | null, terang = false): CSSProperties {
+  const palet = warna ? paletBidang(warna, terang) : WARNA[tema];
   return {
     "--bidang": palet[BIDANG[bagian]],
     "--bidang-berikut": palet[BIDANG[berikut ?? bagian]],
     "--panggung-jauh": palet[3],
     "--panggung-tengah": palet[4],
     "--panggung-dekat": palet[5],
-    ...(gelap ? { "--event-utama": "#fbf5e7", "--event-teks": "#fbf5e7", "--event-muted": "#e2e7d5", "--event-label": "#e6d5a4" } : {}),
   } as CSSProperties;
 }
 
@@ -85,7 +85,7 @@ export function Panggung({ tema, bagian }: { tema: TemplateKey; bagian: BagianId
 }
 
 export function Sambungan({ tema, variasi, bagian }: { tema: TemplateKey; variasi: number; bagian: BagianId }) {
-  const pola = ["acara", "agenda", "informasi", "rsvp"].includes(bagian) ? 0 : ["salam", "pengisi", "galeri"].includes(bagian) ? 1 : 2;
+  const pola = ["acara", "agenda", "rsvp"].includes(bagian) ? 0 : ["salam", "pengisi"].includes(bagian) ? 1 : 2;
   const ragam = ({
     melati: ["serambi", "kisi", "teras"],
     keraton: ["gerbang", "tumpal", "pilar"],

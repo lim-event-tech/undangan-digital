@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { submitRsvp } from "@/lib/rsvp/service";
-import { looksLikeGuestToken, looksLikeSlug } from "@/lib/token";
+import { looksLikeGuestToken } from "@/lib/token";
 import { currentClientKey, tokenGuard } from "@/lib/token-guard-instance";
 
 export type RsvpFormState =
@@ -19,19 +19,17 @@ export async function submitRsvpAction(
   _state: RsvpFormState | null,
   formData: FormData,
 ): Promise<RsvpFormState> {
-  const slug = text(formData, "slug");
   const token = text(formData, "token");
   const key = await currentClientKey();
   if (tokenGuard.isBlocked(key)) {
     return { status: "error", message: "Terlalu banyak percobaan. Coba lagi beberapa menit lagi." };
   }
-  if (!looksLikeSlug(slug) || !looksLikeGuestToken(token)) {
+  if (!looksLikeGuestToken(token)) {
     tokenGuard.recordFailure(key);
     return { status: "error", message: "Link undangan tidak valid." };
   }
 
   const result = await submitRsvp(db, {
-    slug,
     token,
     read: (eventId) => {
       const choice = text(formData, `hadir-${eventId}`);
@@ -39,12 +37,18 @@ export async function submitRsvpAction(
         attending: choice === "" ? null : choice,
         attendeeCount: text(formData, `peserta-${eventId}`),
         note: text(formData, `pesan-${eventId}`),
+        days: formData.getAll(`hari-${eventId}`).filter((value): value is string => typeof value === "string"),
+        times: Object.fromEntries(
+          [...formData.entries()]
+            .filter(([key, value]) => key.startsWith(`jam-${eventId}-`) && typeof value === "string")
+            .map(([key, value]) => [key.slice(`jam-${eventId}-`.length), value as string]),
+        ),
       };
     },
   });
 
   if (result.ok) {
-    revalidatePath(`/${slug}/${token}`);
+    revalidatePath(`/${token}`);
     return { status: "ok" };
   }
   if (result.error === "tidak-valid") {

@@ -1,7 +1,6 @@
-import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
-import { guest, invitation, photo } from "@/db/schema";
+import { and, eq, inArray, sql } from "drizzle-orm";
+import { invitation, photo } from "@/db/schema";
 import type { AppDb } from "@/db/types";
-import { isUniqueViolation } from "@/lib/db-errors";
 import { listEventDetails, type EventDetail } from "@/lib/events/service";
 import { listPhotos, type PhotoInfo } from "@/lib/photos/service";
 import { readContent, type InvitationContent } from "./content";
@@ -61,58 +60,6 @@ export async function saveRsvpSettings(
   return rows.length > 0;
 }
 
-export type ChangeSlugResult =
-  | { ok: true; slug: string }
-  | { ok: false; reason: "terkunci" | "dipakai" | "tidak-ada" };
-
-export async function changeSlug(
-  db: AppDb,
-  invitationId: string,
-  slug: string,
-  options: { ignoreLock?: boolean } = {},
-): Promise<ChangeSlugResult> {
-  try {
-    return await db.transaction(async (tx): Promise<ChangeSlugResult> => {
-      const [current] = await tx
-        .select({ slug: invitation.slug })
-        .from(invitation)
-        .where(eq(invitation.id, invitationId))
-        .for("update");
-      if (!current) return { ok: false, reason: "tidak-ada" };
-      if (current.slug === slug) return { ok: true, slug };
-
-      const [sent] = await tx
-        .select({ id: guest.id })
-        .from(guest)
-        .where(and(eq(guest.invitationId, invitationId), isNotNull(guest.sentAt)))
-        .limit(1);
-      if (sent && !options.ignoreLock) return { ok: false, reason: "terkunci" };
-
-      const [taken] = await tx
-        .select({ id: invitation.id })
-        .from(invitation)
-        .where(eq(invitation.slug, slug))
-        .limit(1);
-      if (taken) return { ok: false, reason: "dipakai" };
-
-      await tx.update(invitation).set({ slug }).where(eq(invitation.id, invitationId));
-      return { ok: true, slug };
-    });
-  } catch (error) {
-    if (isUniqueViolation(error)) return { ok: false, reason: "dipakai" };
-    throw error;
-  }
-}
-
-export async function isSlugLocked(db: AppDb, invitationId: string): Promise<boolean> {
-  const [sent] = await db
-    .select({ id: guest.id })
-    .from(guest)
-    .where(and(eq(guest.invitationId, invitationId), isNotNull(guest.sentAt)))
-    .limit(1);
-  return Boolean(sent);
-}
-
 export function findMissing(
   events: EventDetail[],
   photos: PhotoInfo[],
@@ -122,9 +69,6 @@ export function findMissing(
   if (!parseInvitationTitle(identity.title).ok) missing.push({ id: "title", label: "Nama event", anchor: "identitas-event" });
   if (!readContent(identity.content).penyelenggara.nama.trim()) missing.push({ id: "penyelenggara", label: "Nama penyelenggara", anchor: "penyelenggara" });
   if (!events.length) missing.push({ id: "acara", label: "Minimal satu sesi acara", anchor: "acara" });
-  if (!photos.some((p) => p.kind === "cover")) {
-    missing.push({ id: "cover", label: "Foto cover", anchor: "sampul" });
-  }
   for (const e of events) {
     const anchor = `acara-${e.id}`;
     if (!e.date) {

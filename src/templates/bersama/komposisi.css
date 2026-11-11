@@ -56,20 +56,8 @@
 .event-profil .event-instansi { text-align: center; line-height: 1.8; }
 .event-profil .event-prosa { padding-top: 16px; border-top: 1px solid var(--event-garis); }
 .event-lingkup-bagian[data-bagian=pengisi] .event-ragam-jauh { width: 330px; left: calc(50% - 165px); right: auto; top: 28px; opacity: .08; }
-.event-informasi .event-kepala h2 { font-size: 30px; }
-.event-informasi .event-daftar { gap: 0; }
-.event-informasi .event-info { display: block; padding: 24px 0; }
-.event-info h3 { font-size: 17px; }
-.event-informasi .event-pemisah { width: 100%; opacity: .5; }
 .event-lingkup-bagian[data-bagian=informasi] .event-ragam-jauh { top: auto; bottom: 36px; width: 180px; right: -20px; }
 .event-lingkup-bagian[data-bagian=hitung] > .event-bagian { align-items: center; padding: 76px 28px 168px; }
-.event-hitung .event-kepala { text-align: center; }
-.event-jam-ruang { width: min(100%,290px); position: relative; padding: 40px 30px; aspect-ratio: 1; display: grid; align-items: center; }
-.event-cincin-jam { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--event-utama); opacity: .6; animation: event-putar 90s linear infinite; }
-.event-hitung .event-hitungan { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 19px; border: 0; padding: 0; }
-.event-hitung .event-hitungan > div { border: 0; }
-.event-hitung .event-hitungan > div:last-child:nth-child(3) { grid-column: 1 / -1; }
-.event-hitung .event-hitungan span { font-size: 42px; }
 .event-rsvp .event-kepala { text-align: center; }
 .event-rsvp .event-pemisah { margin-inline: auto; }
 .event-rsvp > .event-prosa,.event-rsvp > .event-catatan { text-align: center; }
@@ -88,30 +76,18 @@
 .event-kontak-isi { border-left: 1px solid var(--event-aksen); padding: 12px 0 12px 22px; }
 .event-kontak-isi h3 { font-size: 25px; }
 .event-lingkup-bagian[data-bagian=kontak] .event-ragam-jauh { top: auto; bottom: 8px; right: -110px; width: 250px; }
-.event-galeri .event-kepala { width: auto; align-self: center; text-align: center; }
-.event-galeri .event-pemisah { width: 100%; }
-.event-galeri .event-lajur { gap: 16px; }
-.event-galeri .event-lajur > div:nth-child(2) { padding-top: 54px; }
-.event-galeri .event-lajur > div { gap: 18px; }
-.event-galeri .event-foto { background: transparent !important; outline: 1px solid var(--event-garis); outline-offset: 5px; }
-.event-ucapan .event-kepala { text-align: left; }
-.event-ucapan > .event-form { border: 0; padding: 25px 0; background: transparent; }
-.event-ucapan .event-pesan-tamu { padding: 22px 16px; background: var(--event-kertas); border: 0; box-shadow: 0 4px 18px #00000008; }
-.event-ucapan .event-pesan-tamu:nth-child(even) { margin-left: 18px; }
 .event-lingkup-bagian[data-bagian=penutup] > .event-bagian { min-height: 700px; padding-bottom: calc(min(79.07vw,340px) + 100px); justify-content: flex-start; }
 .event-penutup .event-nama-penutup { font-size: 28px; }
 .event-penutup > .event-hiasan { width: 96px; }
 html.js .event-adegan:not(.dalam-layar) * { animation-play-state: paused; }
-html.js .event-lingkup-bagian:not(.dalam-layar) :is(.event-tanda-surat,.event-cincin-jam,.event-hiasan,.event-hiasan *) { animation-play-state: paused; }
+html.js .event-lingkup-bagian:not(.dalam-layar) :is(.event-tanda-surat,.event-hiasan,.event-hiasan *) { animation-play-state: paused; }
 html.js .event-lingkup-bagian:not(.dalam-layar) .event-profil-inisial::after { animation-play-state: paused; }
 html.js .undangan-template[data-terbuka=true] .event-sampul:not(.dalam-layar) * { animation-play-state: paused; }
 html.js .undangan-template .event-surat.tampil { animation-name: panggung-surat; }
 html.js .undangan-template .event-susunan [data-anim].tampil { animation-name: panggung-langkah; }
-html.js .undangan-template .event-informasi [data-anim].tampil { animation-name: panggung-lipat; }
 html.js .undangan-template .event-profil[data-anim].tampil { animation-name: panggung-profil; }
 html.js .undangan-template .event-organisasi[data-anim].tampil { animation-name: panggung-mitra; }
 html.js .undangan-template .event-kontak-isi.tampil { animation-name: panggung-kontak; }
-html.js .undangan-template .event-foto[data-anim].tampil { animation-name: event-zoom; animation-duration: 1.3s; }
 html.js .undangan-template .event-agenda[data-anim].tampil { animation-name: panggung-sesi; animation-duration: 1.2s; }
 .event-lingkup-bagian[data-bagian=penutup] .event-adegan { bottom: 0; }
 .event-lingkup-bagian[data-bagian=galeri] .event-ragam-jauh { top: 23%; right: -160px; width: 290px; }
@@ -138,6 +114,4 @@ html.js .undangan-template .event-agenda[data-anim].tampil { animation-name: pan
   .event-mitra { grid-template-columns: minmax(0,1fr); }
   .event-rsvp .event-form { padding-inline: 16px; border-radius: 70px 70px 3px 3px; }
   .event-kontak .event-kepala h2 { font-size: 36px; }
-  .event-jam-ruang { padding: 25px; }
-  .event-hitung .event-hitungan span { font-size: 32px; }
 }
