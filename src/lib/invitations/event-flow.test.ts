@@ -27,12 +27,12 @@ it("menjalankan alur event dari judul sampai penerbitan dan RSVP tamu tanpa prof
   expect((await addPhoto(db, invitation.id, { kind: "cover", fileName: "event.jpg", bytes })).ok).toBe(true);
   const guest = await createGuest(db, invitation.id, { name: "Tamu Seminar", phone: "+6281200000101", groupName: null, eventIds: [events[0].id], maxAttendees: 1,  });
   expect(await publishInvitation(db, invitation.id)).toEqual({ ok: true });
-  const before = await findGuestPage(db, invitation.slug, guest.token);
+  const before = await findGuestPage(db, guest.token);
   expect(before?.invitation).toMatchObject({ title: "Seminar Komunitas Kreatif", slug: invitation.slug, status: "terbit", content: { sambutan: "Mari berbagi inspirasi." } });
   expect(before?.invitation.content).not.toHaveProperty("pria");
   expect(before?.invitation.content).not.toHaveProperty("wanita");
-  const result = await submitRsvp(db, { slug: invitation.slug, token: guest.token, read: () => ({ attending: "ya", attendeeCount: "1",  note: "" }) });
+  const result = await submitRsvp(db, { token: guest.token, read: () => ({ attending: "ya", attendeeCount: "1",  note: "" }) });
   expect(result.ok).toBe(true);
-  const after = await findGuestPage(db, invitation.slug, guest.token);
+  const after = await findGuestPage(db, guest.token);
   expect(after?.events[0].response).toMatchObject({ attending: true, attendeeCount: 1,  });
 });

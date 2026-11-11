@@ -68,6 +68,26 @@ export function formatLongDate(value: string): string {
   return `${DAYS[weekday]}, ${formatDate(value)}`;
 }
 
+export function formatDayLabel(value: string): string {
+  const { year, month, day } = splitDate(value);
+  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  return `${DAYS[weekday]}, ${day} ${MONTHS[month - 1]}`;
+}
+
+export function formatDateRange(start: string, end: string | null): string {
+  if (!end || end <= start) return formatDate(start);
+  const a = splitDate(start);
+  const b = splitDate(end);
+  if (a.year !== b.year) return `${formatDate(start)} – ${formatDate(end)}`;
+  if (a.month !== b.month) return `${a.day} ${MONTHS[a.month - 1]} – ${b.day} ${MONTHS[b.month - 1]} ${b.year}`;
+  return `${a.day}–${b.day} ${MONTHS[b.month - 1]} ${b.year}`;
+}
+
+export function formatLongDateRange(start: string, end: string | null): string {
+  if (!end || end <= start) return formatLongDate(start);
+  return `${formatLongDate(start)} – ${formatLongDate(end)}`;
+}
+
 export function formatTime(time: string, zone: Zone): string {
   return `${time.slice(0, 5).replace(":", ".")} ${zone}`;
 }

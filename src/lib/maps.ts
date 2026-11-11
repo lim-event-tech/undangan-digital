@@ -1,19 +1,20 @@
-const GOOGLE_HOST = /^(www\.|maps\.)?google\.[a-z]{2,3}(\.[a-z]{2})?$/;
-
-export function isGoogleMapsUrl(value: string): boolean {
+export function isMapsUrl(value: string): boolean {
+  const text = value.trim();
+  if (/\s/.test(text)) return false;
   let url: URL;
   try {
-    url = new URL(value.trim());
+    url = new URL(text);
   } catch {
     return false;
   }
   if (url.protocol !== "https:") return false;
-  if (url.username || url.password || url.port) return false;
+  if (url.username || url.password) return false;
+  return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(url.hostname);
+}
 
-  const host = url.hostname.toLowerCase();
-  if (host === "maps.app.goo.gl") return url.pathname.length > 1;
-  if (host === "goo.gl") return url.pathname.startsWith("/maps/");
-  if (!GOOGLE_HOST.test(host)) return false;
-  if (host.startsWith("maps.")) return true;
-  return url.pathname === "/maps" || url.pathname.startsWith("/maps/");
+export function normalizeMapsUrl(value: string): string | null {
+  const text = value.trim();
+  if (!text) return null;
+  const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(text) ? text : /^[a-z][a-z0-9+.-]*:/i.test(text) && !/^[^/]+:\d+(\/|$)/.test(text) ? text : `https://${text.replace(/^\/+/, "")}`;
+  return isMapsUrl(withScheme) ? withScheme : null;
 }

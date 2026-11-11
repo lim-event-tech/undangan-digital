@@ -188,13 +188,11 @@ describe("getDashboard", () => {
     };
     expect(
       await submitRsvp(db, {
-        slug: mine.invitation.slug,
         token: a.token,
         read: (id) => answers[id],
       }),
     ).toEqual({ ok: true });
     await submitRsvp(db, {
-      slug: other.invitation.slug,
       token: stranger.token,
       read: () => ({ attending: "ya", attendeeCount: "2",  note: "" }),
     });

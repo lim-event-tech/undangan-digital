@@ -4,10 +4,11 @@ import { useInvitationAction } from "@/components/invitation-context";
 
 import { useActionState, useState } from "react";
 import { kolom, labelKolom, pesanGalat, tombolBahaya, tombolGelap } from "@/components/ui";
-import { isZone, ZONES, type Zone } from "@/lib/datetime";
+import { formatLongDate, isDateString, isZone, ZONES, type Zone } from "@/lib/datetime";
+import { MAX_EVENT_DAYS, eventDays } from "@/lib/events/days";
 import { EVENT_LIMITS, MAPS_ERROR, MAX_EVENTS } from "@/lib/events/form";
 import type { EventDetail } from "@/lib/events/service";
-import { isGoogleMapsUrl } from "@/lib/maps";
+import { normalizeMapsUrl } from "@/lib/maps";
 import type { SaveResult } from "@/lib/save-result";
 import { hapusAcaraAction, simpanAcaraAction, tambahAcaraAction } from "./actions";
 import { BidangArea, BidangTeks } from "./bidang";
@@ -21,12 +22,15 @@ function KartuAcara({ acara, bisaHapus, tanggalMinimal }: { acara: EventDetail; 
   const { formRef, status, errors, formError, formProps } = useAutoSave(simpanAcaraAction);
   const [maps, setMaps] = useState(acara.mapsUrl ?? "");
   const [zona, setZona] = useState(acara.timezone);
+  const [tanggal, setTanggal] = useState(acara.date ?? "");
+  const [tanggalSelesai, setTanggalSelesai] = useState(acara.endDate ?? "");
+  const hari = eventDays({ date: isDateString(tanggal) ? tanggal : null, endDate: isDateString(tanggalSelesai) ? tanggalSelesai : null });
   const [hapus, hapusAction, menghapus] = useActionState<SaveResult | null, FormData>(
     hapusAcaraActionForInvitation,
     null,
   );
 
-  const mapsValid = maps.trim() !== "" && isGoogleMapsUrl(maps);
+  const mapsValid = maps.trim() !== "" && normalizeMapsUrl(maps) !== null;
   const mapsGalat = errors.maps ?? (maps.trim() !== "" && !mapsValid ? MAPS_ERROR : undefined);
 
   return (
@@ -54,24 +58,27 @@ function KartuAcara({ acara, bisaHapus, tanggalMinimal }: { acara: EventDetail; 
         </div>
         <div className="sm:col-span-2">
           <BidangTeks
-            label="Tanggal"
+            label="Tanggal mulai"
             name="tanggal"
             type="date"
             min={tanggalMinimal[zona]}
-            defaultValue={acara.date ?? ""}
+            value={tanggal}
+            onChange={(event) => setTanggal(event.target.value)}
             error={errors.tanggal}
           />
         </div>
         <div className="sm:col-span-2">
           <BidangTeks
-            label="Jam mulai"
-            name="jam"
-            type="time"
-            defaultValue={acara.time ?? ""}
-            error={errors.jam}
+            label="Tanggal selesai"
+            name="tanggalSelesai"
+            type="date"
+            min={tanggal || tanggalMinimal[zona]}
+            value={tanggalSelesai}
+            onChange={(event) => setTanggalSelesai(event.target.value)}
+            hint="Opsional, untuk acara lebih dari satu hari"
+            error={errors.tanggalSelesai}
           />
         </div>
-        <div className="sm:col-span-2"><BidangTeks label="Jam selesai" name="jamSelesai" type="time" defaultValue={acara.endTime ?? ""} hint="Opsional, pada tanggal yang sama" error={errors.jamSelesai} /></div>
         <label className={`${labelKolom} sm:col-span-2`}>
           Zona waktu
           <select
@@ -89,6 +96,37 @@ function KartuAcara({ acara, bisaHapus, tanggalMinimal }: { acara: EventDetail; 
             ))}
           </select>
         </label>
+        <div className="sm:col-span-3">
+          <BidangTeks
+            label="Jam mulai"
+            name="jam"
+            type="time"
+            defaultValue={acara.time ?? ""}
+            error={errors.jam}
+          />
+        </div>
+        <div className="sm:col-span-3"><BidangTeks label="Jam selesai" name="jamSelesai" type="time" defaultValue={acara.endTime ?? ""} hint="Opsional. Berlaku setiap hari acara" error={errors.jamSelesai} /></div>
+        {hari.length > 1 ? (
+          <details className="rounded-lg border border-garis-halus bg-white p-3 sm:col-span-6" open={acara.dayTimes.length > 0}>
+            <summary className="cursor-pointer text-sm font-medium">Jam khusus per hari (opsional)</summary>
+            <p className="mt-2 mb-3 text-[13px] leading-relaxed text-redup-2">
+              Kosongkan bila jam harian sama dengan jam mulai dan selesai di atas. Isi keduanya untuk hari yang jamnya berbeda; tamu hanya bisa memilih jam datang dalam rentang tersebut.
+            </p>
+            {hari.length >= MAX_EVENT_DAYS ? <p className="m-0 mb-2 text-xs text-redup">Rentang dibatasi {MAX_EVENT_DAYS} hari.</p> : null}
+            <div className="flex flex-col gap-3">
+              {hari.map((tgl) => {
+                const khusus = acara.dayTimes.find((item) => item.date === tgl);
+                return (
+                  <div key={tgl} className="grid items-start gap-2 sm:grid-cols-[1fr_8rem_8rem]">
+                    <span className="pt-2 text-sm">{formatLongDate(tgl)}</span>
+                    <BidangTeks label="Mulai" name={`mulai-${tgl}`} type="time" defaultValue={khusus?.start ?? ""} error={errors[`mulai-${tgl}`]} />
+                    <BidangTeks label="Selesai" name={`selesai-${tgl}`} type="time" defaultValue={khusus?.end ?? ""} error={errors[`selesai-${tgl}`]} />
+                  </div>
+                );
+              })}
+            </div>
+          </details>
+        ) : null}
         <div className="sm:col-span-6">
           <BidangTeks
             label="Nama tempat"
@@ -111,19 +149,19 @@ function KartuAcara({ acara, bisaHapus, tanggalMinimal }: { acara: EventDetail; 
         </div>
         <div className="sm:col-span-6">
           <BidangTeks
-            label="Link Google Maps"
+            label="Link lokasi (Google Maps)"
             name="maps"
-            type="url"
+            type="text"
             inputMode="url"
             autoComplete="off"
             maxLength={EVENT_LIMITS.maps}
-            placeholder="https://maps.app.goo.gl/…"
+            placeholder="https://www.google.com/maps/place/…"
             value={maps}
             onChange={(event) => setMaps(event.target.value)}
             hint={
               mapsValid
                 ? "Link valid"
-                : "Buka lokasi di Google Maps, ketuk Bagikan, lalu tempel link-nya di sini."
+                : "Tempel link dari tombol Bagikan atau salin langsung dari kolom alamat browser."
             }
             error={mapsGalat}
           />
@@ -143,7 +181,7 @@ function KartuAcara({ acara, bisaHapus, tanggalMinimal }: { acara: EventDetail; 
             <input type="hidden" name="id" value={acara.id} />
             <p className="m-0 text-[13px] leading-relaxed text-redup-2">
               {acara.name} beserta jawaban RSVP-nya akan dihapus. Tamu yang hanya diundang ke acara
-              ini perlu dipilihkan acara lain di daftar tamu.
+              ini perlu dipilihkan acara lain di daftar undangan.
             </p>
             {hapus && !hapus.ok && hapus.formError ? (
               <p role="alert" className={`m-0 ${pesanGalat}`}>
@@ -195,7 +233,7 @@ export function BagianAcara({ acara, tanggalMinimal }: { acara: EventDetail[]; t
     <KartuBagian
       id="acara"
       judul="Acara"
-      deskripsi="Tamu hanya melihat acara yang dicentang untuknya di daftar tamu. Tanggal, jam, dan link Maps wajib terisi sebelum terbit."
+      deskripsi="Tamu hanya melihat acara yang dicentang untuknya di daftar undangan. Tanggal, jam, dan link Maps wajib terisi sebelum terbit."
     >
       <div className="flex flex-col gap-4">
         {acara.map((item) => (

@@ -1,4 +1,5 @@
-import { asc, eq } from "drizzle-orm";
+import type { Visit } from "@/lib/events/days";
+import { and, asc, eq } from "drizzle-orm";
 import { guest, guestEvent, guestGroup, rsvp } from "@/db/schema";
 import type { AppDb } from "@/db/types";
 import { listEventDetails } from "@/lib/events/service";
@@ -27,6 +28,7 @@ export type DashboardAnswer = {
   attending: boolean;
   attendeeCount: number;
   note: string;
+  visits?: Visit[];
   respondedAt: Date;
 };
 
@@ -102,6 +104,7 @@ export type RawResponse = {
   attending: boolean;
   attendeeCount: number;
   note: string | null;
+  visits?: Visit[];
   respondedAt: Date;
 };
 
@@ -140,6 +143,7 @@ export function buildDashboard(
       attending: r.attending,
       attendeeCount: r.attendeeCount,
       note: r.note ?? "",
+      visits: r.visits ?? [],
       respondedAt: r.respondedAt,
     });
     answersBy.set(r.guestId, list);
@@ -248,7 +252,9 @@ export async function getDashboard(
   db: AppDb,
   invitationId: string,
   filters: DashboardFilters = {},
+  addedBy?: string,
 ): Promise<DashboardData> {
+  const scope = addedBy ? eq(guest.addedBy, addedBy) : undefined;
   const [events, guests, links, responses] = await Promise.all([
     listEventDetails(db, invitationId),
     db
@@ -264,13 +270,13 @@ export async function getDashboard(
       })
       .from(guest)
       .leftJoin(guestGroup, eq(guest.groupId, guestGroup.id))
-      .where(eq(guest.invitationId, invitationId))
+      .where(and(eq(guest.invitationId, invitationId), scope))
       .orderBy(asc(guest.createdAt), asc(guest.name)),
     db
       .select({ guestId: guestEvent.guestId, eventId: guestEvent.eventId })
       .from(guestEvent)
       .innerJoin(guest, eq(guestEvent.guestId, guest.id))
-      .where(eq(guest.invitationId, invitationId)),
+      .where(and(eq(guest.invitationId, invitationId), scope)),
     db
       .select({
         guestId: rsvp.guestId,
@@ -278,11 +284,12 @@ export async function getDashboard(
         attending: rsvp.attending,
         attendeeCount: rsvp.attendeeCount,
         note: rsvp.note,
+        visits: rsvp.visits,
         respondedAt: rsvp.respondedAt,
       })
       .from(rsvp)
       .innerJoin(guest, eq(rsvp.guestId, guest.id))
-      .where(eq(guest.invitationId, invitationId)),
+      .where(and(eq(guest.invitationId, invitationId), scope)),
   ]);
 
   return buildDashboard(

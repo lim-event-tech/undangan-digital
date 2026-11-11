@@ -103,3 +103,16 @@ describe("buildIcs", () => {
     expect(unfolded).toContain("LOCATION:Aula Graha Puspa\\, Jl. Dago Atas No. 88\\, Bandung");
   });
 });
+
+describe("acara beberapa hari", () => {
+  it("membentang dari mulai hari pertama sampai jam selesai hari terakhir", () => {
+    const [slot] = calendarSlots([{ id: "a", name: "Konferensi", date: "2027-02-20", endDate: "2027-02-22", time: "09:00", endTime: "17:00", timezone: "WIB", venueName: null, address: null, mapsUrl: null }], "Nasional");
+    expect(slot.start.toISOString()).toBe("2027-02-20T02:00:00.000Z");
+    expect(slot.end.toISOString()).toBe("2027-02-22T10:00:00.000Z");
+  });
+
+  it("memakai akhir hari terakhir bila jam selesai kosong", () => {
+    const [slot] = calendarSlots([{ id: "a", name: "Konferensi", date: "2027-02-20", endDate: "2027-02-21", time: "09:00", timezone: "WIB", venueName: null, address: null, mapsUrl: null }], "Nasional");
+    expect(slot.end.toISOString()).toBe("2027-02-21T16:59:00.000Z");
+  });
+});

@@ -1,6 +1,7 @@
-import { and, asc, eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { event, guest, guestEvent, invitation, rsvp } from "@/db/schema";
 import type { AppDb } from "@/db/types";
+import { dayWindow, eventDays, isTimeInWindow, readVisits, type Visit } from "@/lib/events/days";
 import { toEventDetail, type EventDetail } from "@/lib/events/service";
 import { readContent, type InvitationContent } from "@/lib/invitations/content";
 import { listPhotos, type PhotoInfo } from "@/lib/photos/service";
@@ -46,22 +47,21 @@ const GUEST_COLUMNS = {
   rsvpDeadline: invitation.rsvpDeadline,
 };
 
-export async function findGuestRow(db: AppDb, slug: string, token: string) {
+export async function findGuestRow(db: AppDb, token: string) {
   const [row] = await db
     .select(GUEST_COLUMNS)
     .from(guest)
     .innerJoin(invitation, eq(guest.invitationId, invitation.id))
-    .where(and(eq(invitation.slug, slug), eq(guest.token, token)))
+    .where(eq(guest.token, token))
     .limit(1);
   return row ?? null;
 }
 
 export async function findGuestPage(
   db: AppDb,
-  slug: string,
   token: string,
 ): Promise<GuestPage | null> {
-  const row = await findGuestRow(db, slug, token);
+  const row = await findGuestRow(db, token);
   if (!row) return null;
 
   const [eventRows, responses, photos] = await Promise.all([
@@ -102,6 +102,7 @@ export async function findGuestPage(
               attending: response.attending,
               attendeeCount: response.attendeeCount,
               note: response.note ?? "",
+              visits: readVisits(response.visits),
             }
           : null,
       };
@@ -114,6 +115,8 @@ export type RawAnswer = {
   attending: string | null;
   attendeeCount: string;
   note: string;
+  days?: string[];
+  times?: Record<string, string>;
 };
 
 type Answer = {
@@ -121,6 +124,7 @@ type Answer = {
   attending: boolean;
   attendeeCount: number;
   note: string | null;
+  visits: Visit[];
 };
 
 export type SubmitRsvpResult =
@@ -134,47 +138,76 @@ function parseCount(value: string): number | null {
   return /^\d{1,3}$/.test(text) ? Number(text) : null;
 }
 
+function validateVisits(ev: EventDetail, raw: RawAnswer): { visits: Visit[] } | { error: string } {
+  const days = eventDays(ev);
+  let chosen: string[];
+  if (days.length <= 1) chosen = days;
+  else {
+    chosen = [...new Set(raw.days ?? [])];
+    if (chosen.length === 0) return { error: "Pilih minimal satu hari kehadiran." };
+    if (chosen.some((date) => !days.includes(date))) return { error: "Hari yang dipilih tidak sesuai jadwal acara." };
+  }
+  const visits: Visit[] = [];
+  for (const date of chosen.sort()) {
+    const window = dayWindow(ev, date);
+    if (!window.start) {
+      visits.push({ date, time: null });
+      continue;
+    }
+    const time = raw.times?.[date] || window.start;
+    if (!isTimeInWindow(time, window.start, window.end)) return { error: "Jam datang harus berada dalam jam acara pada hari yang dipilih." };
+    visits.push({ date, time });
+  }
+  return { visits };
+}
+
 function validateAnswer(
-  eventId: string,
+  ev: EventDetail,
   raw: RawAnswer,
   limits: { maxAttendees: number },
 ): { answer: Answer } | { error: string } {
+  const eventId = ev.id;
   const note = raw.note.replace(/\r\n?/g, "\n").trim();
   if (note.length > RSVP_NOTE_MAX) return { error: `Pesan maksimal ${RSVP_NOTE_MAX} karakter.` };
-  if (raw.attending === "tidak") return { answer: { eventId, attending: false, attendeeCount: 0, note: note || null } };
+  if (raw.attending === "tidak") return { answer: { eventId, attending: false, attendeeCount: 0, note: note || null, visits: [] } };
   if (raw.attending !== "ya") return { error: "Pilih hadir atau tidak hadir." };
   const attendeeCount = parseCount(raw.attendeeCount);
   if (attendeeCount === null || attendeeCount < 1 || attendeeCount > limits.maxAttendees) {
     return { error: `Jumlah peserta harus 1 sampai ${limits.maxAttendees}.` };
   }
-  return { answer: { eventId, attending: true, attendeeCount, note: note || null } };
+  const visits = validateVisits(ev, raw);
+  if ("error" in visits) return { error: visits.error };
+  return { answer: { eventId, attending: true, attendeeCount, note: note || null, visits: visits.visits } };
 }
 
 export async function submitRsvp(
   db: AppDb,
   input: {
-    slug: string;
     token: string;
     read: (eventId: string) => RawAnswer;
     now?: Date;
   },
 ): Promise<SubmitRsvpResult> {
   const now = input.now ?? new Date();
-  const row = await findGuestRow(db, input.slug, input.token);
+  const row = await findGuestRow(db, input.token);
   if (!row) return { ok: false, error: "tidak-ditemukan" };
   if (row.status !== "terbit") return { ok: false, error: "belum-terbit" };
   if (isRsvpClosed(row.rsvpDeadline, now)) return { ok: false, error: "ditutup" };
 
-  const invited = await db
-    .select({ id: guestEvent.eventId })
-    .from(guestEvent)
-    .where(eq(guestEvent.guestId, row.guestId));
+  const invited = (
+    await db
+      .select({ ev: event })
+      .from(guestEvent)
+      .innerJoin(event, eq(guestEvent.eventId, event.id))
+      .where(eq(guestEvent.guestId, row.guestId))
+  ).map(({ ev }) => toEventDetail(ev));
   if (invited.length === 0) return { ok: false, error: "tidak-ditemukan" };
 
   const answers: Answer[] = [];
   const errors: Record<string, string> = {};
-  for (const { id } of invited) {
-    const result = validateAnswer(id, input.read(id), {
+  for (const ev of invited) {
+    const id = ev.id;
+    const result = validateAnswer(ev, input.read(id), {
       maxAttendees: row.maxAttendees,
     });
     if ("error" in result) errors[id] = result.error;
@@ -192,6 +225,7 @@ export async function submitRsvp(
           attending: answer.attending,
           attendeeCount: answer.attendeeCount,
           note: answer.note,
+          visits: answer.visits,
           respondedAt: now,
         })
         .onConflictDoUpdate({
@@ -200,6 +234,7 @@ export async function submitRsvp(
             attending: answer.attending,
             attendeeCount: answer.attendeeCount,
             note: answer.note,
+            visits: answer.visits,
             respondedAt: now,
             updatedAt: now,
           },

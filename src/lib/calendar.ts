@@ -4,6 +4,7 @@ export const DEFAULT_DURATION_MINUTES = 120;
 
 export type CalendarEvent = TimedEvent & {
   endTime?: string | null;
+  endDate?: string | null;
   id: string;
   name: string;
   venueName: string | null;
@@ -40,7 +41,8 @@ export function calendarSlots(
       title: `${e.name} ${eventTitle}`,
       start,
       end: (() => {
-        const end = e.endTime ? eventInstant(e.date, e.endTime, e.timezone) : null;
+        const endDate = e.endDate && e.endDate > e.date ? e.endDate : e.date;
+        const end = e.endTime ? eventInstant(endDate, e.endTime, e.timezone) : endDate !== e.date ? eventInstant(endDate, "23:59", e.timezone) : null;
         return end && end > start ? end : new Date(start.getTime() + minutes * 60_000);
       })(),
       location,

@@ -3,6 +3,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { event, invitation } from "@/db/schema";
 import type { AppDb } from "@/db/types";
 import { shortTime, type Zone } from "@/lib/datetime";
+import { readDayTimes, type DayTime } from "./days";
 import { MAX_EVENTS, type EventInput } from "./form";
 
 export type EventDetail = {
@@ -11,8 +12,10 @@ export type EventDetail = {
   name: string;
   sortOrder: number;
   date: string | null;
+  endDate: string | null;
   time: string | null;
   endTime: string | null;
+  dayTimes: DayTime[];
   agenda: AgendaItem[];
   timezone: Zone;
   venueName: string | null;
@@ -29,8 +32,10 @@ export function toEventDetail(row: EventRow): EventDetail {
     name: row.name,
     sortOrder: row.sortOrder,
     date: row.eventDate,
+    endDate: row.eventEndDate,
     time: shortTime(row.eventTime),
     endTime: shortTime(row.eventEndTime),
+    dayTimes: readDayTimes(row.dayTimes),
     agenda: readAgenda(row.agenda),
     timezone: row.timezone,
     venueName: row.venueName,
@@ -113,8 +118,10 @@ export async function updateEvent(
     .set({
       name: input.name,
       eventDate: input.date,
+      eventEndDate: input.endDate ?? null,
       eventTime: input.time,
       eventEndTime: input.endTime,
+      dayTimes: input.dayTimes ?? [],
       agenda: input.agenda,
       timezone: input.timezone,
       venueName: input.venueName,

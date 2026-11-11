@@ -1,4 +1,5 @@
 import { deadlineFromDate, isDateString, todayWib } from "@/lib/datetime";
+import type { Visit } from "@/lib/events/days";
 
 export const RSVP_MAX_ATTENDEES = 40;
 
@@ -24,4 +25,5 @@ export type RsvpResponse = {
   attending: boolean;
   attendeeCount: number;
   note: string;
+  visits: Visit[];
 };

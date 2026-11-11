@@ -48,10 +48,9 @@ const tidak = (note = ""): RawAnswer => ({ attending: "tidak", attendeeCount: ""
 function submit(
   ctx: Awaited<ReturnType<typeof setup>>,
   answers: Record<string, RawAnswer>,
-  extra: { now?: Date; token?: string; slug?: string } = {},
+  extra: { now?: Date; token?: string } = {},
 ) {
   return submitRsvp(db, {
-    slug: extra.slug ?? ctx.invitation.slug,
     token: extra.token ?? ctx.guest.token,
     read: (eventId) => answers[eventId] ?? { attending: null, attendeeCount: "",  note: "" },
     now: extra.now,
@@ -64,7 +63,7 @@ describe("findGuestPage", () => {
     await saveContentText(db, ctx.invitation.id, { sambutan: "Selamat datang" });
     await addPhoto(db, ctx.invitation.id, { kind: "cover", fileName: "cover.jpg", bytes: jpeg() });
 
-    const page = await findGuestPage(db, ctx.invitation.slug, ctx.guest.token);
+    const page = await findGuestPage(db, ctx.guest.token);
     expect(page).not.toBeNull();
     expect(page!.guest).toMatchObject({ name: "Bapak Hendra & Istri", maxAttendees: 3,  });
     expect(page!.invitation).toMatchObject({ slug: "raka", title: "Raka", status: "terbit" });
@@ -84,17 +83,15 @@ describe("findGuestPage", () => {
       eventIds: [utama.id],
       maxAttendees: 1,
     });
-    const page = await findGuestPage(db, seeded.invitation.slug, created.token);
+    const page = await findGuestPage(db, created.token);
     expect(page!.events.map((e) => e.name)).toEqual(["Acara utama"]);
   });
 
-  it("mengembalikan null untuk token salah, slug salah, atau token milik undangan lain", async () => {
+  it("mengembalikan null untuk token yang tidak dikenal dan halaman untuk token tamu", async () => {
     const first = await setup();
-    const second = await setup();
-    expect(await findGuestPage(db, first.invitation.slug, "TokenSalahTokenSa")).toBeNull();
-    expect(await findGuestPage(db, "slug-tidak-ada", first.guest.token)).toBeNull();
-    expect(await findGuestPage(db, first.invitation.slug, second.guest.token)).toBeNull();
-    expect(await findGuestPage(db, second.invitation.slug, first.guest.token)).toBeNull();
+    expect(await findGuestPage(db, "TokenSalahTokenSa")).toBeNull();
+    expect(await findGuestPage(db, "TokenSal")).toBeNull();
+    expect((await findGuestPage(db, first.guest.token))?.invitation.id).toBe(first.invitation.id);
   });
 
   it("mengisi jawaban sebelumnya per acara", async () => {
@@ -102,13 +99,14 @@ describe("findGuestPage", () => {
     const [utama, lanjutan] = ctx.events;
     await submit(ctx, { [utama.id]: hadir("2", "1", "Datang bersama cucu"), [lanjutan.id]: tidak() });
 
-    const page = await findGuestPage(db, ctx.invitation.slug, ctx.guest.token);
+    const page = await findGuestPage(db, ctx.guest.token);
     expect(page!.events[0].response).toEqual({
       attending: true,
       attendeeCount: 3,
       note: "Datang bersama cucu",
+      visits: [],
     });
-    expect(page!.events[1].response).toEqual({ attending: false, attendeeCount: 0,  note: "" });
+    expect(page!.events[1].response).toEqual({ attending: false, attendeeCount: 0,  note: "", visits: [] });
   });
 });
 
@@ -208,7 +206,6 @@ describe("submitRsvp", () => {
     });
 
     const result = await submitRsvp(db, {
-      slug: seeded.invitation.slug,
       token: created.token,
       read: () => hadir("2", "0"),
     });
@@ -218,12 +215,11 @@ describe("submitRsvp", () => {
     expect(rows.some((r) => r.eventId === lanjutan.id)).toBe(false);
   });
 
-  it("menolak token atau slug yang salah dan undangan yang belum terbit atau ditangguhkan", async () => {
+  it("menolak token yang salah dan undangan yang belum terbit atau ditangguhkan", async () => {
     const ctx = await setup();
     const [utama, lanjutan] = ctx.events;
     const answers = { [utama.id]: hadir(), [lanjutan.id]: hadir() };
     expect(await submit(ctx, answers, { token: "TokenSalahTokenSa" })).toEqual({ ok: false, error: "tidak-ditemukan" });
-    expect(await submit(ctx, answers, { slug: "slug-lain" })).toEqual({ ok: false, error: "tidak-ditemukan" });
 
     await db.update(invitation).set({ status: "draf" }).where(eq(invitation.id, ctx.invitation.id));
     expect(await submit(ctx, answers)).toEqual({ ok: false, error: "belum-terbit" });
@@ -267,7 +263,7 @@ describe("submitRsvp", () => {
     const [utama, lanjutan] = ctx.events;
     await submit(ctx, { [utama.id]: hadir("2", "1", "Rahasia tamu pertama"), [lanjutan.id]: tidak() });
 
-    const otherPage = await findGuestPage(db, ctx.invitation.slug, other.token);
+    const otherPage = await findGuestPage(db, other.token);
     expect(otherPage!.events.every((e) => e.response === null)).toBe(true);
     await updateEvent(db, ctx.invitation.id, utama.id, {
       name: "Acara utama",
@@ -278,7 +274,66 @@ describe("submitRsvp", () => {
       address: null,
       mapsUrl: null,
     });
-    const page = await findGuestPage(db, ctx.invitation.slug, ctx.guest.token);
+    const page = await findGuestPage(db, ctx.guest.token);
     expect(page!.events[0]).toMatchObject({ date: "2026-12-20", endTime: null, agenda: [], time: "09:00" });
+  });
+});
+
+describe("kehadiran per hari dan jam datang", () => {
+  async function acaraTigaHari() {
+    const ctx = await setup();
+    const [utama, lanjutan] = ctx.events;
+    await updateEvent(db, ctx.invitation.id, utama.id, {
+      name: "Acara utama", date: "2026-12-20", endDate: "2026-12-22", time: "09:00", endTime: "11:00",
+      dayTimes: [{ date: "2026-12-21", start: "13:00", end: "15:00" }], agenda: [], timezone: "WIB",
+      venueName: null, address: null, mapsUrl: null,
+    });
+    return { ctx, utama, lanjutan };
+  }
+  const pilih = (days: string[], times: Record<string, string> = {}): RawAnswer => ({ ...hadir("1"), days, times });
+
+  it("menyimpan hari yang dipilih dengan jam datang, memakai jam mulai hari itu bila kosong", async () => {
+    const { ctx, utama, lanjutan } = await acaraTigaHari();
+    const result = await submit(ctx, { [utama.id]: pilih(["2026-12-21", "2026-12-20"], { "2026-12-21": "14:00" }), [lanjutan.id]: tidak() });
+    expect(result).toEqual({ ok: true });
+    const page = await findGuestPage(db, ctx.guest.token);
+    expect(page!.events[0].response?.visits).toEqual([
+      { date: "2026-12-20", time: "09:00" },
+      { date: "2026-12-21", time: "14:00" },
+    ]);
+    expect(page!.events[1].response?.visits).toEqual([]);
+  });
+
+  it("menolak acara beberapa hari tanpa hari terpilih, hari di luar rentang, dan jam di luar jendela", async () => {
+    const { ctx, utama, lanjutan } = await acaraTigaHari();
+    for (const answer of [pilih([]), pilih(["2026-12-23"]), pilih(["2026-12-21"], { "2026-12-21": "12:30" }), pilih(["2026-12-20"], { "2026-12-20": "11:30" }), pilih(["2026-12-20"], { "2026-12-20": "bukan-jam" })]) {
+      const result = await submit(ctx, { [utama.id]: answer, [lanjutan.id]: tidak() });
+      expect(result).toMatchObject({ ok: false, error: "tidak-valid", errors: { [utama.id]: expect.any(String) } });
+    }
+    expect(await db.select().from(rsvp).where(eq(rsvp.guestId, ctx.guest.id))).toHaveLength(0);
+  });
+
+  it("mengosongkan hari saat tamu berubah menjadi tidak hadir dan menggantinya saat dikirim ulang", async () => {
+    const { ctx, utama, lanjutan } = await acaraTigaHari();
+    await submit(ctx, { [utama.id]: pilih(["2026-12-20", "2026-12-22"]), [lanjutan.id]: tidak() });
+    await submit(ctx, { [utama.id]: pilih(["2026-12-22"], { "2026-12-22": "10:30" }), [lanjutan.id]: tidak() });
+    let page = await findGuestPage(db, ctx.guest.token);
+    expect(page!.events[0].response?.visits).toEqual([{ date: "2026-12-22", time: "10:30" }]);
+    await submit(ctx, { [utama.id]: tidak(), [lanjutan.id]: tidak() });
+    page = await findGuestPage(db, ctx.guest.token);
+    expect(page!.events[0].response).toMatchObject({ attending: false, visits: [] });
+  });
+
+  it("acara satu hari otomatis memakai harinya dan hanya memeriksa jam datang", async () => {
+    const ctx = await setup();
+    const [utama, lanjutan] = ctx.events;
+    await updateEvent(db, ctx.invitation.id, utama.id, {
+      name: "Acara utama", date: "2026-12-20", time: "09:00", endTime: "11:00", agenda: [], timezone: "WIB",
+      venueName: null, address: null, mapsUrl: null,
+    });
+    expect(await submit(ctx, { [utama.id]: pilih(["2030-01-01"], { "2026-12-20": "10:00" }), [lanjutan.id]: tidak() })).toEqual({ ok: true });
+    const page = await findGuestPage(db, ctx.guest.token);
+    expect(page!.events[0].response?.visits).toEqual([{ date: "2026-12-20", time: "10:00" }]);
+    expect(await submit(ctx, { [utama.id]: pilih([], { "2026-12-20": "12:00" }), [lanjutan.id]: tidak() })).toMatchObject({ ok: false, error: "tidak-valid" });
   });
 });
