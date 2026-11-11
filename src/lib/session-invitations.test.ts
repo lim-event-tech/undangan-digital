@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
-import { adminRole, guest as guestTable, invitation as invitationTable, templateRegistry, user, waJob } from "@/db/schema";
+import { adminRole, guest as guestTable, invitation as invitationTable, invitationInvite, invitationMember, templateRegistry, user, waJob } from "@/db/schema";
 import { createTestDb, seedInvitation, type TestDb } from "@/test/db";
 import { createInvitation, type Invitation } from "@/lib/invitations/service";
 
@@ -13,16 +13,16 @@ vi.mock("next/navigation", () => ({
   notFound: () => { throw new Error("not-found"); },
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
-vi.mock("@/lib/wa/manager", () => ({ getWaManager: () => ({ ready: () => true }) }));
+vi.mock("@/lib/wa/manager", () => ({ getWaManager: () => ({ for: () => ({ ready: () => true, snapshot: () => ({ status: "terhubung", qr: null, nomor: null, galat: null, sejak: null }), connect: async () => undefined, disconnect: async () => undefined, logout: async () => undefined }) }) }));
 
-import { ACTING_COOKIE, getWorkContextForInvitation, loadOwnedInvitation, requireInvitationById, requireOwnAccount } from "./session";
+import { ACTING_COOKIE, getWorkContextForInvitation, loadOwnedInvitation, requireInvitationAccess, requireInvitationById, requireOwnAccount } from "./session";
 import * as editorActions from "@/app/undangan/[id]/isi/actions";
 import * as guestActions from "@/app/undangan/[id]/tamu/actions";
 import * as importActions from "@/app/undangan/[id]/tamu/impor/actions";
 import * as sendingActions from "@/app/undangan/[id]/kirim/actions";
 import * as checkinActions from "@/app/undangan/[id]/checkin/actions";
-import * as wishActions from "@/app/undangan/[id]/ucapan/actions";
 import * as templateActions from "@/app/undangan/[id]/template/actions";
+import * as teamActions from "@/app/undangan/[id]/tim/actions";
 import { createInvitationAction } from "@/app/undangan/baru/actions";
 import { POST as uploadPhoto } from "@/app/api/foto/route";
 import { POST as uploadMusic } from "@/app/api/musik/route";
@@ -157,7 +157,7 @@ function form(values: Record<string, string> = {}) {
   return data;
 }
 
-const actions = [editorActions, guestActions, importActions, sendingActions, checkinActions, wishActions, templateActions]
+const actions = [editorActions, guestActions, importActions, sendingActions, checkinActions, templateActions, teamActions]
   .flatMap((module) => Object.entries(module).filter(([, value]) => typeof value === "function"));
 
 describe("batas akses seluruh action pengelolaan", () => {
@@ -274,5 +274,114 @@ describe("unggah, WhatsApp dan check-in dengan ID eksplisit", () => {
     await sendingActions.batalkanAntreanAction(a.id);
     expect((await mocks.db.select().from(waJob).where(eq(waJob.invitationId, a.id))).map((job) => job.status)).toEqual(["dibatalkan"]);
     expect((await mocks.db.select().from(waJob).where(eq(waJob.invitationId, b.id))).map((job) => job.status)).toEqual(["menunggu"]);
+  });
+});
+
+describe("anggota tim pada konteks undangan", () => {
+  const anggotaId = "uji-anggota-tim";
+  let tamuPemilik: Awaited<ReturnType<typeof createGuest>>;
+  let tamuAnggota: Awaited<ReturnType<typeof createGuest>>;
+
+  beforeAll(async () => {
+    await mocks.db.insert(user).values({ id: anggotaId, name: "Anggota Tim", email: "anggota-tim@example.com" });
+    await mocks.db.insert(invitationMember).values({ invitationId: first.id, userId: anggotaId });
+    const [event] = await listEventDetails(mocks.db, first.id);
+    tamuPemilik = await createGuest(mocks.db, first.id, { name: "Tamu Pemilik", phone: "+6281200090001", eventIds: [event.id], groupName: null, maxAttendees: 1 }, ownerId);
+    tamuAnggota = await createGuest(mocks.db, first.id, { name: "Tamu Anggota", phone: "+6281200090002", eventIds: [event.id], groupName: null, maxAttendees: 1 }, anggotaId);
+    await mocks.db.update(invitationTable).set({ status: "terbit" }).where(eq(invitationTable.id, first.id));
+  });
+
+  beforeEach(() => {
+    mocks.session.mockResolvedValue(session(anggotaId));
+  });
+
+  async function dibaca(id: string) {
+    const [row] = await mocks.db.select().from(guestTable).where(eq(guestTable.id, id));
+    return row;
+  }
+
+  it("memberi anggota peran dan cakupan sendiri, serta menolak undangan yang bukan miliknya atau bukan timnya", async () => {
+    expect(await requireInvitationAccess(first.id)).toMatchObject({ role: "anggota", scope: anggotaId, invitation: { id: first.id } });
+    await expect(requireInvitationAccess(second.id)).rejects.toThrow("not-found");
+    await expect(requireInvitationAccess(other.id)).rejects.toThrow("not-found");
+    mocks.session.mockResolvedValue(session(ownerId));
+    expect(await requireInvitationAccess(first.id)).toMatchObject({ role: "pemilik", scope: null });
+  });
+
+  it("menolak seluruh pengelolaan khusus pemilik untuk anggota", async () => {
+    await expect(requireInvitationById(first.id)).rejects.toThrow("not-found");
+    await expect(editorActions.simpanTitleAction(first.id, form({ title: "Diganti Anggota" }))).rejects.toThrow("not-found");
+    await expect(editorActions.terbitkanAction(first.id)).rejects.toThrow("not-found");
+    await expect(editorActions.hapusUndanganAction(first.id)).rejects.toThrow("not-found");
+    await expect(checkinActions.gantiKunciAction(first.id)).rejects.toThrow("not-found");
+    await expect(sendingActions.simpanPesanAction(first.id, form({ pesan: "Halo {nama} {link}" }))).rejects.toThrow("not-found");
+    await expect(sendingActions.simpanPosterWaAction(first.id, form({ kirim: "on" }))).rejects.toThrow("not-found");
+    await expect(teamActions.undangAnggotaAction(first.id, null, form({ email: "x@example.com" }))).rejects.toThrow("not-found");
+    await expect(teamActions.keluarkanAnggotaAction(first.id, form({ id: ownerId }))).rejects.toThrow("not-found");
+    const [row] = await mocks.db.select().from(invitationTable).where(eq(invitationTable.id, first.id));
+    expect(row.title).not.toBe("Diganti Anggota");
+  });
+
+  it("hanya menghapus tamu sendiri, dan menandai kirim serta check-in hanya untuk tamu sendiri", async () => {
+    await expect(guestActions.deleteGuestAction(first.id, form({ id: tamuPemilik.id }))).rejects.toThrow("redirect");
+    expect(await dibaca(tamuPemilik.id)).toBeDefined();
+    await sendingActions.tandaiTerkirimAction(first.id, tamuPemilik.id);
+    expect((await dibaca(tamuPemilik.id)).sentAt).toBeNull();
+    await sendingActions.tandaiTerkirimAction(first.id, tamuAnggota.id);
+    expect((await dibaca(tamuAnggota.id)).sentAt).not.toBeNull();
+    await sendingActions.tandaiBelumTerkirimAction(first.id, form({ id: tamuAnggota.id }));
+    expect((await dibaca(tamuAnggota.id)).sentAt).toBeNull();
+    await checkinActions.masukkanTamuAction(first.id, form({ id: tamuPemilik.id }));
+    expect((await dibaca(tamuPemilik.id)).checkedInAt).toBeNull();
+    await checkinActions.masukkanTamuAction(first.id, form({ id: tamuAnggota.id }));
+    expect((await dibaca(tamuAnggota.id)).checkedInAt).not.toBeNull();
+    await checkinActions.batalkanMasukAction(first.id, form({ id: tamuAnggota.id }));
+  });
+
+  it("menambah tamu atas nama anggota dan tidak menganggap nomor milik pemilik sebagai bentrokan", async () => {
+    const data = new FormData();
+    data.set("nama", "Klien Baru Anggota");
+    data.set("whatsapp", "0812-0009-0001");
+    data.set("grup", "");
+    data.set("maksPeserta", "1");
+    const [event] = await listEventDetails(mocks.db, first.id);
+    data.append("acara", event.id);
+    await expect(guestActions.saveGuestAction(first.id, {}, data)).rejects.toThrow("redirect");
+    const [baru] = await mocks.db.select().from(guestTable).where(eq(guestTable.name, "Klien Baru Anggota"));
+    expect(baru).toMatchObject({ addedBy: anggotaId, phone: "+6281200090001" });
+  });
+
+  it("mengantre WhatsApp hanya untuk tamu anggota dengan nomor pengirim anggota", async () => {
+    await saveWaConfig(mocks.db, { aktif: true });
+    await mocks.db.delete(waJob).where(eq(waJob.invitationId, first.id));
+    const hasil = await sendingActions.kirimOtomatisAction(first.id, null, form());
+    expect(hasil).toMatchObject({ ok: true });
+    const jobs = await mocks.db.select().from(waJob).where(eq(waJob.invitationId, first.id));
+    const milikAnggota = new Set((await mocks.db.select({ id: guestTable.id }).from(guestTable).where(eq(guestTable.addedBy, anggotaId))).map((g) => g.id));
+    expect(jobs.length).toBeGreaterThan(0);
+    for (const job of jobs) {
+      expect(job.senderUserId).toBe(anggotaId);
+      expect(milikAnggota.has(job.guestId)).toBe(true);
+    }
+    expect(jobs.some((job) => job.guestId === tamuPemilik.id)).toBe(false);
+    await sendingActions.batalkanAntreanAction(first.id);
+    expect((await mocks.db.select().from(waJob).where(eq(waJob.invitationId, first.id))).every((job) => job.status === "dibatalkan")).toBe(true);
+  });
+
+  it("pemilik bisa mengundang, mencabut undangan, dan mengeluarkan anggota", async () => {
+    mocks.session.mockResolvedValue(session(ownerId));
+    const hasil = await teamActions.undangAnggotaAction(first.id, null, form({ email: "calon@example.com" }));
+    expect(hasil).toMatchObject({ ok: true, email: "calon@example.com", surel: "tidak-diatur" });
+    if (!hasil?.ok) return;
+    expect(hasil.link).toMatch(/\/terima\/[A-Za-z0-9_-]{32}$/);
+    const [undangan] = await mocks.db.select().from(invitationInvite).where(eq(invitationInvite.email, "calon@example.com"));
+    await teamActions.cabutUndanganAction(first.id, form({ id: undangan.id }));
+    const [dicabut] = await mocks.db.select().from(invitationInvite).where(eq(invitationInvite.id, undangan.id));
+    expect(dicabut.revokedAt).not.toBeNull();
+    expect(await teamActions.undangAnggotaAction(first.id, null, form({ email: "salah" }))).toEqual({ ok: false, error: "Alamat email tidak valid." });
+    await teamActions.keluarkanAnggotaAction(first.id, form({ id: anggotaId }));
+    mocks.session.mockResolvedValue(session(anggotaId));
+    await expect(requireInvitationAccess(first.id)).rejects.toThrow("not-found");
+    expect((await dibaca(tamuAnggota.id)).addedBy).toBe(ownerId);
   });
 });

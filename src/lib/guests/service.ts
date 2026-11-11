@@ -33,6 +33,7 @@ export type GuestFilters = {
   q?: string;
   groupId?: string;
   eventId?: string;
+  addedBy?: string;
 };
 
 export type GuestRow = {
@@ -44,6 +45,7 @@ export type GuestRow = {
   groupName: string | null;
   maxAttendees: number;
   sentAt: Date | null;
+  addedBy: string | null;
   eventIds: string[];
 };
 
@@ -59,6 +61,7 @@ export async function listGuests(
   const conditions = [eq(guest.invitationId, invitationId)];
 
   if (filters.id) conditions.push(eq(guest.id, filters.id));
+  if (filters.addedBy) conditions.push(eq(guest.addedBy, filters.addedBy));
   const q = filters.q?.trim();
   if (q) {
     const needle = phoneSearchNeedle(q);
@@ -92,6 +95,7 @@ export async function listGuests(
       groupName: guestGroup.name,
       maxAttendees: guest.maxAttendees,
       sentAt: guest.sentAt,
+      addedBy: guest.addedBy,
     })
     .from(guest)
     .leftJoin(guestGroup, eq(guest.groupId, guestGroup.id))
@@ -132,11 +136,11 @@ export async function firstGuestToken(
   return row?.token ?? null;
 }
 
-export async function countGuests(db: AppDb, invitationId: string) {
+export async function countGuests(db: AppDb, invitationId: string, addedBy?: string) {
   const [row] = await db
     .select({ total: sql<number>`count(*)::int` })
     .from(guest)
-    .where(eq(guest.invitationId, invitationId));
+    .where(and(eq(guest.invitationId, invitationId), addedBy ? eq(guest.addedBy, addedBy) : undefined));
   return row?.total ?? 0;
 }
 
@@ -148,11 +152,24 @@ export async function listEvents(db: AppDb, invitationId: string) {
     .orderBy(asc(event.sortOrder), asc(event.name));
 }
 
-export async function listGroups(db: AppDb, invitationId: string) {
+export async function listGroups(db: AppDb, invitationId: string, addedBy?: string) {
   return db
     .select({ id: guestGroup.id, name: guestGroup.name })
     .from(guestGroup)
-    .where(eq(guestGroup.invitationId, invitationId))
+    .where(
+      and(
+        eq(guestGroup.invitationId, invitationId),
+        addedBy
+          ? inArray(
+              guestGroup.id,
+              db
+                .select({ id: guest.groupId })
+                .from(guest)
+                .where(and(eq(guest.invitationId, invitationId), eq(guest.addedBy, addedBy), sql`${guest.groupId} is not null`)) as never,
+            )
+          : undefined,
+      ),
+    )
     .orderBy(asc(guestGroup.name));
 }
 
@@ -161,11 +178,13 @@ export async function findPhoneConflict(
   invitationId: string,
   phone: string,
   excludeGuestId?: string,
+  addedBy?: string,
 ): Promise<{ id: string; name: string } | null> {
   const conditions = [
     eq(guest.invitationId, invitationId),
     eq(guest.phone, phone),
   ];
+  if (addedBy) conditions.push(eq(guest.addedBy, addedBy));
   if (excludeGuestId) conditions.push(ne(guest.id, excludeGuestId));
   const [row] = await db
     .select({ id: guest.id, name: guest.name })
@@ -215,6 +234,21 @@ async function ownEventIds(
   return rows.map((r) => r.id);
 }
 
+export async function freshTokens(db: AppDb, count: number): Promise<string[]> {
+  const tokens = new Set<string>();
+  while (tokens.size < count) {
+    const candidates = new Set<string>();
+    while (tokens.size + candidates.size < count) {
+      const token = newGuestToken();
+      if (!tokens.has(token)) candidates.add(token);
+    }
+    const taken = await db.select({ token: guest.token }).from(guest).where(inArray(guest.token, [...candidates]));
+    const used = new Set(taken.map((row) => row.token));
+    for (const token of candidates) if (!used.has(token)) tokens.add(token);
+  }
+  return [...tokens];
+}
+
 export type GuestInput = {
   name: string;
   phone: string;
@@ -227,10 +261,12 @@ export async function createGuest(
   db: AppDb,
   invitationId: string,
   input: GuestInput,
+  addedBy: string | null = null,
 ) {
   return db.transaction(async (tx) => {
     const eventIds = await ownEventIds(tx, invitationId, input.eventIds);
     const groupId = await ensureGroupId(tx, invitationId, input.groupName);
+    const [token] = await freshTokens(tx, 1);
     const [created] = await tx
       .insert(guest)
       .values({
@@ -238,7 +274,8 @@ export async function createGuest(
         groupId,
         name: input.name,
         phone: input.phone,
-        token: newGuestToken(),
+        token,
+        addedBy,
         maxAttendees: input.maxAttendees,
       })
       .returning();
@@ -256,6 +293,7 @@ export async function updateGuest(
   invitationId: string,
   guestId: string,
   input: GuestInput,
+  addedBy?: string,
 ) {
   return db.transaction(async (tx) => {
     const eventIds = await ownEventIds(tx, invitationId, input.eventIds);
@@ -268,7 +306,7 @@ export async function updateGuest(
         phone: input.phone,
         maxAttendees: input.maxAttendees,
       })
-      .where(and(eq(guest.id, guestId), eq(guest.invitationId, invitationId)))
+      .where(and(eq(guest.id, guestId), eq(guest.invitationId, invitationId), addedBy ? eq(guest.addedBy, addedBy) : undefined))
       .returning();
     if (!updated) return null;
 
@@ -293,10 +331,11 @@ export async function deleteGuest(
   db: AppDb,
   invitationId: string,
   guestId: string,
+  addedBy?: string,
 ): Promise<boolean> {
   const rows = await db
     .delete(guest)
-    .where(and(eq(guest.id, guestId), eq(guest.invitationId, invitationId)))
+    .where(and(eq(guest.id, guestId), eq(guest.invitationId, invitationId), addedBy ? eq(guest.addedBy, addedBy) : undefined))
     .returning({ id: guest.id });
   return rows.length > 0;
 }
@@ -305,14 +344,16 @@ export async function getGuest(
   db: AppDb,
   invitationId: string,
   guestId: string,
+  addedBy?: string,
 ): Promise<GuestRow | null> {
-  const rows = await listGuests(db, invitationId, { id: guestId });
+  const rows = await listGuests(db, invitationId, { id: guestId, addedBy });
   return rows[0] ?? null;
 }
 
 export async function getImportContext(
   db: AppDb,
   invitationId: string,
+  addedBy?: string,
 ): Promise<ImportContext> {
   const [inv] = await db
     .select({
@@ -324,11 +365,11 @@ export async function getImportContext(
 
   const [events, groups, existing] = await Promise.all([
     listEvents(db, invitationId),
-    listGroups(db, invitationId),
+    listGroups(db, invitationId, addedBy),
     db
       .select({ name: guest.name, phone: guest.phone })
       .from(guest)
-      .where(eq(guest.invitationId, invitationId))
+      .where(and(eq(guest.invitationId, invitationId), addedBy ? eq(guest.addedBy, addedBy) : undefined))
       .orderBy(asc(guest.createdAt)),
   ]);
 
@@ -349,8 +390,10 @@ export async function commitImport(
   invitationId: string,
   rows: RawRow[],
   skipProblems: boolean,
+  addedBy?: string,
+  scope?: string,
 ): Promise<CommitImportResult> {
-  const context = await getImportContext(db, invitationId);
+  const context = await getImportContext(db, invitationId, scope);
   const validated = validateImportRows(rows, context);
   const ready = validated.filter((r) => r.status === "siap");
   const problems = validated.length - ready.length;
@@ -386,12 +429,15 @@ export async function commitImport(
 
     const CHUNK = 300;
     for (let start = 0; start < ready.length; start += CHUNK) {
-      const chunk = ready.slice(start, start + CHUNK).map((row) => ({
+      const slice = ready.slice(start, start + CHUNK);
+      const tokens = await freshTokens(tx, slice.length);
+      const chunk = slice.map((row, i) => ({
         row,
         id: randomUUID(),
+        token: tokens[i],
       }));
       await tx.insert(guest).values(
-        chunk.map(({ row, id }) => ({
+        chunk.map(({ row, id, token }) => ({
           id,
           invitationId,
           groupId: row.groupName
@@ -399,7 +445,8 @@ export async function commitImport(
             : null,
           name: row.name,
           phone: row.phone!,
-          token: newGuestToken(),
+          token,
+          addedBy: addedBy ?? null,
           maxAttendees: row.maxAttendees,
         })),
       );

@@ -16,7 +16,7 @@ import { isUuid } from "@/lib/uuid";
 import { TEMPLATES } from "@/templates/registry";
 import { mulaiKelolaAction } from "@/app/undangan/kelola-actions";
 import { ubahStatusAction } from "./actions";
-import { FormBatasAdmin, FormHapus, FormSlugAdmin } from "./form-detail";
+import { FormBatasAdmin, FormHapus } from "./form-detail";
 
 const STATUS_TAMU: Record<GuestStatus, string> = {
   hadir: "Hadir",
@@ -51,7 +51,7 @@ export default async function DetailUndanganAdminPage({ params }: PageProps<"/ad
     ["Link dibuka", detail.opened],
     ["Tamu menjawab", detail.responded],
     ["Check-in", detail.checkedIn],
-    ["Foto", `${detail.photos} / 13`],
+    ["Poster", detail.photos ? "Ada" : "Belum ada"],
   ];
 
   const pemeriksaan: string[] = [];
@@ -114,7 +114,7 @@ export default async function DetailUndanganAdminPage({ params }: PageProps<"/ad
             <section aria-labelledby="judul-tamu" className={`${kartu} flex flex-col gap-3 p-5`}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 id="judul-tamu" className="m-0 font-judul text-2xl font-medium">
-                  Daftar tamu
+                  Daftar undangan
                 </h2>
                 {tamu.guests.length > 0 ? <TombolUnduh href={`/admin/undangan/${detail.id}/tamu`} /> : null}
               </div>
@@ -217,7 +217,7 @@ export default async function DetailUndanganAdminPage({ params }: PageProps<"/ad
                 Kelola isi undangan
               </h2>
               <p className="m-0 text-sm leading-relaxed text-redup-2">
-                Buka undangan ini seperti pengguna: isi, tamu, RSVP, pesan tamu, foto, musik, dan pengiriman. Setiap sesi
+                Buka undangan ini seperti pengguna: isi, tamu, RSVP, poster, dan pengiriman. Setiap sesi
                 kelola tercatat di log audit.
               </p>
               <form action={mulaiKelolaAction}>
@@ -233,7 +233,6 @@ export default async function DetailUndanganAdminPage({ params }: PageProps<"/ad
             <h2 id="judul-atur" className="m-0 font-judul text-2xl font-medium">
               Pengaturan undangan
             </h2>
-            <FormSlugAdmin id={detail.id} slug={detail.slug} terkunci={detail.slugLocked} boleh={bolehUbah} />
             <FormBatasAdmin id={detail.id} batas={dateFromDeadline(detail.rsvpDeadline)} hariIni={todayWib()} boleh={bolehUbah} />
           </section>
 

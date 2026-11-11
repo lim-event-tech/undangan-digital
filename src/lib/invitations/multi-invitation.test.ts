@@ -48,15 +48,13 @@ it("memisahkan isi, acara, tamu, media, dan RSVP dua undangan dalam satu akun", 
   expect(await getGuest(db, gathering.id, guests[1].id)).toBeNull();
   expect(await deleteGuest(db, gathering.id, guests[1].id)).toBe(false);
   expect(await updateEvent(db, gathering.id, eventIds[1], { name: "Tertukar", date: "2026-12-12", endTime: null, agenda: [], time: "16:00", timezone: "WIB", venueName: "Salah", address: "Bandung", mapsUrl: "https://maps.app.goo.gl/AbC123" })).toBeNull();
-  expect(await findGuestPage(db, gathering.slug, guests[1].token)).toBeNull();
-  expect((await submitRsvp(db, { slug: gathering.slug, token: guests[1].token, read: () => ({ attending: "ya", attendeeCount: "1",  note: "" }) })).ok).toBe(false);
 
-  expect((await submitRsvp(db, { slug: gathering.slug, token: guests[0].token, read: () => ({ attending: "ya", attendeeCount: "1",  note: "Hadir Gathering" }) })).ok).toBe(true);
-  expect((await findGuestPage(db, workshop.slug, guests[1].token))?.events[0].response).toBeNull();
-  expect((await submitRsvp(db, { slug: workshop.slug, token: guests[1].token, read: () => ({ attending: "tidak", attendeeCount: "0",  note: "Belum bisa" }) })).ok).toBe(true);
+  expect((await submitRsvp(db, { token: guests[0].token, read: () => ({ attending: "ya", attendeeCount: "1",  note: "Hadir Gathering" }) })).ok).toBe(true);
+  expect((await findGuestPage(db, guests[1].token))?.events[0].response).toBeNull();
+  expect((await submitRsvp(db, { token: guests[1].token, read: () => ({ attending: "tidak", attendeeCount: "0",  note: "Belum bisa" }) })).ok).toBe(true);
 
   for (const [i, target] of targets.entries()) {
-    const page = await findGuestPage(db, target.slug, guests[i].token);
+    const page = await findGuestPage(db, guests[i].token);
     expect(page?.invitation).toMatchObject({ title: `${target.title} Komunitas`, content: { sambutan: `Sambutan ${target.title}`, penyelenggara: { nama: `Penyelenggara ${target.title}`, namaEo: "" } }, templateKey: target.templateKey });
     expect(page?.events).toHaveLength(1);
     expect(page?.events[0]).toMatchObject({ id: eventIds[i], name: `Sesi ${target.title}`, response: { attending: i === 0, attendeeCount: i === 0 ? 1 : 0 } });

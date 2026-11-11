@@ -13,15 +13,22 @@ const STATUS_UNDANGAN = {
   ditangguhkan: { label: "Ditangguhkan", kelas: "bg-jingga-bg text-jingga" },
 } as const;
 
-function invitationNav(id: string): ItemNav[] {
+function invitationNav(id: string, peran: "pemilik" | "anggota"): ItemNav[] {
   const base = `/undangan/${id}`;
+  if (peran === "anggota") {
+    return [
+      { label: "Daftar undangan", ikon: "tamu", href: `${base}/tamu` },
+      { label: "Kirim undangan", ikon: "kirim", href: `${base}/kirim` },
+      { label: "Check-in", ikon: "ceklis", href: `${base}/checkin` },
+    ];
+  }
   return [
     { label: "Ringkasan RSVP", ikon: "dasbor", href: `${base}/ringkasan` },
     { label: "Isi undangan", ikon: "pena", href: `${base}/isi` },
-    { label: "Daftar tamu", ikon: "tamu", href: `${base}/tamu` },
+    { label: "Daftar undangan", ikon: "tamu", href: `${base}/tamu` },
     { label: "Kirim undangan", ikon: "kirim", href: `${base}/kirim` },
-    { label: "Pesan tamu", ikon: "surat", href: `${base}/ucapan` },
     { label: "Check-in", ikon: "ceklis", href: `${base}/checkin` },
+    { label: "Tim", ikon: "tautan", href: `${base}/tim` },
     { label: "Ganti template", ikon: "templat", href: `${base}/template` },
   ];
 }
@@ -31,6 +38,7 @@ export type ShellInvitation = {
   id: string;
   title: string;
   status: keyof typeof STATUS_UNDANGAN;
+  peran: "pemilik" | "anggota";
 };
 
 export function AppShell({
@@ -63,7 +71,7 @@ export function AppShell({
 
         {invitation && status ? (
           <div className="flex flex-col gap-0.5 rounded-lg bg-kertas p-3">
-            <span className="text-xs text-redup">Undangan</span>
+            <span className="text-xs text-redup">{invitation.peran === "anggota" ? "Undangan (anggota tim)" : "Undangan"}</span>
             <span className="font-medium wrap-anywhere">
               {invitation.title}
             </span>
@@ -80,7 +88,7 @@ export function AppShell({
             { label: "Semua undangan", ikon: "surat" as const, href: "/undangan", tepat: true },
             { label: "Buat undangan", ikon: "pena" as const, href: "/undangan/baru" },
           ] : []),
-          ...(invitation ? invitationNav(invitation.id) : []),
+          ...(invitation ? invitationNav(invitation.id, invitation.peran) : []),
           ...(!kelola ? [{ label: "Pengaturan akun", ikon: "kunci" as const, href: "/undangan/akun" }] : []),
         ]} />
 

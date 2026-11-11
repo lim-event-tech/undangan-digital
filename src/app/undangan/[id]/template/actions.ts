@@ -16,7 +16,7 @@ export async function gantiTemplateAction(invitationId: string, formData: FormDa
   if (key !== invitation.templateKey) {
     await setInvitationTemplate(db, invitation.id, key);
     revalidatePath("/undangan", "layout");
-    revalidatePath(`/${invitation.slug}`, "layout");
+    revalidatePath("/[token]", "page");
   }
   redirect(`/undangan/${invitation.id}/isi`);
 }

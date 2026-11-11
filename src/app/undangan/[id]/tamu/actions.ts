@@ -14,7 +14,7 @@ import {
   listEvents,
   updateGuest,
 } from "@/lib/guests/service";
-import { requireInvitationById } from "@/lib/session";
+import { requireInvitationAccess } from "@/lib/session";
 import { isUuid } from "@/lib/uuid";
 
 function field(formData: FormData, name: string): string {
@@ -25,7 +25,7 @@ function field(formData: FormData, name: string): string {
 export async function saveGuestAction(invitationId: string, _state: GuestFormState,
   formData: FormData,
 ): Promise<GuestFormState> {
-  const { invitation } = await requireInvitationById(invitationId);
+  const { invitation, user, scope } = await requireInvitationAccess(invitationId);
 
   const id = field(formData, "id");
   const parsed = parseGuestForm(formData);
@@ -50,12 +50,13 @@ export async function saveGuestAction(invitationId: string, _state: GuestFormSta
       invitation.id,
       input.phone,
       id || undefined,
+      scope ?? undefined,
     );
     if (conflict) return { duplicate: { name: conflict.name }, values };
   }
 
   if (id) {
-    const updated = await updateGuest(db, invitation.id, id, input);
+    const updated = await updateGuest(db, invitation.id, id, input, scope ?? undefined);
     if (!updated) {
       return {
         formError: "Tamu tidak ditemukan. Mungkin sudah dihapus.",
@@ -63,7 +64,7 @@ export async function saveGuestAction(invitationId: string, _state: GuestFormSta
       };
     }
   } else {
-    await createGuest(db, invitation.id, input);
+    await createGuest(db, invitation.id, input, user.id);
   }
 
   revalidatePath(`/undangan/${invitation.id}/tamu`);
@@ -71,9 +72,9 @@ export async function saveGuestAction(invitationId: string, _state: GuestFormSta
 }
 
 export async function deleteGuestAction(invitationId: string, formData: FormData) {
-  const { invitation } = await requireInvitationById(invitationId);
+  const { invitation, scope } = await requireInvitationAccess(invitationId);
   const id = field(formData, "id");
-  if (isUuid(id)) await deleteGuest(db, invitation.id, id);
+  if (isUuid(id)) await deleteGuest(db, invitation.id, id, scope ?? undefined);
   revalidatePath(`/undangan/${invitation.id}/tamu`);
   redirect(`/undangan/${invitation.id}/tamu?ok=dihapus`);
 }

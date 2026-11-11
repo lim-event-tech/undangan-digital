@@ -29,14 +29,14 @@ export async function markUnsent(
   return rows.length > 0;
 }
 
-export async function countSent(db: AppDb, invitationId: string) {
+export async function countSent(db: AppDb, invitationId: string, addedBy?: string) {
   const [row] = await db
     .select({
       total: sql<number>`count(*)::int`,
       sent: sql<number>`count(${guest.sentAt})::int`,
     })
     .from(guest)
-    .where(eq(guest.invitationId, invitationId));
+    .where(and(eq(guest.invitationId, invitationId), addedBy ? eq(guest.addedBy, addedBy) : undefined));
   return { total: row?.total ?? 0, sent: row?.sent ?? 0 };
 }
 

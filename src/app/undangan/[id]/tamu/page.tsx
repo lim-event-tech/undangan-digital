@@ -9,6 +9,8 @@ import {
   tombolTerang,
 } from "@/components/ui";
 import { db } from "@/db";
+import { user as userTable } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import {
   countGuests,
   getGuest,
@@ -17,12 +19,14 @@ import {
   listGuests,
 } from "@/lib/guests/service";
 import { formatPhone } from "@/lib/phone";
-import { requireInvitationById } from "@/lib/session";
+import { requireInvitationAccess } from "@/lib/session";
+import { listMembers } from "@/lib/team/service";
 import { isUuid } from "@/lib/uuid";
+import { KeluarTim } from "../tim/keluar-tim";
 import { FormTamu } from "./form-tamu";
 import { TombolSalin } from "./tombol-salin";
 
-export const metadata: Metadata = { title: "Daftar tamu" };
+export const metadata: Metadata = { title: "Daftar undangan" };
 
 const MAKS_BARIS = 500;
 
@@ -58,8 +62,9 @@ export default async function TamuPage({
   params,
   searchParams,
 }: PageProps<"/undangan/[id]/tamu">) {
-  const { invitation } = await requireInvitationById((await params).id);
+  const { invitation, role, scope } = await requireInvitationAccess((await params).id);
   const sp = await searchParams;
+  const pemilik = role === "pemilik";
 
   const q = satu(sp.q)?.slice(0, 100);
   const grupParam = satu(sp.grup);
@@ -69,23 +74,32 @@ export default async function TamuPage({
   const ubahParam = satu(sp.ubah);
   const banner = pesanOk(satu(sp.ok), angka(sp.diimpor), angka(sp.dilewati));
 
+  const anggota = pemilik ? await listMembers(db, invitation.id) : [];
+  const [pemilikRow] = pemilik ? await db.select({ id: userTable.id, name: userTable.name }).from(userTable).where(eq(userTable.id, invitation.ownerId)) : [];
+  const penambah = [...(pemilikRow ? [{ id: pemilikRow.id, name: `${pemilikRow.name} (pemilik)` }] : []), ...anggota.map((m) => ({ id: m.userId, name: m.name }))];
+  const olehParam = satu(sp.oleh);
+  const oleh = pemilik && olehParam && penambah.some((p) => p.id === olehParam) ? olehParam : undefined;
+  const batas = scope ?? oleh;
+  const namaPenambah = new Map(penambah.map((p) => [p.id, p.name]));
+
   const [events, groups, total, rows, editing] = await Promise.all([
     listEvents(db, invitation.id),
-    listGroups(db, invitation.id),
-    countGuests(db, invitation.id),
-    listGuests(db, invitation.id, { q, groupId: grupId, eventId: acaraId }),
-    isUuid(ubahParam) ? getGuest(db, invitation.id, ubahParam) : null,
+    listGroups(db, invitation.id, scope ?? undefined),
+    countGuests(db, invitation.id, scope ?? undefined),
+    listGuests(db, invitation.id, { q, groupId: grupId, eventId: acaraId, addedBy: batas }),
+    isUuid(ubahParam) ? getGuest(db, invitation.id, ubahParam, scope ?? undefined) : null,
   ]);
 
   const eventsById = new Map(events.map((e, index) => [e.id, { ...e, index }]));
   const tampil = rows.slice(0, MAKS_BARIS);
-  const disaring = Boolean(q || grupId || acaraId);
+  const disaring = Boolean(q || grupId || acaraId || oleh);
 
   function href(ubah?: string) {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (grupId) params.set("grup", grupId);
     if (acaraId) params.set("acara", acaraId);
+    if (oleh) params.set("oleh", oleh);
     if (ubah) params.set("ubah", ubah);
     const query = params.toString();
     return `/undangan/${invitation.id}/tamu${query ? `?${query}` : ""}`;
@@ -95,12 +109,13 @@ export default async function TamuPage({
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3.5">
         <div>
-          <h1 className={`m-0 ${judulHalaman}`}>Daftar tamu</h1>
+          <h1 className={`m-0 ${judulHalaman}`}>Daftar undangan</h1>
           <p className="mt-1 mb-0 text-sm text-redup">
-            {total} tamu · tiap tamu punya link pribadi sendiri
+            {pemilik ? `${total} tamu · tiap tamu punya link pribadi sendiri` : `${total} tamu yang Anda tambahkan · hanya Anda dan pemilik undangan yang melihat daftar ini`}
           </p>
         </div>
         <div className="flex flex-wrap gap-2.5">
+          {!pemilik ? <KeluarTim /> : null}
           <Link href={`/undangan/${invitation.id}/tamu/impor`} className={`${tombolTerang} no-underline`}>
             <Ikon nama="unduh" ukuran={16} />
             Impor Excel atau CSV
@@ -124,7 +139,7 @@ export default async function TamuPage({
       <div className="flex flex-wrap items-start gap-6">
         <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-3.5">
           <Form
-            key={`${q ?? ""}|${grupId ?? ""}|${acaraId ?? ""}`}
+            key={`${q ?? ""}|${grupId ?? ""}|${acaraId ?? ""}|${oleh ?? ""}`}
             action={`/undangan/${invitation.id}/tamu`}
             className="flex flex-wrap items-end gap-2.5"
           >
@@ -169,6 +184,23 @@ export default async function TamuPage({
                 ))}
               </select>
             </label>
+            {pemilik && penambah.length > 1 ? (
+              <label className="flex items-center gap-2 text-[13px] font-medium text-redup-2">
+                Ditambahkan oleh
+                <select
+                  name="oleh"
+                  defaultValue={oleh ?? ""}
+                  className="min-h-11 rounded-lg border border-garis-input bg-white px-2.5 text-sm font-medium text-tinta"
+                >
+                  <option value="">Semua</option>
+                  {penambah.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             <button type="submit" className={tombolTerang}>
               Terapkan
             </button>
@@ -206,6 +238,7 @@ export default async function TamuPage({
                     <th scope="col" className="px-2.5 py-3 font-medium">WhatsApp</th>
                     <th scope="col" className="px-2.5 py-3 font-medium">Grup</th>
                     <th scope="col" className="px-2.5 py-3 font-medium">Acara</th>
+                    {pemilik && penambah.length > 1 ? <th scope="col" className="px-2.5 py-3 font-medium">Ditambahkan oleh</th> : null}
                     <th scope="col" className="px-2.5 py-3 text-center font-medium">Maks. peserta</th>
                     <th scope="col" className="px-2.5 py-3 font-medium">
                       <span className="sr-only">Aksi</span>
@@ -251,11 +284,12 @@ export default async function TamuPage({
                             ))}
                         </div>
                       </td>
+                      {pemilik && penambah.length > 1 ? <td className="px-2.5 py-3 text-xs text-redup-2">{namaPenambah.get(g.addedBy ?? invitation.ownerId) ?? "—"}</td> : null}
                       <td className="px-2.5 py-3 text-center font-medium">{g.maxAttendees}</td>
                       <td className="px-2.5 py-1.5 whitespace-nowrap">
                         <div className="flex gap-1.5">
                           <TombolSalin
-                            path={`/${invitation.slug}/${g.token}`}
+                            path={`/${g.token}`}
                             nama={g.name}
                           />
                           <Link

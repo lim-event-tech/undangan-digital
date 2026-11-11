@@ -6,7 +6,6 @@ import { db } from "@/db";
 import { recordAudit } from "@/lib/admin/audit";
 import { requireAdmin } from "@/lib/admin/guard";
 import {
-  adminChangeSlug,
   adminDeleteInvitation,
   adminSetDeadline,
   getInvitationAdmin,
@@ -15,8 +14,6 @@ import {
 import { dateFromDeadline } from "@/lib/datetime";
 import { parseRsvpDeadline } from "@/lib/rsvp/shared";
 import { SAVED, type SaveResult } from "@/lib/save-result";
-import { checkCustomSlug } from "@/lib/slug";
-import { getSettings } from "@/lib/platform/service";
 import { isUuid } from "@/lib/uuid";
 
 function field(formData: FormData, name: string): string {
@@ -48,43 +45,6 @@ export async function ubahStatusAction(formData: FormData): Promise<void> {
     detail: `Status ${detail.status} menjadi ${hasil ?? detail.status}`,
   });
   refresh(id);
-}
-
-export async function ubahSlugAction(
-  _state: SaveResult | null,
-  formData: FormData,
-): Promise<SaveResult> {
-  const id = field(formData, "id");
-  if (!isUuid(id)) return NOT_FOUND;
-  const admin = await requireAdmin("ubah-undangan");
-
-  const checked = checkCustomSlug(field(formData, "slug"));
-  if (!checked.ok) return { ok: false, errors: { slug: checked.error } };
-  const settings = await getSettings(db);
-  if (settings.slugCadangan.includes(checked.slug)) {
-    return { ok: false, errors: { slug: "Link ini termasuk kata yang dicadangkan" } };
-  }
-
-  const detail = await getInvitationAdmin(db, id);
-  if (!detail) return NOT_FOUND;
-  const result = await adminChangeSlug(db, id, checked.slug);
-  if (!result.ok) {
-    if (result.reason === "dipakai") {
-      return { ok: false, errors: { slug: "Link ini sudah dipakai undangan lain" } };
-    }
-    return NOT_FOUND;
-  }
-  if (detail.slug !== checked.slug) {
-    await recordAudit(db, {
-      actor: admin,
-      category: "undangan",
-      action: "Mengubah slug",
-      target: `/u/${checked.slug}`,
-      detail: `Dari ${detail.slug}${detail.slugLocked ? ", walau sudah ada link terkirim" : ""}`,
-    });
-  }
-  refresh(id);
-  return SAVED;
 }
 
 export async function ubahBatasAction(

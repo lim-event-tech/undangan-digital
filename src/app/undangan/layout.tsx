@@ -1,27 +1,41 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { db } from "@/db";
 import { todayWib } from "@/lib/datetime";
 import { getSettings } from "@/lib/platform/service";
 import { ANNOUNCEMENT_LABEL, activeAnnouncement } from "@/lib/platform/settings";
 import { getActing, requireUser } from "@/lib/session";
+import { looksLikeInviteToken } from "@/lib/team/service";
+import { INVITE_COOKIE } from "@/lib/token";
 import { listInvitationsForOwner } from "@/lib/invitations/service";
+import { listInvitationsForMember } from "@/lib/team/service";
 
 export default async function UndanganLayout({
   children,
 }: LayoutProps<"/undangan">) {
   const user = await requireUser();
+  const tertunda = (await cookies()).get(INVITE_COOKIE)?.value;
+  if (looksLikeInviteToken(tertunda)) redirect(`/terima/${tertunda}`);
   const [settings, acting] = await Promise.all([
     getSettings(db),
     getActing(),
   ]);
-  const invitations = settings.pemeliharaan.aktif ? [] : acting ? [acting.invitation] : await listInvitationsForOwner(db, user.id);
+  const invitations = settings.pemeliharaan.aktif
+    ? []
+    : acting
+      ? [{ ...acting.invitation, peran: "pemilik" as const }]
+      : [
+          ...(await listInvitationsForOwner(db, user.id)).map((item) => ({ ...item, peran: "pemilik" as const })),
+          ...(await listInvitationsForMember(db, user.id)).map((item) => ({ ...item, peran: "anggota" as const })),
+        ];
   const announcement = activeAnnouncement(settings, todayWib());
 
   return (
     <AppShell
       kelola={acting ? { admin: acting.admin.name } : null}
       user={{ name: user.name, email: user.email }}
-      invitations={invitations.map(({ id, title, status }) => ({ id, title, status }))}
+      invitations={invitations.map(({ id, title, status, peran }) => ({ id, title, status, peran }))}
       pengumuman={
         announcement
           ? { teks: announcement.teks, jenis: ANNOUNCEMENT_LABEL[announcement.jenis] }

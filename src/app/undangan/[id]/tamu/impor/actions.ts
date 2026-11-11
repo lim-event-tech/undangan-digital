@@ -6,7 +6,7 @@ import { db } from "@/db";
 import { MAX_IMPORT_BYTES, MAX_IMPORT_ROWS, type RawRow } from "@/lib/guests/import";
 import { readXlsx } from "@/lib/xlsx";
 import { commitImport, type CommitImportResult } from "@/lib/guests/service";
-import { requireInvitationById } from "@/lib/session";
+import { requireInvitationAccess } from "@/lib/session";
 
 const rowSchema = z.object({
   row: z.number().int().min(2).max(1_000_000),
@@ -25,7 +25,7 @@ const payloadSchema = z.object({
 export type BacaXlsxResult = { ok: true; table: string[][] } | { ok: false; error: string };
 
 export async function bacaXlsxAction(invitationId: string, formData: FormData): Promise<BacaXlsxResult> {
-  await requireInvitationById(invitationId);
+  await requireInvitationAccess(invitationId);
   const file = formData.get("file");
   if (!(file instanceof File)) return { ok: false, error: "File tidak terbaca." };
   if (file.size > MAX_IMPORT_BYTES) {
@@ -43,7 +43,7 @@ export async function bacaXlsxAction(invitationId: string, formData: FormData): 
 export async function commitImportAction(invitationId: string, rows: RawRow[],
   skipProblems: boolean,
 ): Promise<CommitImportResult> {
-  const { invitation } = await requireInvitationById(invitationId);
+  const { invitation, user, scope } = await requireInvitationAccess(invitationId);
 
   const parsed = payloadSchema.safeParse({ rows, skipProblems });
   if (!parsed.success) {
@@ -59,6 +59,8 @@ export async function commitImportAction(invitationId: string, rows: RawRow[],
       invitation.id,
       parsed.data.rows,
       parsed.data.skipProblems,
+      user.id,
+      scope ?? undefined,
     );
     if (result.ok) revalidatePath(`/undangan/${invitation.id}/tamu`);
     return result;

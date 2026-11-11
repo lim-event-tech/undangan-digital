@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { kolom, labelKolom, pesanGalat, tombolBahaya, tombolTerang } from "@/components/ui";
 import type { SaveResult } from "@/lib/save-result";
-import { hapusPermanenAction, ubahBatasAction, ubahSlugAction } from "./actions";
+import { hapusPermanenAction, ubahBatasAction } from "./actions";
 
 type Aksi = (state: SaveResult | null, formData: FormData) => Promise<SaveResult>;
 
@@ -27,56 +27,6 @@ function Pesan({ galat, sukses, teks }: { galat: { errors?: Record<string, strin
         </p>
       ) : null}
     </>
-  );
-}
-
-export function FormSlugAdmin({
-  id,
-  slug,
-  terkunci,
-  boleh,
-}: {
-  id: string;
-  slug: string;
-  terkunci: boolean;
-  boleh: boolean;
-}) {
-  const { aksi, memproses, galat, sukses } = useForm(ubahSlugAction);
-  return (
-    <form action={aksi} className="flex flex-col gap-2.5">
-      <input type="hidden" name="id" value={id} />
-      <label className={labelKolom}>
-        Slug link
-        <input
-          name="slug"
-          defaultValue={slug}
-          disabled={!boleh}
-          required
-          autoCapitalize="none"
-          spellCheck={false}
-          aria-invalid={galat?.errors?.slug ? true : undefined}
-          className={kolom}
-        />
-      </label>
-      {galat?.errors?.slug ? (
-        <p role="alert" className={`m-0 ${pesanGalat}`}>
-          {galat.errors.slug}
-        </p>
-      ) : null}
-      <p className="m-0 text-xs text-redup">
-        {terkunci
-          ? "Sudah ada link terkirim. Mengubah slug membuat link yang sudah dikirim tidak berlaku."
-          : "Belum terkunci, belum ada link terkirim."}
-      </p>
-      <Pesan galat={galat} sukses={sukses} teks="Slug diperbarui." />
-      {boleh ? (
-        <div>
-          <button type="submit" disabled={memproses} className={tombolTerang}>
-            {memproses ? "Menyimpan…" : "Ubah slug"}
-          </button>
-        </div>
-      ) : null}
-    </form>
   );
 }
 

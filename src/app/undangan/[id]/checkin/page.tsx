@@ -7,7 +7,7 @@ import { appBaseUrl } from "@/lib/app-url";
 import { checkinCounts, getOrCreateCheckinKey, listCheckinGuests } from "@/lib/checkin/service";
 import { formatStamp } from "@/lib/datetime";
 import { readContent } from "@/lib/invitations/content";
-import { requireInvitationById } from "@/lib/session";
+import { requireInvitationAccess } from "@/lib/session";
 import { TombolSalin } from "../tamu/tombol-salin";
 import { batalkanMasukAction, gantiKunciAction, masukkanTamuAction } from "./actions";
 
@@ -21,7 +21,8 @@ function satu(value: string | string[] | undefined): string | undefined {
 }
 
 export default async function CheckinPage({ params, searchParams }: PageProps<"/undangan/[id]/checkin">) {
-  const { invitation } = await requireInvitationById((await params).id);
+  const { invitation, role, scope } = await requireInvitationAccess((await params).id);
+  const pemilik = role === "pemilik";
   const sp = await searchParams;
   const q = satu(sp.q)?.slice(0, 100);
   const semua = satu(sp.tampil) === "semua";
@@ -36,18 +37,20 @@ export default async function CheckinPage({ params, searchParams }: PageProps<"/
             petugas tidak berlaku. Aktifkan di bagian Check-in di lokasi pada halaman Isi undangan bila Anda
             membutuhkannya.
           </p>
-          <Link href={`/undangan/${invitation.id}/isi#checkin`} className={`${tombolGelap} no-underline`}>
-            Buka pengaturan
-          </Link>
+          {pemilik ? (
+            <Link href={`/undangan/${invitation.id}/isi#checkin`} className={`${tombolGelap} no-underline`}>
+              Buka pengaturan
+            </Link>
+          ) : null}
         </section>
       </div>
     );
   }
 
   const [key, counts, guests] = await Promise.all([
-    getOrCreateCheckinKey(db, invitation.id),
-    checkinCounts(db, invitation.id),
-    listCheckinGuests(db, invitation.id, { q, onlyAttending: !semua, limit: MAKS_BARIS }),
+    pemilik ? getOrCreateCheckinKey(db, invitation.id) : Promise.resolve(null),
+    checkinCounts(db, invitation.id, scope ?? undefined),
+    listCheckinGuests(db, invitation.id, { q, onlyAttending: !semua, limit: MAKS_BARIS, addedBy: scope ?? undefined }),
   ]);
   const usherPath = `/petugas/${invitation.slug}/${key}`;
 
@@ -56,7 +59,7 @@ export default async function CheckinPage({ params, searchParams }: PageProps<"/
       <div>
         <h1 className={`m-0 ${judulHalaman}`}>Check-in tamu</h1>
         <p className="mt-1 mb-0 text-sm text-redup">
-          Tamu yang konfirmasi hadir mendapat kode QR. Petugas penerima tamu memindainya di hari acara.
+          {pemilik ? "Tamu yang konfirmasi hadir mendapat kode QR. Petugas penerima tamu memindainya di hari acara." : "Menampilkan tamu yang Anda tambahkan. Anda hanya bisa memasukkan tamu Anda sendiri."}
         </p>
       </div>
 
@@ -73,7 +76,7 @@ export default async function CheckinPage({ params, searchParams }: PageProps<"/
         ))}
       </dl>
 
-      <section aria-labelledby="judul-petugas" className={`${kartu} flex flex-col gap-3 p-5`}>
+      {pemilik ? <section aria-labelledby="judul-petugas" className={`${kartu} flex flex-col gap-3 p-5`}>
         <div>
           <h2 id="judul-petugas" className="m-0 font-judul text-2xl font-medium">
             Halaman petugas
@@ -104,12 +107,12 @@ export default async function CheckinPage({ params, searchParams }: PageProps<"/
           “Buat link baru” mematikan link petugas yang lama, misalnya bila link tersebar ke orang yang tidak
           seharusnya.
         </p>
-      </section>
+      </section> : null}
 
       <section aria-labelledby="judul-daftar-checkin" className={`${kartu} flex flex-col gap-4 p-5`}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 id="judul-daftar-checkin" className="m-0 font-judul text-2xl font-medium">
-            Daftar tamu
+            Daftar undangan
           </h2>
           <Form action={`/undangan/${invitation.id}/checkin`} className="flex gap-2">
             {semua ? <input type="hidden" name="tampil" value="semua" /> : null}
@@ -182,7 +185,7 @@ export default async function CheckinPage({ params, searchParams }: PageProps<"/
                 <div className="flex flex-wrap items-center gap-2">
                   {g.attending ? (
                     <a
-                      href={`/${invitation.slug}/${g.token}/qr`}
+                      href={`/${g.token}/qr`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`${tombolTerang} min-h-10 px-3.5 no-underline`}

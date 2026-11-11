@@ -11,6 +11,7 @@ import {
   getOwnedInvitation,
   type Invitation,
 } from "@/lib/invitations/service";
+import { getInvitationAccess, type Role } from "@/lib/team/service";
 import { isUuid } from "@/lib/uuid";
 
 export const ACTING_COOKIE = "ud_kelola";
@@ -112,6 +113,30 @@ export async function requireInvitationById(invitationId: unknown) {
   const invitation = await loadOwnedInvitation(user.id, invitationId);
   if (!invitation) notFound();
   return { user, invitation };
+}
+
+export type InvitationAccessContext = {
+  user: { id: string; name: string; email: string };
+  invitation: Invitation;
+  role: Role;
+  scope: string | null;
+};
+
+export async function requireInvitationAccess(invitationId: unknown): Promise<InvitationAccessContext> {
+  const user = await requireUser();
+  const session = await getSession();
+  if (session?.user.adminRole) {
+    const invitation = await loadOwnedInvitation(user.id, invitationId);
+    if (!invitation) notFound();
+    return { user, invitation, role: "pemilik", scope: null };
+  }
+  const access = await getInvitationAccess(db, user.id, invitationId);
+  if (!access) notFound();
+  return { user, invitation: access.invitation, role: access.role, scope: access.scope };
+}
+
+export async function requireInvitationOwner(invitationId: unknown) {
+  return requireInvitationById(invitationId);
 }
 
 export async function getWorkContextForInvitation(
