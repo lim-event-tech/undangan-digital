@@ -64,7 +64,7 @@ function Salam({ v, tema }: PropsBagian & { tema: TemplateKey }) {
     <section id="salam" className="event-bagian event-salam">
       <div className="event-surat" data-anim="surat">
         {v.tampilan.hiasan ? <span className="event-tanda-surat" aria-hidden="true">{tema === "melati" || tema === "pasundan" || tema === "bintang" ? <HiasanEvent tema={tema} /> : "❧"}</span> : null}
-        <Judul>Sambutan</Judul>
+        <Judul>{v.namaTamu ? `Dear ${v.namaTamu}` : "Dear Tamu Undangan"}</Judul>
         {v.sambutan ? <p className="event-prosa">{v.sambutan}</p> : null}
         {v.penyelenggara.nama ? <p className="event-penanda-surat">{v.penyelenggara.nama}</p> : null}
       </div>
