@@ -29,11 +29,11 @@ pipeline {
                     echo "Mendeteksi branch aktif: ${currentBranch}"
 
                     def secretId = ''
-                    if (currentBranch.contains('staging')) {
+                    if (currentBranch.contains('main')) {
                         echo "Environment terdeteksi: STAGING"
                         secretId = env.STAGING_ENV_CREDENTIALS_ID
                     } else {
-                        echo "Environment terdeteksi: PRODUCTION (main)"
+                        echo "Environment terdeteksi: PRODUCTION (production)"
                         secretId = env.PROD_ENV_CREDENTIALS_ID
                     }
 
