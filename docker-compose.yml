@@ -1,9 +1,9 @@
-name: undangan-digital
+name: lim-rsvp
 
 services:
   db:
     image: postgres:17-alpine
-    container_name: undangan-db
+    container_name: lim-rsvp-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-undangan}
@@ -12,7 +12,9 @@ services:
     ports:
       - "127.0.0.1:${DB_PORT:-5433}:5432"
     volumes:
-      - undangan-db-data:/var/lib/postgresql/data
+      - lim-rsvp-db-data:/var/lib/postgresql/data
+    networks:
+      - lim-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
@@ -21,8 +23,8 @@ services:
 
   app:
     build: .
-    image: undangan-app
-    container_name: undangan-app
+    image: lim-rsvp-app
+    container_name: lim-rsvp-app
     restart: unless-stopped
     depends_on:
       db:
@@ -34,6 +36,8 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-undangan}:${POSTGRES_PASSWORD:-undangan_dev}@db:5432/${POSTGRES_DB:-undangan_digital}
     ports:
       - "127.0.0.1:${APP_PORT:-3000}:3000"
+    networks:
+      - lim-network
     logging:
       driver: json-file
       options:
@@ -47,4 +51,8 @@ services:
       start_period: 15s
 
 volumes:
-  undangan-db-data:
+  lim-rsvp-db-data:
+
+networks:
+  lim-network:
+    driver: bridge
