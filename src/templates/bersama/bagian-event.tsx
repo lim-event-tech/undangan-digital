@@ -101,7 +101,7 @@ function Pengisi({ v }: PropsBagian) {
 
 
 function Kontak({ v }: PropsBagian) {
-  return <section id="kontak" className="event-bagian event-kontak"><Judul>Narahubung</Judul><article className="event-kontak-isi" data-anim="naik"><h3>{v.kontak.nama}</h3><div className="event-aksi">{v.kontakWhatsapp ? <a className="event-tombol" href={v.kontakWhatsapp} target="_blank" rel="noopener noreferrer">WhatsApp panitia <span aria-hidden="true">↗</span></a> : null}{v.kontakEmail ? <a className="event-tautan" href={v.kontakEmail}>{v.kontak.email}</a> : null}</div></article></section>;
+  return <section id="kontak" className="event-bagian event-kontak"><Judul>Narahubung</Judul><article className="event-kontak-isi" data-anim="naik"><h3>{v.kontak.nama}</h3><div className="event-aksi">{v.kontakWhatsapp ? <a className="event-tombol" href={v.kontakWhatsapp} target="_blank" rel="noopener noreferrer">WhatsApp Narahubung <span aria-hidden="true">↗</span></a> : null}{v.kontakEmail ? <a className="event-tautan" href={v.kontakEmail}>{v.kontak.email}</a> : null}</div></article></section>;
 }
 
 

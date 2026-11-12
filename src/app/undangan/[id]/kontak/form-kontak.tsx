@@ -57,7 +57,7 @@ export function FormKontak({
           className={kolom}
         />
         <span className="text-xs text-redup">
-          Tombol WhatsApp panitia pada undangan tamu Anda akan langsung mengarah ke nomor ini.
+          Tombol WhatsApp narahubung pada undangan tamu Anda akan langsung mengarah ke nomor ini.
         </span>
         {state && !state.ok && state.errors?.telepon ? (
           <span className={pesanGalat}>{state.errors.telepon}</span>
