@@ -13,14 +13,16 @@ const STATUS_UNDANGAN = {
   ditangguhkan: { label: "Ditangguhkan", kelas: "bg-jingga-bg text-jingga" },
 } as const;
 
-function invitationNav(id: string, peran: "pemilik" | "anggota"): ItemNav[] {
+function invitationNav(id: string, peran: "pemilik" | "anggota", templateKey?: string): ItemNav[] {
   const base = `/undangan/${id}`;
+  const pratinjauHref = `/pratinjau/${templateKey || "bersama"}?undangan=${id}`;
   if (peran === "anggota") {
     return [
       { label: "Daftar undangan", ikon: "tamu", href: `${base}/tamu` },
       { label: "Kirim undangan", ikon: "kirim", href: `${base}/kirim` },
       { label: "Narahubung saya", ikon: "surat", href: `${base}/kontak` },
       { label: "Check-in", ikon: "ceklis", href: `${base}/checkin` },
+      { label: "Pratinjau undangan", ikon: "mata", href: pratinjauHref, targetBlank: true },
     ];
   }
   return [
@@ -31,6 +33,7 @@ function invitationNav(id: string, peran: "pemilik" | "anggota"): ItemNav[] {
     { label: "Check-in", ikon: "ceklis", href: `${base}/checkin` },
     { label: "Tim", ikon: "tautan", href: `${base}/tim` },
     { label: "Ganti template", ikon: "templat", href: `${base}/template` },
+    { label: "Pratinjau undangan", ikon: "mata", href: pratinjauHref, targetBlank: true },
   ];
 }
 
@@ -40,6 +43,7 @@ export type ShellInvitation = {
   title: string;
   status: keyof typeof STATUS_UNDANGAN;
   peran: "pemilik" | "anggota";
+  templateKey?: string;
 };
 
 export function AppShell({
@@ -89,7 +93,7 @@ export function AppShell({
             { label: "Semua undangan", ikon: "surat" as const, href: "/undangan", tepat: true },
             { label: "Buat undangan", ikon: "pena" as const, href: "/undangan/baru" },
           ] : []),
-          ...(invitation ? invitationNav(invitation.id, invitation.peran) : []),
+          ...(invitation ? invitationNav(invitation.id, invitation.peran, invitation.templateKey) : []),
           ...(!kelola ? [{ label: "Pengaturan akun", ikon: "kunci" as const, href: "/undangan/akun" }] : []),
         ]} />
 

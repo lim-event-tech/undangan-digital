@@ -60,6 +60,12 @@ const BENTUK = {
   ),
   tutup: <path d="M6 6l12 12M18 6L6 18" />,
   sampah: <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" />,
+  mata: (
+    <>
+      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
 } as const;
 
 export type NamaIkon = keyof typeof BENTUK;

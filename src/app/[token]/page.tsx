@@ -10,6 +10,7 @@ import { isLinkCrawler, markOpened } from "@/lib/guests/sending";
 import { findGuestPage, type GuestPage } from "@/lib/rsvp/service";
 import { isRsvpClosed } from "@/lib/rsvp/shared";
 import { getSession } from "@/lib/session";
+import { getInvitationAccess } from "@/lib/team/service";
 import { looksLikeGuestToken } from "@/lib/token";
 import { currentClientKey, tokenGuard } from "@/lib/token-guard-instance";
 import { renderTemplate } from "@/templates/render";
@@ -63,11 +64,12 @@ export default async function UndanganTamuPage({ params }: PageProps<"/[token]">
 
   const { invitation, guest, events, photos } = lookup.data;
   const session = await getSession();
-  const isOwner = session?.user.id === invitation.ownerId;
-  const preview = invitation.status === "draf" && isOwner;
+  const access = session?.user ? await getInvitationAccess(db, session.user.id, invitation.id) : null;
+  const isTeamOrOwner = Boolean(access);
+  const preview = invitation.status === "draf" && isTeamOrOwner;
   if (invitation.status !== "terbit" && !preview) notFound();
 
-  if (invitation.status === "terbit" && !isOwner && !guest.firstOpenedAt) {
+  if (invitation.status === "terbit" && !isTeamOrOwner && !guest.firstOpenedAt) {
     const userAgent = (await headers()).get("user-agent");
     if (!isLinkCrawler(userAgent)) {
       const guestId = guest.id;

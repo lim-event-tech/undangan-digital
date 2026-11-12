@@ -35,7 +35,7 @@ export default async function UndanganLayout({
     <AppShell
       kelola={acting ? { admin: acting.admin.name } : null}
       user={{ name: user.name, email: user.email }}
-      invitations={invitations.map(({ id, title, status, peran }) => ({ id, title, status, peran }))}
+      invitations={invitations.map(({ id, title, status, peran, templateKey }) => ({ id, title, status, peran, templateKey }))}
       pengumuman={
         announcement
           ? { teks: announcement.teks, jenis: ANNOUNCEMENT_LABEL[announcement.jenis] }

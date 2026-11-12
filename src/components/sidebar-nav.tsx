@@ -10,6 +10,7 @@ export type ItemNav = {
   href?: string;
   lencana?: number;
   tepat?: boolean;
+  targetBlank?: boolean;
 };
 
 const dasar =
@@ -45,6 +46,8 @@ export function SidebarNav({ items }: { items: ItemNav[] }) {
             <li key={item.label}>
               <Link
                 href={item.href}
+                target={item.targetBlank ? "_blank" : undefined}
+                rel={item.targetBlank ? "noopener noreferrer" : undefined}
                 aria-current={aktif ? "page" : undefined}
                 className={`${dasar} no-underline ${
                   aktif
@@ -54,6 +57,7 @@ export function SidebarNav({ items }: { items: ItemNav[] }) {
               >
                 <Ikon nama={item.ikon} />
                 {item.label}
+                {item.targetBlank ? <span className="ml-auto text-xs text-redup">↗</span> : null}
                 {item.lencana ? (
                   <span className="ml-auto rounded-full bg-galat px-2 py-0.5 text-[11px] font-medium text-white">
                     {item.lencana}

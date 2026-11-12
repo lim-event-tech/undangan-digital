@@ -116,6 +116,15 @@ export default async function TamuPage({
         </div>
         <div className="flex flex-wrap gap-2.5">
           {!pemilik ? <KeluarTim /> : null}
+          <a
+            href={`/pratinjau/${invitation.templateKey}?undangan=${invitation.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${tombolTerang} no-underline`}
+          >
+            <Ikon nama="mata" ukuran={16} />
+            Pratinjau
+          </a>
           <Link href={`/undangan/${invitation.id}/tamu/impor`} className={`${tombolTerang} no-underline`}>
             <Ikon nama="unduh" ukuran={16} />
             Impor Excel atau CSV
@@ -292,6 +301,15 @@ export default async function TamuPage({
                             path={`/${g.token}`}
                             nama={g.name}
                           />
+                          <a
+                            href={`/${g.token}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Buka undangan ${g.name}`}
+                            className="inline-flex size-10 items-center justify-center rounded-md border border-garis bg-white text-redup-2 transition-colors hover:bg-kertas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emas-muda"
+                          >
+                            <Ikon nama="mata" ukuran={16} />
+                          </a>
                           <Link
                             href={`${href(g.id)}#tambah`}
                             aria-label={`Ubah ${g.name}`}
