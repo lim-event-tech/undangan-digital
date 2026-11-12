@@ -1,8 +1,8 @@
-import { requireInvitationById } from "@/lib/session";
+import { requireInvitationAccess } from "@/lib/session";
 import { Fragment } from "react";
 
 export default async function InvitationLayout({ children, params }: LayoutProps<"/undangan/[id]">) {
   const { id } = await params;
-  await requireInvitationById(id);
+  await requireInvitationAccess(id);
   return <Fragment key={id}>{children}</Fragment>;
 }
