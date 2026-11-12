@@ -6,8 +6,9 @@ import { commitImport, countGuests, createGuest, deleteGuest, findPhoneConflict,
 import { countSent, markSent } from "@/lib/guests/sending";
 import { scanCheckin, checkinCounts, listCheckinGuests } from "@/lib/checkin/service";
 import { checkinCode } from "@/lib/checkin/code";
+import { saveContentText } from "@/lib/invitations/editor";
 import { getDashboard } from "@/lib/rsvp/dashboard";
-import { submitRsvp } from "@/lib/rsvp/service";
+import { findGuestPage, submitRsvp } from "@/lib/rsvp/service";
 import { createTestDb, seedInvitation, type TestDb } from "@/test/db";
 import { inviteMail } from "./mail";
 import {
@@ -16,6 +17,7 @@ import {
   acceptInvite,
   createInvite,
   getInvitationAccess,
+  getMemberContact,
   hashInviteToken,
   listInvitationsForMember,
   listMembers,
@@ -24,6 +26,7 @@ import {
   previewInvite,
   removeMember,
   revokeInvite,
+  saveMemberContact,
 } from "./service";
 
 let db: TestDb;
@@ -211,5 +214,42 @@ describe("akses menurut peran", () => {
     expect(await listGuests(db, ctx.invitation.id, { addedBy: ctx.salesA })).toEqual([]);
     const sisa = await db.select().from(invitationMember).where(and(eq(invitationMember.invitationId, ctx.invitation.id), eq(invitationMember.userId, ctx.salesB)));
     expect(sisa).toHaveLength(1);
+  });
+
+  it("mengatur dan meng-override narahubung undangan khusus untuk tamu milik anggota tim", async () => {
+    const ctx = await setup();
+    await saveContentText(db, ctx.invitation.id, { kontak: { nama: "Panitia", telepon: "+628999999999", email: "panitia@utama.com" } });
+    const a1 = await tamu(ctx, "Klien Sales A", ctx.salesA);
+    const ownerGuest = await tamu(ctx, "Klien Pemilik", ctx.ownerId);
+
+    // Sebelum diatur, narahubung memakai bawaan acara
+    const pageAwal = await findGuestPage(db, a1.token);
+    expect(pageAwal?.invitation.content.kontak.nama).toBe("Panitia");
+
+    // Sales A mengatur kontak khusus
+    expect(await saveMemberContact(db, ctx.invitation.id, ctx.salesA, {
+      name: "Sales A Support",
+      phone: "+628111222333",
+      email: "sales-a@support.com",
+    })).toBe(true);
+
+    const contact = await getMemberContact(db, ctx.invitation.id, ctx.salesA);
+    expect(contact).toEqual({
+      name: "Sales A Support",
+      phone: "+628111222333",
+      email: "sales-a@support.com",
+    });
+
+    // Tamu milik Sales A melihat narahubung Sales A
+    const pageSales = await findGuestPage(db, a1.token);
+    expect(pageSales?.invitation.content.kontak).toEqual({
+      nama: "Sales A Support",
+      telepon: "+628111222333",
+      email: "sales-a@support.com",
+    });
+
+    // Tamu pemilik tetap melihat kontak utama bawaan acara
+    const pageOwner = await findGuestPage(db, ownerGuest.token);
+    expect(pageOwner?.invitation.content.kontak.nama).toBe("Panitia");
   });
 });

@@ -262,6 +262,9 @@ export const invitationMember = pgTable(
     userId: text()
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
+    contactName: text(),
+    contactPhone: text(),
+    contactEmail: text(),
     createdAt: createdAt(),
   },
   (t) => [

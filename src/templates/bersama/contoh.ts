@@ -20,13 +20,13 @@ export function contohView(now: number): InvitationView {
       penutup: "Terima kasih atas perhatian dan kesediaan Bapak/Ibu untuk hadir. Sampai bertemu pada kegiatan kami.",
     }),
     events: [
-      { id: "contoh-utama", key: "utama", name: "Sesi utama", sortOrder: 0, date: "2027-02-20", endDate: null, dayTimes: [], time: "09:00", endTime: "11:00", timezone: "WIB", venueName: "Aula Graha Puspa", address: ALAMAT, mapsUrl: PETA, response: null,
+      { id: "contoh-utama", key: "utama", name: "Sesi utama", sortOrder: 0, date: "2027-02-20", endDate: null, singleDayOnly: false, dayTimes: [], time: "09:00", endTime: "11:00", timezone: "WIB", venueName: "Aula Graha Puspa", address: ALAMAT, mapsUrl: PETA, response: null,
         agenda: [
           { id: "20000000-0000-4000-8000-000000000001", jam: "09:00", judul: "Pembukaan", keterangan: "Sambutan penyelenggara dan pengantar kegiatan." },
           { id: "20000000-0000-4000-8000-000000000002", jam: "09:30", judul: "Paparan utama", keterangan: "Pemaparan narasumber dan diskusi peserta." },
         ],
       },
-      { id: "contoh-lanjutan", key: "lanjutan", name: "Diskusi dan jejaring", sortOrder: 1, date: "2027-02-20", endDate: null, dayTimes: [], time: "13:00", endTime: "15:00", timezone: "WIB", venueName: "Aula Graha Puspa", address: ALAMAT, mapsUrl: PETA, response: null, agenda: [] },
+      { id: "contoh-lanjutan", key: "lanjutan", name: "Diskusi dan jejaring", sortOrder: 1, date: "2027-02-20", endDate: null, singleDayOnly: false, dayTimes: [], time: "13:00", endTime: "15:00", timezone: "WIB", venueName: "Aula Graha Puspa", address: ALAMAT, mapsUrl: PETA, response: null, agenda: [] },
     ],
     photos: [], rsvp: { closed: false, deadline: "2027-02-15T09:59:00.000Z" },
     now,

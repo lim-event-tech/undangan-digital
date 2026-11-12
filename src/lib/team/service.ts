@@ -54,7 +54,16 @@ export async function listInvitationsForMember(db: AppDb, userId: string): Promi
     .orderBy(desc(invitation.createdAt), desc(invitation.id));
 }
 
-export type MemberRow = { userId: string; name: string; email: string; joinedAt: Date; guests: number };
+export type MemberRow = {
+  userId: string;
+  name: string;
+  email: string;
+  joinedAt: Date;
+  guests: number;
+  contactName: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+};
 
 export async function listMembers(db: AppDb, invitationId: string): Promise<MemberRow[]> {
   return db
@@ -64,6 +73,9 @@ export async function listMembers(db: AppDb, invitationId: string): Promise<Memb
       email: user.email,
       joinedAt: invitationMember.createdAt,
       guests: sql<number>`(select count(*)::int from guest where guest.invitation_id = ${invitationId} and guest.added_by = ${user.id})`,
+      contactName: invitationMember.contactName,
+      contactPhone: invitationMember.contactPhone,
+      contactEmail: invitationMember.contactEmail,
     })
     .from(invitationMember)
     .innerJoin(user, eq(user.id, invitationMember.userId))
@@ -239,4 +251,44 @@ export async function acceptInvite(
       .onConflictDoNothing();
     return { ok: true, invitationId: invite.invitationId } as const;
   });
+}
+
+export type MemberContact = {
+  name: string | null;
+  phone: string | null;
+  email: string | null;
+};
+
+export async function getMemberContact(
+  db: AppDb,
+  invitationId: string,
+  userId: string,
+): Promise<MemberContact | null> {
+  const [row] = await db
+    .select({
+      name: invitationMember.contactName,
+      phone: invitationMember.contactPhone,
+      email: invitationMember.contactEmail,
+    })
+    .from(invitationMember)
+    .where(and(eq(invitationMember.invitationId, invitationId), eq(invitationMember.userId, userId)));
+  return row ?? null;
+}
+
+export async function saveMemberContact(
+  db: AppDb,
+  invitationId: string,
+  userId: string,
+  input: { name?: string | null; phone?: string | null; email?: string | null },
+): Promise<boolean> {
+  const result = await db
+    .update(invitationMember)
+    .set({
+      contactName: input.name ? input.name.trim().slice(0, 120) : null,
+      contactPhone: input.phone ? input.phone.trim().slice(0, 20) : null,
+      contactEmail: input.email ? input.email.trim().slice(0, 254) : null,
+    })
+    .where(and(eq(invitationMember.invitationId, invitationId), eq(invitationMember.userId, userId)))
+    .returning({ id: invitationMember.id });
+  return result.length > 0;
 }

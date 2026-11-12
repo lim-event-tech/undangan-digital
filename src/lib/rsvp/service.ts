@@ -5,6 +5,7 @@ import { dayWindow, eventDays, isTimeInWindow, readVisits, type Visit } from "@/
 import { toEventDetail, type EventDetail } from "@/lib/events/service";
 import { readContent, type InvitationContent } from "@/lib/invitations/content";
 import { listPhotos, type PhotoInfo } from "@/lib/photos/service";
+import { getMemberContact } from "@/lib/team/service";
 import { RSVP_NOTE_MAX, isRsvpClosed, type RsvpResponse } from "./shared";
 
 export type GuestEvent = EventDetail & { response: RsvpResponse | null };
@@ -37,6 +38,7 @@ const GUEST_COLUMNS = {
   guestName: guest.name,
   maxAttendees: guest.maxAttendees,
   firstOpenedAt: guest.firstOpenedAt,
+  addedBy: guest.addedBy,
   invitationId: invitation.id,
   slug: invitation.slug,
   ownerId: invitation.ownerId,
@@ -64,7 +66,7 @@ export async function findGuestPage(
   const row = await findGuestRow(db, token);
   if (!row) return null;
 
-  const [eventRows, responses, photos] = await Promise.all([
+  const [eventRows, responses, photos, memberContact] = await Promise.all([
     db
       .select({ ev: event })
       .from(event)
@@ -73,7 +75,17 @@ export async function findGuestPage(
       .orderBy(asc(event.sortOrder), asc(event.createdAt)),
     db.select().from(rsvp).where(eq(rsvp.guestId, row.guestId)),
     listPhotos(db, row.invitationId),
+    row.addedBy ? getMemberContact(db, row.invitationId, row.addedBy) : Promise.resolve(null),
   ]);
+
+  const content = readContent(row.content);
+  if (memberContact && (memberContact.name || memberContact.phone || memberContact.email)) {
+    content.kontak = {
+      nama: memberContact.name || content.kontak.nama,
+      telepon: memberContact.phone || content.kontak.telepon,
+      email: memberContact.email || content.kontak.email,
+    };
+  }
 
   const byEvent = new Map(responses.map((r) => [r.eventId, r]));
   return {
@@ -84,7 +96,7 @@ export async function findGuestPage(
       status: row.status,
       title: row.title,
       templateKey: row.templateKey,
-      content: readContent(row.content),
+      content,
       rsvpDeadline: row.rsvpDeadline,
     },
     guest: {

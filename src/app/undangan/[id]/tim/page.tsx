@@ -44,6 +44,11 @@ export default async function TimPage({ params }: PageProps<"/undangan/[id]/tim"
                   <span className="text-sm font-medium">{a.name}</span>
                   <span className="text-[13px] text-redup">{a.email}</span>
                   <span className="text-xs text-redup-2">{a.guests} tamu · bergabung {formatStamp(a.joinedAt)}</span>
+                  {a.contactName || a.contactPhone ? (
+                    <span className="text-xs text-emas-tua">
+                      Narahubung kustom: {[a.contactName, a.contactPhone, a.contactEmail].filter(Boolean).join(" · ")}
+                    </span>
+                  ) : null}
                 </div>
                 <TombolKeluarkan userId={a.userId} nama={a.name} />
               </li>

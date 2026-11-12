@@ -19,6 +19,7 @@ function invitationNav(id: string, peran: "pemilik" | "anggota"): ItemNav[] {
     return [
       { label: "Daftar undangan", ikon: "tamu", href: `${base}/tamu` },
       { label: "Kirim undangan", ikon: "kirim", href: `${base}/kirim` },
+      { label: "Narahubung saya", ikon: "surat", href: `${base}/kontak` },
       { label: "Check-in", ikon: "ceklis", href: `${base}/checkin` },
     ];
   }
