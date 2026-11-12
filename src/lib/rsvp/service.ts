@@ -145,6 +145,9 @@ function validateVisits(ev: EventDetail, raw: RawAnswer): { visits: Visit[] } | 
   else {
     chosen = [...new Set(raw.days ?? [])];
     if (chosen.length === 0) return { error: "Pilih minimal satu hari kehadiran." };
+    if (ev.singleDayOnly && chosen.length > 1) {
+      return { error: "Anda hanya dapat memilih satu hari kedatangan untuk acara ini." };
+    }
     if (chosen.some((date) => !days.includes(date))) return { error: "Hari yang dipilih tidak sesuai jadwal acara." };
   }
   const visits: Visit[] = [];

@@ -107,6 +107,33 @@ function KartuAcara({ acara, bisaHapus, tanggalMinimal }: { acara: EventDetail; 
         </div>
         <div className="sm:col-span-3"><BidangTeks label="Jam selesai" name="jamSelesai" type="time" defaultValue={acara.endTime ?? ""} hint="Opsional. Berlaku setiap hari acara" error={errors.jamSelesai} /></div>
         {hari.length > 1 ? (
+          <div className="flex flex-col gap-2.5 rounded-lg border border-garis-halus bg-white p-3.5 sm:col-span-6">
+            <span className="text-sm font-medium">Aturan kehadiran tamu</span>
+            <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-tinta">
+                <input
+                  type="radio"
+                  name="singleDayOnly"
+                  value="false"
+                  defaultChecked={!acara.singleDayOnly}
+                  className="accent-emas"
+                />
+                <span>Tamu boleh memilih lebih dari satu hari (banyak hari)</span>
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-tinta">
+                <input
+                  type="radio"
+                  name="singleDayOnly"
+                  value="true"
+                  defaultChecked={acara.singleDayOnly}
+                  className="accent-emas"
+                />
+                <span>Tamu hanya dapat memilih 1 hari kedatangan</span>
+              </label>
+            </div>
+          </div>
+        ) : null}
+        {hari.length > 1 ? (
           <details className="rounded-lg border border-garis-halus bg-white p-3 sm:col-span-6" open={acara.dayTimes.length > 0}>
             <summary className="cursor-pointer text-sm font-medium">Jam khusus per hari (opsional)</summary>
             <p className="mt-2 mb-3 text-[13px] leading-relaxed text-redup-2">

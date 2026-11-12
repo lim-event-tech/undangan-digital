@@ -80,26 +80,31 @@ export function useUndangan(data: DataUndangan, palet: Palet): Vals {
     const y = pil === "ya" ? palet.on : palet.off;
     const t = pil === "tidak" ? palet.on : palet.off;
     const semuaHari = a.hari.map((h) => h.date);
-    const terpilih = a.hari.length === 1 ? semuaHari : (hariDipilih[a.id] ?? semuaHari);
+    const terpilih = a.hari.length === 1
+      ? semuaHari
+      : (hariDipilih[a.id] ?? (a.singleDayOnly && semuaHari.length > 0 ? [semuaHari[0]] : semuaHari));
     const hariPilihan = a.hari.map((h) => ({
       ...h,
       dipilih: terpilih.includes(h.date),
       waktu: jamDipilih[a.id]?.[h.date] ?? h.mulai ?? "",
       pilih: () => setHariDipilih((lama) => {
+        if (a.singleDayOnly) {
+          return { ...lama, [a.id]: [h.date] };
+        }
         const sekarang = lama[a.id] ?? semuaHari;
         return { ...lama, [a.id]: sekarang.includes(h.date) ? sekarang.filter((d) => d !== h.date) : [...sekarang, h.date] };
       }),
       ubahWaktu: (waktu: string) => setJamDipilih((lama) => ({ ...lama, [a.id]: { ...lama[a.id], [h.date]: waktu } })),
     }));
     return {
-      ...a, hariPilihan, banyakHari: a.hari.length > 1, ya: pil === "ya", tidak: pil === "tidak", yaBg: y.bg, yaFg: y.fg, yaBd: y.bd,
+      ...a, hariPilihan, banyakHari: a.hari.length > 1, singleDayOnly: a.singleDayOnly, ya: pil === "ya", tidak: pil === "tidak", yaBg: y.bg, yaFg: y.fg, yaBd: y.bd,
       tdBg: t.bg, tdFg: t.fg, tdBd: t.bd, tampilJumlah: pil === "ya", maksPeserta: maks, peserta,
       pilihYa: () => setPilihan((lama) => ({ ...lama, [a.id]: "ya" })),
       pilihTidak: () => setPilihan((lama) => ({ ...lama, [a.id]: "tidak" })),
       tambah: () => atur(Math.min(maks, peserta + 1)), kurang: () => atur(Math.max(1, peserta - 1)),
     };
   });
-  const lengkap = data.acara.length > 0 && data.acara.every((a) => pilihan[a.id]) && rsvpAcara.every((r) => !r.ya || !r.banyakHari || r.hariPilihan.some((h) => h.dipilih));
+  const lengkap = data.acara.length > 0 && data.acara.every((a) => pilihan[a.id]) && rsvpAcara.every((r) => !r.ya || !r.banyakHari || (r.singleDayOnly ? r.hariPilihan.filter((h) => h.dipilih).length === 1 : r.hariPilihan.some((h) => h.dipilih)));
   const adaYa = rsvpAcara.some((r) => r.ya);
   const ringkasan = rsvpAcara.map((r) => `${r.nama}: ${r.ya ? `${r.peserta} peserta` : "tidak hadir"}`).join(" · ");
 

@@ -24,6 +24,7 @@ export type EventInput = {
   name: string;
   date: string | null;
   endDate?: string | null;
+  singleDayOnly?: boolean;
   time: string | null;
   endTime: string | null;
   dayTimes?: DayTime[];
@@ -117,12 +118,15 @@ export function parseEventForm(
     return { ok: false, errors };
   }
 
+  const singleDayOnly = formData.get("singleDayOnly") === "true";
+
   return {
     ok: true,
     input: {
       name: parsedName.name,
       date: date || null,
       endDate,
+      singleDayOnly,
       time: time || null,
       endTime: endTime || null,
       dayTimes: parsedDayTimes.ok ? parsedDayTimes.dayTimes : [],

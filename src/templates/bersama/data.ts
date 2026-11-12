@@ -61,6 +61,7 @@ export function siapkanData(view: InvitationView): DataUndangan {
     return {
       id: e.id,
       nama: e.name,
+      singleDayOnly: e.singleDayOnly ?? false,
       tgl,
       tglBesar: tgl.toUpperCase(),
       jam: e.time ? `${e.time.slice(0, 5)}${e.endTime ? `–${e.endTime.slice(0, 5)}` : ""} ${e.timezone}` : "Waktu menyusul",

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { judulHalaman, kartu, tombolGelap, tombolTerang } from "@/components/ui";
 import { TombolUnduh } from "@/components/tombol-unduh";
 import { db } from "@/db";
-import { formatStamp } from "@/lib/datetime";
+import { formatShortDay, formatStamp } from "@/lib/datetime";
 import { listGroups } from "@/lib/guests/service";
 import {
   getDashboard,
@@ -52,6 +52,7 @@ function ringkasJawaban(g: DashboardGuest) {
       ? `Hadir · ${a.attendeeCount} peserta`
       : "Tidak hadir",
     pesan: a.note,
+    visits: a.visits ?? [],
   }));
 }
 
@@ -65,6 +66,11 @@ function Jawaban({ guest }: { guest: DashboardGuest }) {
           <span>
             <span className="font-medium">{item.acara}:</span> {item.teks}
           </span>
+          {item.visits.length > 0 ? (
+            <span className="text-xs text-redup">
+              Jadwal: {item.visits.map((v) => `${formatShortDay(v.date)}${v.time ? ` (${v.time.replace(":", ".")})` : ""}`).join(", ")}
+            </span>
+          ) : null}
           {item.pesan ? (
             <span className="text-xs text-redup-2 italic">“{item.pesan}”</span>
           ) : null}

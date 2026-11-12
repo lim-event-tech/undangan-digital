@@ -336,4 +336,25 @@ describe("kehadiran per hari dan jam datang", () => {
     expect(page!.events[0].response?.visits).toEqual([{ date: "2026-12-20", time: "10:00" }]);
     expect(await submit(ctx, { [utama.id]: pilih([], { "2026-12-20": "12:00" }), [lanjutan.id]: tidak() })).toMatchObject({ ok: false, error: "tidak-valid" });
   });
+
+  it("menolak lebih dari satu hari jika singleDayOnly diaktifkan", async () => {
+    const { ctx, utama, lanjutan } = await acaraTigaHari();
+    await updateEvent(db, ctx.invitation.id, utama.id, {
+      name: "Acara utama", date: "2026-12-20", endDate: "2026-12-22", singleDayOnly: true,
+      time: "09:00", endTime: "11:00", agenda: [], timezone: "WIB",
+      venueName: null, address: null, mapsUrl: null,
+    });
+    // Memilih 2 hari ditolak
+    const gagal = await submit(ctx, { [utama.id]: pilih(["2026-12-20", "2026-12-21"]), [lanjutan.id]: tidak() });
+    expect(gagal).toMatchObject({
+      ok: false,
+      error: "tidak-valid",
+      errors: { [utama.id]: "Anda hanya dapat memilih satu hari kedatangan untuk acara ini." },
+    });
+    // Memilih 1 hari diterima
+    const sukses = await submit(ctx, { [utama.id]: pilih(["2026-12-21"], { "2026-12-21": "10:00" }), [lanjutan.id]: tidak() });
+    expect(sukses).toEqual({ ok: true });
+    const page = await findGuestPage(db, ctx.guest.token);
+    expect(page!.events[0].response?.visits).toEqual([{ date: "2026-12-21", time: "10:00" }]);
+  });
 });

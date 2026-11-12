@@ -13,6 +13,7 @@ export type EventDetail = {
   sortOrder: number;
   date: string | null;
   endDate: string | null;
+  singleDayOnly: boolean;
   time: string | null;
   endTime: string | null;
   dayTimes: DayTime[];
@@ -33,6 +34,7 @@ export function toEventDetail(row: EventRow): EventDetail {
     sortOrder: row.sortOrder,
     date: row.eventDate,
     endDate: row.eventEndDate,
+    singleDayOnly: row.singleDayOnly ?? false,
     time: shortTime(row.eventTime),
     endTime: shortTime(row.eventEndTime),
     dayTimes: readDayTimes(row.dayTimes),
@@ -119,6 +121,7 @@ export async function updateEvent(
       name: input.name,
       eventDate: input.date,
       eventEndDate: input.endDate ?? null,
+      singleDayOnly: input.singleDayOnly ?? false,
       eventTime: input.time,
       eventEndTime: input.endTime,
       dayTimes: input.dayTimes ?? [],

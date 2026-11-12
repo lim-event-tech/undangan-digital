@@ -14,6 +14,7 @@ export type HariData = {
 export type AcaraData = {
   id: string;
   nama: string;
+  singleDayOnly: boolean;
   tgl: string;
   tglBesar: string;
   jam: string;

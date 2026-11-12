@@ -108,13 +108,28 @@ function Kontak({ v }: PropsBagian) {
 function HariHadir({ acara }: { acara: RsvpAcara }) {
   if (!acara.ya || acara.hariPilihan.length === 0) return null;
   const banyak = acara.banyakHari;
+  const single = acara.singleDayOnly;
   return (
     <div className="event-hari" role="group" aria-label={`Hari dan jam kehadiran untuk ${acara.nama}`}>
-      <p className="event-catatan">{banyak ? "Pilih hari yang akan Anda hadiri dan perkiraan jam datang." : "Pilih perkiraan jam datang."}</p>
+      <p className="event-catatan">
+        {banyak
+          ? single
+            ? "Pilih 1 hari kedatangan Anda dan perkiraan jam datang."
+            : "Pilih hari yang akan Anda hadiri dan perkiraan jam datang."
+          : "Pilih perkiraan jam datang."}
+      </p>
       {acara.hariPilihan.map((h) => (
         <div className="event-hari-baris" key={h.date} data-dipilih={h.dipilih}>
           {banyak ? (
-            <label className="event-hari-centang"><input type="checkbox" checked={h.dipilih} onChange={h.pilih} /><span>{h.label}</span></label>
+            <label className="event-hari-centang">
+              <input
+                type={single ? "radio" : "checkbox"}
+                name={`hari-${acara.id}`}
+                checked={h.dipilih}
+                onChange={h.pilih}
+              />
+              <span>{h.label}</span>
+            </label>
           ) : null}
           {h.opsi.length > 0 ? (
             <label className="event-hari-jam"><span>{banyak ? "Jam datang" : "Perkiraan jam datang"}{h.jam ? <small>Acara {h.jam}</small> : null}</span>

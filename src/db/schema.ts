@@ -155,6 +155,7 @@ export const event = pgTable(
     sortOrder: integer().notNull().default(0),
     eventDate: date({ mode: "string" }),
     eventEndDate: date({ mode: "string" }),
+    singleDayOnly: boolean().notNull().default(false),
     dayTimes: jsonb().$type<DayTime[]>().notNull().default([]),
     eventTime: time(),
     eventEndTime: time(),
