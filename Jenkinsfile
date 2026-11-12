@@ -2,13 +2,13 @@ pipeline {
     agent any
 
     environment {
-        // ID Secret File yang disimpan di Jenkins Credentials (Manage Jenkins -> Credentials)
-        ENV_CREDENTIALS_ID = 'lim-rsvp-staging-env'
         COMPOSE_PROJECT_NAME = 'lim-rsvp'
+        // Credential ID di Jenkins Credentials (Secret file)
+        PROD_ENV_CREDENTIALS_ID    = 'lim-rsvp-prod-env'
+        STAGING_ENV_CREDENTIALS_ID = 'lim-rsvp-staging-env'
     }
 
     options {
-        // Batasi build log dan simpan artefak secukupnya
         buildDiscarder(logRotator(numToKeepStr: '10'))
         timestamps()
         disableConcurrentBuilds()
@@ -23,13 +23,27 @@ pipeline {
 
         stage('Inject Environment (.env)') {
             steps {
-                echo 'Menyuntikkan konfigurasi .env dari Jenkins Secret File...'
-                withCredentials([file(credentialsId: "${ENV_CREDENTIALS_ID}", variable: 'SECRET_ENV')]) {
-                    sh '''
-                        # Salin secret file ke file .env di direktori kerja
-                        cp "${SECRET_ENV}" .env
-                        chmod 600 .env
-                    '''
+                script {
+                    // Deteksi nama branch (mendukung Multibranch Pipeline maupun Pipeline biasa)
+                    def currentBranch = env.BRANCH_NAME ?: env.GIT_BRANCH ?: ''
+                    echo "Mendeteksi branch aktif: ${currentBranch}"
+
+                    def secretId = ''
+                    if (currentBranch.contains('staging')) {
+                        echo "Environment terdeteksi: STAGING"
+                        secretId = env.STAGING_ENV_CREDENTIALS_ID
+                    } else {
+                        echo "Environment terdeteksi: PRODUCTION (main)"
+                        secretId = env.PROD_ENV_CREDENTIALS_ID
+                    }
+
+                    echo "Mengambil credential secret file ID: ${secretId}"
+                    withCredentials([file(credentialsId: secretId, variable: 'SECRET_ENV')]) {
+                        sh '''
+                            cp "${SECRET_ENV}" .env
+                            chmod 600 .env
+                        '''
+                    }
                 }
             }
         }
@@ -38,7 +52,6 @@ pipeline {
             steps {
                 echo 'Menjalankan unit test & lint check menggunakan Node Docker container...'
                 sh '''
-                    # Jalankan lint dan test di environment Node terisolasi
                     docker run --rm \
                         -v "${WORKSPACE}":/app \
                         -w /app \
@@ -50,7 +63,14 @@ pipeline {
 
         stage('Deploy with Docker Compose') {
             when {
-                branch 'main'
+                anyOf {
+                    branch 'main'
+                    branch 'staging'
+                    expression {
+                        def currentBranch = env.BRANCH_NAME ?: env.GIT_BRANCH ?: ''
+                        return currentBranch.contains('main') || currentBranch.contains('staging')
+                    }
+                }
             }
             steps {
                 echo 'Melakukan build dan deployment aplikasi via Docker Compose...'
@@ -59,8 +79,6 @@ pipeline {
                     docker compose pull db
 
                     # Build dan deploy app dan db sesuai konfigurasi docker-compose.yml
-                    # Flag --build memastikan image app di-rebuild dari commit terbaru
-                    # Flag --wait menunggu hingga healthcheck app & db berstatus healthy
                     docker compose up -d --build --wait --remove-orphans
 
                     # Verifikasi status container
@@ -74,7 +92,6 @@ pipeline {
         always {
             echo 'Membersihkan file sensitif dari workspace Jenkins...'
             sh '''
-                # Hapus file .env dari workspace agar credentials tidak tertinggal di disk agent
                 rm -f .env
             '''
         }
@@ -91,4 +108,3 @@ pipeline {
         }
     }
 }
-
