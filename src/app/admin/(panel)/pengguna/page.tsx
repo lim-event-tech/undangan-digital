@@ -123,6 +123,20 @@ export default async function PenggunaAdminPage({ searchParams }: PageProps<"/ad
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium">{row.name}</span>
                   <LencanaAkun status={row.status} />
+                  {row.wabaAllowed ? (
+                    <span className="rounded-full bg-hijau-bg px-2 py-0.5 text-xs font-medium text-hijau">
+                      WABA Resmi
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-krem-2 px-2 py-0.5 text-xs font-medium text-redup">
+                      Hanya Baileys
+                    </span>
+                  )}
+                  {row.wabaAllowed ? (
+                    <span className="text-xs text-redup">
+                      Kredit: <strong className="font-semibold text-emas">{row.wabaQuota}</strong> · Terkirim: {row.wabaSentCount}
+                    </span>
+                  ) : null}
                 </div>
                 <span className="text-sm text-redup">{row.email}</span>
                 <span className="text-xs text-redup">
@@ -150,7 +164,16 @@ export default async function PenggunaAdminPage({ searchParams }: PageProps<"/ad
                 </form>
               ) : null}
               </div>
-              {bolehKelola ? <FormAkun id={row.id} nama={row.name} email={row.email} /> : null}
+              {bolehKelola ? (
+                <FormAkun
+                  id={row.id}
+                  nama={row.name}
+                  email={row.email}
+                  wabaAllowed={row.wabaAllowed}
+                  wabaQuota={row.wabaQuota}
+                  wabaSentCount={row.wabaSentCount}
+                />
+              ) : null}
             </li>
           ))}
         </ul>

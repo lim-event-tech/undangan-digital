@@ -3,6 +3,8 @@ const tombolDasar =
 
 export const tombolGelap = `${tombolDasar} bg-tinta text-white hover:bg-tinta-2`;
 
+export const tombolEmas = `${tombolDasar} bg-emas text-white hover:bg-emas-tua`;
+
 export const tombolTerang = `${tombolDasar} border border-garis-input bg-white text-tinta hover:bg-kertas`;
 
 export const tombolBahaya = `${tombolDasar} border border-galat/40 bg-white text-galat hover:bg-galat-bg`;

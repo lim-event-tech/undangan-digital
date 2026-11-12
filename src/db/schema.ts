@@ -58,6 +58,9 @@ export const user = pgTable("user", {
     .notNull()
     .default("aktif"),
   adminRole: text().references(() => adminRole.key, { onDelete: "restrict" }),
+  wabaAllowed: boolean("waba_allowed").notNull().default(false),
+  wabaQuota: integer("waba_quota").notNull().default(0),
+  wabaSentCount: integer("waba_sent_count").notNull().default(0),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
@@ -433,5 +436,37 @@ export const waJob = pgTable(
     uniqueIndex("wa_job_active_unique")
       .on(t.guestId, t.kind)
       .where(sql`${t.status} in ('menunggu', 'mengirim')`),
+  ],
+);
+
+export const wabaMessage = pgTable(
+  "waba_message",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    invitationId: uuid("invitation_id")
+      .notNull()
+      .references(() => invitation.id, { onDelete: "cascade" }),
+    guestId: uuid("guest_id").references(() => guest.id, { onDelete: "set null" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    recipientPhone: text("recipient_phone").notNull(),
+    recipientName: text("recipient_name").notNull(),
+    templateName: text("template_name").notNull(),
+    status: text({ enum: ["pending", "processing", "sent", "delivered", "read", "failed"] })
+      .notNull()
+      .default("pending"),
+    wamid: text(),
+    wabaQueueId: text("waba_queue_id"),
+    referenceId: text("reference_id"),
+    lastError: text("last_error"),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    index("waba_msg_invitation_idx").on(t.invitationId),
+    index("waba_msg_user_idx").on(t.userId),
+    index("waba_msg_guest_idx").on(t.guestId),
   ],
 );

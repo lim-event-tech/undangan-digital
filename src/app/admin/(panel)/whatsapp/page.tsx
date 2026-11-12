@@ -10,8 +10,10 @@ import { getWaConfig } from "@/lib/wa/config-service";
 import { getWaManager, type WaStatus } from "@/lib/wa/manager";
 import { platformSummary, recentFailures } from "@/lib/wa/queue";
 import { listSessionRows } from "@/lib/wa/session-service";
+import { getWabaConfig } from "@/lib/waba/config-service";
 import { keluarkanPenggunaAction, putuskanPenggunaAction } from "./actions";
 import { FormPengaturanWa } from "./form-whatsapp";
+import { FormWaba } from "./form-waba";
 
 export const metadata: Metadata = { title: "WhatsApp" };
 export const dynamic = "force-dynamic";
@@ -64,8 +66,9 @@ export default async function WhatsappAdminPage() {
 }
 
 async function Isi() {
-  const [config, summary, failures, sessions] = await Promise.all([
+  const [config, wabaConfig, summary, failures, sessions] = await Promise.all([
     getWaConfig(db),
+    getWabaConfig(db),
     platformSummary(db),
     recentFailures(db, { limit: 10 }),
     listSessionRows(db),
@@ -74,6 +77,13 @@ async function Isi() {
 
   return (
     <>
+      <Bagian
+        judul="WhatsApp Business API Resmi (WABA Gateway Induk)"
+        keterangan="Integrasi terpusat ke WhatsApp Business Cloud API melalui Aplikasi Induk Lingkar Ide Manajemen. Pengiriman menggunakan template resmi yang disetujui Meta dengan sistem kuota per akun."
+      >
+        <FormWaba config={wabaConfig} />
+      </Bagian>
+
       <Notifikasi jenis="info">
         Baileys adalah pustaka tidak resmi yang meniru WhatsApp Web. WhatsApp bisa membatasi atau
         memblokir nomor yang mengirim pesan massal. Sarankan pengguna memakai nomor khusus (bukan

@@ -15,6 +15,11 @@ import { queueBlast } from "@/lib/wa/blast";
 import { getWaConfig } from "@/lib/wa/config-service";
 import { getWaManager } from "@/lib/wa/manager";
 import { cancelPending, type JobKind } from "@/lib/wa/queue";
+import {
+  sendBatchInvitationViaWaba,
+  sendGuestInvitationViaWaba,
+  type BatchWabaResult,
+} from "@/lib/waba/service";
 
 
 export async function simpanPesanAction(invitationId: string, formData: FormData): Promise<SaveResult> {
@@ -121,4 +126,41 @@ export async function putuskanSayaAction(invitationId: string): Promise<void> {
 export async function keluarkanSayaAction(invitationId: string): Promise<void> {
   const { user } = await requireInvitationAccess(invitationId);
   await getWaManager().for(user.id).logout();
+}
+
+export async function kirimWabaTamuAction(
+  invitationId: string,
+  guestId: string,
+): Promise<{ ok: boolean; error?: string; remainingQuota?: number }> {
+  const { invitation, user, scope } = await requireInvitationAccess(invitationId);
+  if (!isUuid(guestId) || !(await getGuest(db, invitation.id, guestId, scope ?? undefined))) {
+    return { ok: false, error: "Tamu tidak ditemukan." };
+  }
+
+  const result = await sendGuestInvitationViaWaba(db, {
+    invitationId: invitation.id,
+    guestId,
+    senderUserId: user.id,
+  });
+
+  if (result.ok) {
+    revalidatePath(`/undangan/${invitation.id}/kirim`);
+    return { ok: true, remainingQuota: result.remainingQuota };
+  }
+  return { ok: false, error: result.error };
+}
+
+export async function kirimBatchWabaAction(
+  invitationId: string,
+): Promise<BatchWabaResult> {
+  const { invitation, user, scope } = await requireInvitationAccess(invitationId);
+
+  const result = await sendBatchInvitationViaWaba(db, {
+    invitationId: invitation.id,
+    senderUserId: user.id,
+    addedBy: scope ?? undefined,
+  });
+
+  revalidatePath(`/undangan/${invitation.id}/kirim`);
+  return result;
 }

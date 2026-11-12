@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/admin/guard";
 import { setAccountPassword, updateAccountProfile } from "@/lib/admin/accounts";
 import { isAccountStatus, setAccountStatus } from "@/lib/admin/queries";
 import { SAVED, type SaveResult } from "@/lib/save-result";
+import { updateUserWabaQuota } from "@/lib/waba/service";
 import { user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
@@ -89,4 +90,25 @@ export async function aturSandiAkunAction(
   });
   revalidatePath("/admin/pengguna");
   return SAVED;
+}
+
+export async function aturWabaAkunAction(formData: FormData): Promise<void> {
+  const admin = await requireAdmin("kelola-akun");
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+
+  const wabaAllowedRaw = formData.get("wabaAllowed");
+  const allowed = wabaAllowedRaw !== null ? wabaAllowedRaw === "1" : undefined;
+
+  const mode = formData.get("mode");
+  const rawJumlah = Number(formData.get("jumlah"));
+  const jumlah = Number.isFinite(rawJumlah) ? Math.round(rawJumlah) : undefined;
+
+  await updateUserWabaQuota(db, admin, id, {
+    allowed,
+    deltaQuota: mode === "delta" ? jumlah : undefined,
+    setQuota: mode === "set" ? jumlah : undefined,
+  });
+
+  revalidatePath("/admin/pengguna");
 }

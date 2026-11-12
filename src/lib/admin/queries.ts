@@ -352,6 +352,9 @@ export type AdminAccountRow = {
   email: string;
   status: AccountStatus;
   methods: string[];
+  wabaAllowed: boolean;
+  wabaQuota: number;
+  wabaSentCount: number;
   createdAt: Date;
   lastActive: Date | null;
   invitationId: string | null;
@@ -419,6 +422,9 @@ export async function listAccounts(
       name: user.name,
       email: user.email,
       status: user.status,
+      wabaAllowed: user.wabaAllowed,
+      wabaQuota: user.wabaQuota,
+      wabaSentCount: user.wabaSentCount,
       createdAt: user.createdAt,
       lastActive: sql<Date | null>`(select max(session.updated_at) from session where session.user_id = ${user.id})`,
       providers: sql<string[]>`coalesce((select array_agg(account.provider_id) from account where account.user_id = ${user.id}), '{}')`,
@@ -441,6 +447,9 @@ export async function listAccounts(
       email: row.email,
       status: row.status,
       methods: [...new Set(row.providers.map((p) => (p === "credential" ? "Email" : "Google")))],
+      wabaAllowed: row.wabaAllowed,
+      wabaQuota: row.wabaQuota,
+      wabaSentCount: row.wabaSentCount,
       createdAt: row.createdAt,
       lastActive: row.lastActive ? new Date(row.lastActive) : null,
       invitationId: row.invitationId,
