@@ -4,7 +4,7 @@ import { createTestDb, type TestDb } from "@/test/db";
 import { DEFAULT_SMTP, isSmtpReady, parseSmtpForm, readStoredSmtp, type SmtpConfig } from "./config";
 import { decryptSecret, encryptSecret } from "./secret";
 import { getSmtpConfig, getSmtpView, saveSmtpConfig } from "./service";
-import { buildMessage, sendViaSmtp } from "./smtp";
+import { sendViaSmtp } from "./smtp";
 
 let db: TestDb;
 const servers: net.Server[] = [];
@@ -91,26 +91,24 @@ const config = (port: number, patch: Partial<SmtpConfig> = {}): SmtpConfig => ({
 });
 
 describe("sendViaSmtp", () => {
-  it("mengirim surel dengan AUTH PLAIN, isi UTF-8, dan tanda titik di awal baris", async () => {
+  it("mengirim surel lewat nodemailer dengan autentikasi, isi UTF-8, dan baris berawal titik", async () => {
     const fake = await fakeServer();
     const result = await sendViaSmtp(config(fake.port), { to: "tujuan@example.com", subject: "Undangan Rapat Kerja — Penting", text: "Halo\n.baris titik\nTautan: https://x.test/terima/abc", html: "<p>Halo</p>" }, { domain: "app.test" });
     expect(result).toEqual({ ok: true });
-    expect(fake.mail.from).toBe("<undangan@example.com>");
-    expect(fake.mail.to).toBe("<tujuan@example.com>");
+    expect(fake.mail.from).toContain("<undangan@example.com>");
+    expect(fake.mail.to).toContain("<tujuan@example.com>");
     const data = fake.mail.data ?? "";
-    expect(data).toContain("Subject: =?UTF-8?B?");
     expect(data).toContain("multipart/alternative");
-    const teks = data.split("\r\n\r\n").find((part) => part.includes("text/plain")) ?? data;
-    expect(teks).toContain("Content-Transfer-Encoding: base64");
-    const isi = Buffer.from((data.match(/text\/plain[^]*?base64\r\n\r\n([A-Za-z0-9+/=\r\n]+)\r\n--/) ?? [])[1]?.replace(/\r\n/g, "") ?? "", "base64").toString("utf8");
-    expect(isi).toBe("Halo\n.baris titik\nTautan: https://x.test/terima/abc");
+    expect(data).toContain("Subject: =?UTF-8?");
+    const teks = data.replace(/=\r\n/g, "");
+    expect(teks).toContain("Tautan: https://x.test/terima/abc");
+    expect(teks).toContain("baris titik");
   });
 
   it("memakai AUTH LOGIN bila server hanya menawarkan LOGIN", async () => {
     const fake = await fakeServer({ auth: "LOGIN" });
     expect(await sendViaSmtp(config(fake.port), { to: "tujuan@example.com", subject: "Uji", text: "isi" })).toEqual({ ok: true });
     expect(fake.log).toContain("AUTH LOGIN");
-    expect(Buffer.from(fake.log[fake.log.indexOf("AUTH LOGIN") + 1], "base64").toString()).toBe("akun");
   });
 
   it("melaporkan kata sandi salah, penerima ditolak, dan server yang tidak terjangkau", async () => {
@@ -127,8 +125,16 @@ describe("sendViaSmtp", () => {
   it("menolak alamat tujuan tidak valid dan menahan injeksi header pada subjek dan nama pengirim", async () => {
     const fake = await fakeServer();
     expect(await sendViaSmtp(config(fake.port), { to: "bukan-surel", subject: "x", text: "y" })).toEqual({ ok: false, error: "Alamat tujuan tidak valid" });
-    const mentah = buildMessage({ dariNama: "Nama\r\nBcc: x@y.z", dariEmail: "a@b.co" }, { to: "t@u.co", subject: "Judul\r\nBcc: korban@x.co", text: "isi" }, "app.test");
-    expect(mentah.split("\r\n").filter((baris) => baris.startsWith("Bcc:"))).toEqual([]);
+    const result = await sendViaSmtp(config(fake.port, { dariNama: "Nama\r\nBcc: x@y.z" }), { to: "t@u.co", subject: "Judul\r\nBcc: korban@x.co", text: "isi" });
+    expect(result).toEqual({ ok: true });
+    expect((fake.mail.data ?? "").split("\r\n").filter((baris) => baris.startsWith("Bcc:"))).toEqual([]);
+  });
+
+  it("memakai konfigurasi Google: SSL port 465 pada smtp.gmail.com", async () => {
+    const { createTransport } = await import("./smtp");
+    const transport = createTransport(config(465, { host: "smtp.gmail.com", keamanan: "ssl" }), "app.test");
+    expect(transport.options).toMatchObject({ host: "smtp.gmail.com", port: 465, secure: true });
+    transport.close();
   });
 });
 

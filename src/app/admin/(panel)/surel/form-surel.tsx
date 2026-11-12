@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Saklar } from "@/app/undangan/[id]/isi/bidang";
 import { kolom, labelKolom, pesanGalat, tombolGelap, tombolTerang } from "@/components/ui";
+import type { SmtpSecurity } from "@/lib/mail/config";
 import type { SmtpView } from "@/lib/mail/service";
 import type { SaveResult } from "@/lib/save-result";
 import { simpanSurelAction, ujiSurelAction, type UjiSurelResult } from "./actions";
@@ -15,23 +16,39 @@ function Galat({ pesan }: { pesan?: string }) {
 export function FormSurel({ config }: { config: SmtpView }) {
   const [hasil, aksi, memproses] = useActionState<SaveResult | null, FormData>(simpanSurelAction, null);
   const galat = hasil && !hasil.ok ? (hasil.errors ?? {}) : {};
+  const [host, setHost] = useState(config.host);
+  const [port, setPort] = useState(String(config.port));
+  const [keamanan, setKeamanan] = useState<SmtpSecurity>(config.keamanan);
+  const [user, setUser] = useState(config.user);
+  const [dariEmail, setDariEmail] = useState(config.dariEmail);
+  const pakaiGoogle = () => {
+    setHost("smtp.gmail.com");
+    setPort("465");
+    setKeamanan("ssl");
+  };
   return (
     <form action={aksi} className="flex flex-col gap-4">
       <Saklar label="Aktifkan pengiriman surel" hint="Dipakai untuk mengirim undangan anggota tim. Bila mati, pemilik undangan hanya bisa menyalin tautan undangan." name="aktif" defaultChecked={config.aktif} />
+      <div className="flex flex-col gap-1.5">
+        <div>
+          <button type="button" onClick={pakaiGoogle} className={tombolTerang}>Isi untuk Google (Gmail)</button>
+        </div>
+        <p className="m-0 text-xs text-redup">Mengisi server smtp.gmail.com, port 465, SSL/TLS. Isi nama pengguna dengan alamat Gmail lengkap dan kata sandi dengan Sandi Aplikasi 16 karakter (akun Google harus memakai verifikasi 2 langkah), bukan kata sandi akun. Alamat pengirim sebaiknya sama dengan alamat Gmail tersebut.</p>
+      </div>
       <div className="grid gap-3.5 sm:grid-cols-6">
         <label className={`${labelKolom} sm:col-span-3`}>
           Server SMTP
-          <input name="host" defaultValue={config.host} placeholder="smtp.example.com" autoCapitalize="none" spellCheck={false} className={kolom} />
+          <input name="host" value={host} onChange={(e) => setHost(e.target.value)} placeholder="smtp.example.com" autoCapitalize="none" spellCheck={false} className={kolom} />
           <Galat pesan={galat.host} />
         </label>
         <label className={`${labelKolom} sm:col-span-1`}>
           Port
-          <input name="port" type="number" inputMode="numeric" min={1} max={65535} defaultValue={config.port} className={kolom} />
+          <input name="port" type="number" inputMode="numeric" min={1} max={65535} value={port} onChange={(e) => setPort(e.target.value)} className={kolom} />
           <Galat pesan={galat.port} />
         </label>
         <label className={`${labelKolom} sm:col-span-2`}>
           Koneksi
-          <select name="keamanan" defaultValue={config.keamanan} className={kolom}>
+          <select name="keamanan" value={keamanan} onChange={(e) => setKeamanan(e.target.value as SmtpSecurity)} className={kolom}>
             <option value="starttls">STARTTLS (port 587)</option>
             <option value="ssl">SSL/TLS (port 465)</option>
             <option value="tanpa">Tanpa enkripsi (tidak disarankan)</option>
@@ -40,7 +57,7 @@ export function FormSurel({ config }: { config: SmtpView }) {
         </label>
         <label className={`${labelKolom} sm:col-span-3`}>
           Nama pengguna
-          <input name="user" defaultValue={config.user} autoComplete="off" autoCapitalize="none" spellCheck={false} className={kolom} />
+          <input name="user" value={user} onChange={(e) => setUser(e.target.value)} autoComplete="off" autoCapitalize="none" spellCheck={false} className={kolom} />
           <Galat pesan={galat.user} />
         </label>
         <label className={`${labelKolom} sm:col-span-3`}>
@@ -59,7 +76,7 @@ export function FormSurel({ config }: { config: SmtpView }) {
         </label>
         <label className={`${labelKolom} sm:col-span-3`}>
           Alamat pengirim
-          <input name="dariEmail" type="email" defaultValue={config.dariEmail} placeholder="undangan@example.com" className={kolom} />
+          <input name="dariEmail" type="email" value={dariEmail} onChange={(e) => setDariEmail(e.target.value)} placeholder="undangan@example.com" className={kolom} />
           <Galat pesan={galat.dariEmail} />
         </label>
       </div>
