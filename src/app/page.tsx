@@ -5,8 +5,8 @@ import { BrandLogo } from "@/components/brand-logo";
 import "./portal.css";
 
 export const metadata: Metadata = {
-  title: { absolute: "UndanganDigital" },
-  description: "Buat undangan acara baru atau kelola isi, tamu, dan RSVP undangan Anda.",
+  title: { absolute: "LIM-RSVP" },
+  description: "Buat undangan acara baru atau kelola isi, tamu, dan konfirmasi RSVP Anda di LIM-RSVP.",
 };
 
 function Panah() {
@@ -21,7 +21,7 @@ export default function Beranda() {
   return (
     <div className="portal-awal selalu-gerak">
       <header className="portal-header">
-        <Link className="portal-merek" href="/" aria-label="LingkarIDE Manajemen, beranda UndanganDigital">
+        <Link className="portal-merek" href="/" aria-label="Beranda LIM-RSVP">
           <BrandLogo height={40} />
         </Link>
         <Link className="portal-masuk" href="/masuk">Masuk <span aria-hidden="true">↗</span></Link>

@@ -68,7 +68,7 @@ export function AppShell({
       <aside className="flex flex-col gap-4 border-b border-garis bg-white p-4 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:overflow-y-auto lg:border-r lg:border-b-0">
         <Link
           href="/undangan"
-          aria-label="LingkarIDE Manajemen, daftar undangan"
+          aria-label="LIM-RSVP, daftar undangan"
           className="flex items-center gap-2 px-2 text-tinta no-underline"
         >
           <BrandLogo height={36} />

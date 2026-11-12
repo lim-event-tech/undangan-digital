@@ -24,7 +24,7 @@ export default async function AkunPage({ searchParams }: PageProps<"/undangan/ak
       <header>
         <h1 className={`${judulHalaman} m-0`}>Pengaturan akun</h1>
         <p className="mt-2 mb-0 text-sm leading-relaxed text-redup-2">
-          Kelola email, kata sandi, dan akun Google untuk masuk ke UndanganDigital.
+          Kelola email, kata sandi, dan akun Google untuk masuk ke LIM-RSVP.
         </p>
       </header>
       <FormAkun

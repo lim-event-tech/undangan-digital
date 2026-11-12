@@ -23,7 +23,7 @@ export const DEFAULT_SMTP: SmtpConfig = {
   keamanan: "starttls",
   user: "",
   password: "",
-  dariNama: "UndanganDigital",
+  dariNama: "LIM-RSVP",
   dariEmail: "",
 };
 

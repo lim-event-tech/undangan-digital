@@ -46,7 +46,7 @@ export default async function RingkasanAdminPage({ searchParams }: PageProps<"/a
       <JudulAdmin
         bagian="Ikhtisar"
         judul="Ringkasan platform"
-        keterangan="Kesehatan UndanganDigital dalam satu layar: pertumbuhan, aktivitas tamu, dan corong pengguna."
+        keterangan="Kesehatan LIM-RSVP dalam satu layar: pertumbuhan, aktivitas tamu, dan corong pengguna."
         aksi={
           <nav aria-label="Rentang waktu" className="flex gap-2">
             {RENTANG.map((r) => (

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 64" width="100%" height="100%">
+  <defs>
+    <linearGradient id="l1_gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EED596" />
+      <stop offset="50%" stop-color="#C59B4E" />
+      <stop offset="100%" stop-color="#7B561B" />
+    </linearGradient>
+    <linearGradient id="l1_goldLight" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#B88E3E" />
+      <stop offset="50%" stop-color="#FDF0CD" />
+      <stop offset="100%" stop-color="#B88E3E" />
+    </linearGradient>
+  </defs>
+
+  <!-- ICON (x=4, y=4, w=56, h=56) -->
+  <g transform="translate(4, 4) scale(0.56)">
+    <rect x="6" y="6" width="88" height="88" rx="24" fill="#201C18" />
+    <rect x="8" y="8" width="84" height="84" rx="22" fill="none" stroke="url(#l1_gold)" stroke-width="2" stroke-opacity="0.9" />
+    <circle cx="50" cy="50" r="38" fill="none" stroke="url(#l1_goldLight)" stroke-width="1" stroke-dasharray="2 3" stroke-opacity="0.6" />
+    <path d="M 32 30 C 32 30 36 30 36 34 L 36 54 C 36 64 42 71 50 71 C 58 71 64 64 64 54 L 64 34 C 64 30 68 30 68 30 C 68 30 68 36 68 54 C 68 67 59 76 50 76 C 41 76 32 67 32 54 Z" fill="url(#l1_gold)" />
+    <path d="M 36 38 L 50 49 L 64 38" fill="none" stroke="url(#l1_goldLight)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 50 21 Q 50 27 45 27 Q 50 27 50 33 Q 50 27 55 27 Q 50 27 50 21 Z" fill="url(#l1_goldLight)" />
+  </g>
+
+  <!-- TEXT TYPOGRAPHY -->
+  <g transform="translate(70, 0)">
+    <!-- Undangan in dark charcoal with classic Cormorant serif feeling -->
+    <text x="0" y="36" font-family="'Cormorant Garamond', Georgia, serif" font-size="28" font-weight="600" fill="#201C18" letter-spacing="-0.5">Undangan<tspan fill="url(#l1_gold)" font-family="'Jost', sans-serif" font-weight="500" letter-spacing="0">Digital</tspan></text>
+    <text x="1" y="50" font-family="'Jost', system-ui, sans-serif" font-size="9.5" font-weight="500" fill="#7A6F62" letter-spacing="2.5">EVENT INVITATION PLATFORM</text>
+  </g>
+</svg>
+

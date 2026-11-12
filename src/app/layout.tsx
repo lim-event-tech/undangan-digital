@@ -9,11 +9,18 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "UndanganDigital",
-    template: "%s · UndanganDigital",
+    default: "LIM-RSVP",
+    template: "%s · LIM-RSVP",
   },
   description:
-    "Undangan event digital dengan link pribadi untuk setiap tamu.",
+    "Sistem undangan acara digital dan konfirmasi kehadiran (RSVP) oleh Lingkar IDE Manajemen.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
   robots: { index: false, follow: false },
 };
 

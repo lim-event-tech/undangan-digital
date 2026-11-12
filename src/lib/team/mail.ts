@@ -10,12 +10,12 @@ export function inviteMail(input: { to: string; title: string; ownerName: string
   const text = [
     `Halo,`,
     ``,
-    `${input.ownerName} mengundang Anda bergabung ke tim undangan "${input.title}" di UndanganDigital. Anda akan bisa menambahkan daftar undangan Anda sendiri, mengirimnya lewat WhatsApp, dan melakukan check-in. Anda hanya melihat tamu yang Anda tambahkan.`,
+    `${input.ownerName} mengundang Anda bergabung ke tim undangan "${input.title}" di LIM-RSVP. Anda akan bisa menambahkan daftar undangan Anda sendiri, mengirimnya lewat WhatsApp, dan melakukan check-in. Anda hanya melihat tamu yang Anda tambahkan.`,
     ``,
     `Terima undangan: ${input.link}`,
     ``,
     `Tautan berlaku sampai ${batas} dan hanya bisa dipakai sekali. Abaikan surel ini bila Anda tidak merasa diundang.`,
   ].join("\n");
-  const html = `<p>Halo,</p><p><strong>${escapeHtml(input.ownerName)}</strong> mengundang Anda bergabung ke tim undangan <strong>${escapeHtml(input.title)}</strong> di UndanganDigital. Anda akan bisa menambahkan daftar undangan Anda sendiri, mengirimnya lewat WhatsApp, dan melakukan check-in. Anda hanya melihat tamu yang Anda tambahkan.</p><p><a href="${escapeHtml(input.link)}">Terima undangan</a></p><p>Tautan berlaku sampai ${batas} dan hanya bisa dipakai sekali. Abaikan surel ini bila Anda tidak merasa diundang.</p>`;
+  const html = `<p>Halo,</p><p><strong>${escapeHtml(input.ownerName)}</strong> mengundang Anda bergabung ke tim undangan <strong>${escapeHtml(input.title)}</strong> di LIM-RSVP. Anda akan bisa menambahkan daftar undangan Anda sendiri, mengirimnya lewat WhatsApp, dan melakukan check-in. Anda hanya melihat tamu yang Anda tambahkan.</p><p><a href="${escapeHtml(input.link)}">Terima undangan</a></p><p>Tautan berlaku sampai ${batas} dan hanya bisa dipakai sekali. Abaikan surel ini bila Anda tidak merasa diundang.</p>`;
   return { to: input.to, subject: `Undangan bergabung ke tim "${input.title}"`, text, html };
 }

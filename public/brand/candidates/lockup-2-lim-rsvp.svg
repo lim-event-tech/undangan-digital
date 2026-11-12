@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 64" width="100%" height="100%">
+  <defs>
+    <linearGradient id="l2_limRed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF4029" />
+      <stop offset="45%" stop-color="#C20002" />
+      <stop offset="100%" stop-color="#730000" />
+    </linearGradient>
+    <linearGradient id="l2_gold" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C59B4E" />
+      <stop offset="50%" stop-color="#FCE1A2" />
+      <stop offset="100%" stop-color="#C59B4E" />
+    </linearGradient>
+  </defs>
+
+  <!-- ICON (x=4, y=4, w=56, h=56) -->
+  <g transform="translate(4, 4) scale(0.56)">
+    <rect x="6" y="6" width="88" height="88" rx="22" fill="#FAF7F0" stroke="#E3DAC8" stroke-width="2.5" />
+    <path d="M 22 36 L 50 56 L 78 36 L 78 66 C 78 72 73 76 67 76 L 33 76 C 27 76 22 72 22 66 Z" fill="url(#l2_limRed)" />
+    <path d="M 22 38 C 30 46 42 56 50 56 C 58 56 70 46 78 38 L 50 22 Z" fill="#880001" opacity="0.9" />
+    <path d="M 22 38 L 50 22 L 78 38" fill="none" stroke="url(#l2_gold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+    <circle cx="50" cy="56" r="8" fill="#1C1816" stroke="url(#l2_gold)" stroke-width="2" />
+    <path d="M 47 56 L 49.5 58.5 L 54 53.5" fill="none" stroke="url(#l2_gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+
+  <!-- TYPOGRAPHY -->
+  <g transform="translate(72, 0)">
+    <text x="0" y="38" font-family="'Jost', system-ui, sans-serif" font-size="28" font-weight="700" fill="#201C18" letter-spacing="-0.5">LIM·<tspan fill="url(#l2_limRed)">RSVP</tspan></text>
+    <text x="1" y="52" font-family="'Jost', system-ui, sans-serif" font-size="9" font-weight="600" fill="#8A7A6E" letter-spacing="2.5">EVENT INVITATION PLATFORM</text>
+  </g>
+</svg>
+

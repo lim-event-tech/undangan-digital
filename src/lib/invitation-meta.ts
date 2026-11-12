@@ -36,7 +36,7 @@ export function buildInvitationMeta(input: MetaInput): Metadata {
     description,
     openGraph: {
       type: "website",
-      siteName: "UndanganDigital",
+      siteName: "LIM-RSVP",
       locale: "id_ID",
       title,
       description,

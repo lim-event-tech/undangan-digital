@@ -38,9 +38,9 @@ export async function ujiSurelAction(_state: UjiSurelResult, formData: FormData)
   if (!isEmailAddress(tujuan)) return { ok: false, error: "Alamat tujuan tidak valid." };
   const result = await sendMail(db, {
     to: tujuan,
-    subject: "Surel uji UndanganDigital",
-    text: "Jika Anda menerima surel ini, pengaturan SMTP UndanganDigital sudah benar.",
-    html: "<p>Jika Anda menerima surel ini, pengaturan SMTP UndanganDigital sudah benar.</p>",
+    subject: "Surel uji LIM-RSVP",
+    text: "Jika Anda menerima surel ini, pengaturan SMTP LIM-RSVP sudah benar.",
+    html: "<p>Jika Anda menerima surel ini, pengaturan SMTP LIM-RSVP sudah benar.</p>",
   });
   await recordAudit(db, {
     actor: admin,

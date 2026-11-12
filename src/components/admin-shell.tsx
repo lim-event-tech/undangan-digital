@@ -26,7 +26,7 @@ export function AdminShell({
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
       <aside className="flex flex-col gap-4 border-b border-garis bg-white p-4 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:overflow-y-auto lg:border-r lg:border-b-0">
-        <Link href="/admin" aria-label="LingkarIDE Manajemen, admin UndanganDigital" className="flex flex-col items-start gap-2 px-2 text-tinta no-underline">
+        <Link href="/admin" aria-label="LIM-RSVP Admin" className="flex flex-col items-start gap-2 px-2 text-tinta no-underline">
           <BrandLogo height={36} />
           <span className="text-[11px] tracking-[0.14em] text-redup uppercase">Admin global</span>
         </Link>

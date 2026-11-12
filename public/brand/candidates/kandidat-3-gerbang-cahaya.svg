@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <defs>
+    <linearGradient id="gold3A" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCEECB" />
+      <stop offset="50%" stop-color="#C59B4E" />
+      <stop offset="100%" stop-color="#7B561B" />
+    </linearGradient>
+    <linearGradient id="darkBg3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#26221E" />
+      <stop offset="100%" stop-color="#181512" />
+    </linearGradient>
+  </defs>
+
+  <!-- Dark luxury backdrop -->
+  <rect x="6" y="6" width="88" height="88" rx="24" fill="url(#darkBg3)" stroke="#3E362E" stroke-width="1.5" />
+
+  <!-- Outer Elegant Arch -->
+  <path d="M 28 76 L 28 42 C 28 29.85 37.85 20 50 20 C 62.15 20 72 29.85 72 42 L 72 76" fill="none" stroke="url(#gold3A)" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Inner Arch line -->
+  <path d="M 35 76 L 35 44 C 35 35.7 41.7 29 50 29 C 58.3 29 65 35.7 65 44 L 65 76" fill="none" stroke="url(#gold3A)" stroke-width="1.5" stroke-opacity="0.6" stroke-linecap="round" />
+
+  <!-- Invitation Card with Fold Inside the Arch -->
+  <path d="M 37 54 L 50 63 L 63 54" fill="none" stroke="url(#gold3A)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  <line x1="32" y1="76" x2="68" y2="76" stroke="url(#gold3A)" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Celestial Sparkle Star on Apex -->
+  <path d="M 50 11 Q 50 17 44 17 Q 50 17 50 23 Q 50 17 56 17 Q 50 17 50 11 Z" fill="#FCEECB" />
+  <circle cx="50" cy="42" r="2.5" fill="url(#gold3A)" />
+</svg>
+
