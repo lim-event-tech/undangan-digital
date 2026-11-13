@@ -33,12 +33,11 @@ export function ModalAjukanTemplate({
   const [selectedPresetId, setSelectedPresetId] = useState<string>("undangan_resmi");
   const [name, setName] = useState<string>("lim_undangan_resmi");
   const [category, setCategory] = useState<"UTILITY" | "MARKETING">("UTILITY");
-  const [headerFormat, setHeaderFormat] = useState<"NONE" | "TEXT">("TEXT");
-  const [headerContent, setHeaderContent] = useState<string>("Undangan Resmi");
-  const [bodyText, setBodyText] = useState<string>(
-    "Yth. Bapak/Ibu/Saudara/i {{1}},\n\nKami mengundang Anda untuk menghadiri acara {{2}}.\n\nBatas konfirmasi kehadiran (RSVP): {{3}}.\nBuka tautan undangan digital Anda di bawah ini:\n{{4}}",
-  );
+  const [headerFormat, setHeaderFormat] = useState<"NONE" | "TEXT" | "IMAGE">("IMAGE");
+  const [headerContent, setHeaderContent] = useState<string>("");
+  const [bodyText, setBodyText] = useState<string>("{{1}}");
   const [footerText, setFooterText] = useState<string>("LIM-RSVP · Lingkar Ide Manajemen");
+  const [sertakanTombol, setSertakanTombol] = useState<boolean>(false);
   const [buttonText, setButtonText] = useState<string>("Buka Undangan");
   const [buttonUrl, setButtonUrl] = useState<string>("https://event.lingkaridemanajemen.id/{{1}}");
 
@@ -54,17 +53,32 @@ export function ModalAjukanTemplate({
 
     setName(preset.payload.name);
     setCategory(preset.payload.category === "MARKETING" ? "MARKETING" : "UTILITY");
-    setHeaderFormat(preset.payload.headerFormat === "TEXT" ? "TEXT" : "NONE");
+    setHeaderFormat(
+      preset.payload.headerFormat === "TEXT"
+        ? "TEXT"
+        : preset.payload.headerFormat === "NONE"
+        ? "NONE"
+        : "IMAGE",
+    );
     setHeaderContent(preset.payload.headerContent || "");
     setBodyText(preset.payload.bodyText);
     setFooterText(preset.payload.footerText || "");
     if (preset.payload.buttons && preset.payload.buttons.length > 0) {
+      setSertakanTombol(true);
       setButtonText(preset.payload.buttons[0].text);
       setButtonUrl(preset.payload.buttons[0].url || "https://event.lingkaridemanajemen.id/{{1}}");
+    } else {
+      setSertakanTombol(false);
     }
   };
 
-  const preview = renderTemplatePreview(bodyText, CONTOH_KONTEKS, headerFormat === "TEXT" ? headerContent : undefined, footerText);
+  const preview = renderTemplatePreview(
+    bodyText,
+    CONTOH_KONTEKS,
+    headerFormat === "TEXT" ? headerContent : undefined,
+    footerText,
+    headerFormat,
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,16 +103,17 @@ export function ModalAjukanTemplate({
       headerContent: headerFormat === "TEXT" ? headerContent.trim() : undefined,
       bodyText: bodyText.trim(),
       footerText: footerText.trim() ? footerText.trim().slice(0, 60) : undefined,
-      buttons: buttonText.trim()
-        ? [
-            {
-              type: "URL",
-              text: buttonText.trim(),
-              url: buttonUrl.trim() || "https://event.lingkaridemanajemen.id/{{1}}",
-              example: ["demo-token"],
-            },
-          ]
-        : undefined,
+      buttons:
+        sertakanTombol && buttonText.trim()
+          ? [
+              {
+                type: "URL",
+                text: buttonText.trim(),
+                url: buttonUrl.trim() || "https://event.lingkaridemanajemen.id/{{1}}",
+                example: ["demo-token"],
+              },
+            ]
+          : undefined,
     };
 
     startTransition(async () => {
@@ -213,14 +228,21 @@ export function ModalAjukanTemplate({
                   Format Header
                   <select
                     value={headerFormat}
-                    onChange={(e) => setHeaderFormat(e.target.value as "NONE" | "TEXT")}
+                    onChange={(e) => setHeaderFormat(e.target.value as "NONE" | "TEXT" | "IMAGE")}
                     className={kolom}
                   >
+                    <option value="IMAGE">Gambar Poster / Sampul (Standar LIM-RSVP)</option>
                     <option value="TEXT">Teks Judul</option>
                     <option value="NONE">Tanpa Header</option>
                   </select>
                 </label>
               </div>
+
+              {headerFormat === "IMAGE" ? (
+                <div className="rounded-md border border-emas/30 bg-emas/5 p-3 text-xs leading-relaxed text-tinta-2">
+                  <strong className="font-semibold text-emas-tua">Header Gambar Otomatis:</strong> Foto sampul atau poster undangan yang diunggah di aplikasi LIM-RSVP akan dikirimkan otomatis sebagai header gambar pesan WhatsApp (sesuai pengiriman Baileys).
+                </div>
+              ) : null}
 
               {headerFormat === "TEXT" ? (
                 <label className={labelKolom}>
@@ -242,20 +264,17 @@ export function ModalAjukanTemplate({
                   <span className="text-[11px] text-redup">{bodyText.length} karakter</span>
                 </div>
                 <textarea
-                  rows={6}
+                  rows={4}
                   required
                   value={bodyText}
                   onChange={(e) => setBodyText(e.target.value)}
                   className="w-full rounded-md border border-garis-input bg-white p-3 font-mono text-xs leading-relaxed text-tinta focus:border-emas-muda focus:outline-none focus:ring-3 focus:ring-emas-muda/20"
                 />
                 <div className="rounded-md bg-krem/50 p-2.5 text-[11px] leading-relaxed text-redup-2">
-                  <strong>Panduan Variabel WhatsApp Meta:</strong>
-                  <ul className="mt-1 mb-0 list-disc pl-4 space-y-0.5">
-                    <li><code className="text-emas-tua">{"{{1}}"}</code> = Nama Tamu Penerima</li>
-                    <li><code className="text-emas-tua">{"{{2}}"}</code> = Nama / Judul Acara</li>
-                    <li><code className="text-emas-tua">{"{{3}}"}</code> = Batas RSVP</li>
-                    <li><code className="text-emas-tua">{"{{4}}"}</code> = Tautan Undangan Digital</li>
-                  </ul>
+                  <strong className="font-semibold text-tinta">Ketentuan Variabel LIM-RSVP:</strong>
+                  <p className="mt-1 mb-0">
+                    Gunakan 1 variabel <code className="font-bold text-emas-tua">{"{{1}}"}</code>. Aplikasi LIM-RSVP akan otomatis mengolah dan menggabungkan konten undangan yang Anda susun di halaman pengiriman (nama tamu, nama event, batas RSVP, dan link undangan) menjadi 1 variabel teks tanpa <em>line break</em> sesuai regulasi Meta.
+                  </p>
                 </div>
               </label>
 
@@ -271,29 +290,47 @@ export function ModalAjukanTemplate({
                 />
               </label>
 
-              <div className="grid grid-cols-2 gap-3">
-                <label className={labelKolom}>
-                  Teks Tombol Tautan (Button)
+              {/* Opsi Tombol */}
+              <div className="flex flex-col gap-2 rounded-lg border border-garis bg-kertas/50 p-3">
+                <label className="flex items-center gap-2 text-xs font-semibold text-tinta cursor-pointer">
                   <input
-                    type="text"
-                    value={buttonText}
-                    onChange={(e) => setButtonText(e.target.value)}
-                    placeholder="Buka Undangan"
-                    maxLength={25}
-                    className={kolom}
+                    type="checkbox"
+                    checked={sertakanTombol}
+                    onChange={(e) => setSertakanTombol(e.target.checked)}
+                    className="size-4 rounded border-garis-input text-emas focus:ring-emas"
                   />
+                  <span>Sertakan Tombol URL (Opsional)</span>
                 </label>
+                <p className="m-0 text-[11px] text-redup">
+                  Standar LIM-RSVP adalah <strong>tanpa tombol</strong> karena tautan pribadi sudah disertakan langsung di dalam konten pesan.
+                </p>
 
-                <label className={labelKolom}>
-                  URL Tautan Tombol
-                  <input
-                    type="text"
-                    value={buttonUrl}
-                    onChange={(e) => setButtonUrl(e.target.value)}
-                    placeholder="https://event.lingkaridemanajemen.id/{{1}}"
-                    className={kolom}
-                  />
-                </label>
+                {sertakanTombol ? (
+                  <div className="mt-2 grid grid-cols-2 gap-3">
+                    <label className={labelKolom}>
+                      Teks Tombol
+                      <input
+                        type="text"
+                        value={buttonText}
+                        onChange={(e) => setButtonText(e.target.value)}
+                        placeholder="Buka Undangan"
+                        maxLength={25}
+                        className={kolom}
+                      />
+                    </label>
+
+                    <label className={labelKolom}>
+                      URL Tautan Tombol
+                      <input
+                        type="text"
+                        value={buttonUrl}
+                        onChange={(e) => setButtonUrl(e.target.value)}
+                        placeholder="https://event.lingkaridemanajemen.id/{{1}}"
+                        className={kolom}
+                      />
+                    </label>
+                  </div>
+                ) : null}
               </div>
             </div>
 
@@ -328,14 +365,23 @@ export function ModalAjukanTemplate({
 
             <div className="flex flex-1 flex-col rounded-xl border border-garis bg-[#EFEAE2] p-4 shadow-inner">
               {/* Balon Chat WA */}
-              <div className="relative max-w-[95%] self-start rounded-lg bg-white p-3.5 text-xs text-[#111B21] shadow-sm">
+              <div className="relative max-w-[95%] self-start overflow-hidden rounded-lg bg-white p-3.5 text-xs text-[#111B21] shadow-sm">
+                {preview.isImageHeader ? (
+                  <div className="mb-2.5 -mx-3.5 -mt-3.5 flex aspect-[16/9] items-center justify-center bg-stone-200 text-stone-500">
+                    <div className="flex flex-col items-center gap-1">
+                      <Ikon nama="gambar" ukuran={24} />
+                      <span className="text-[10px] font-medium">Header Poster / Cover Acara</span>
+                    </div>
+                  </div>
+                ) : null}
+
                 {preview.header ? (
                   <div className="mb-2 border-b border-gray-100 pb-1.5 font-bold text-gray-800">
                     {preview.header}
                   </div>
                 ) : null}
 
-                <div className="whitespace-pre-line leading-relaxed">{preview.body}</div>
+                <div className="leading-relaxed">{preview.body}</div>
 
                 {preview.footer ? (
                   <div className="mt-2 text-[10px] text-gray-400">{preview.footer}</div>
@@ -346,7 +392,7 @@ export function ModalAjukanTemplate({
                 </div>
               </div>
 
-              {buttonText.trim() ? (
+              {sertakanTombol && buttonText.trim() ? (
                 <div className="mt-2 max-w-[95%]">
                   <div className="flex items-center justify-center gap-1.5 rounded-lg bg-white py-2 px-3 text-xs font-medium text-[#00A884] shadow-sm">
                     <Ikon nama="tautan" ukuran={14} />

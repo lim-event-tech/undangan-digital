@@ -5,8 +5,13 @@ import { createTestDb, seedInvitation, type TestDb } from "@/test/db";
 import { saveWabaConfig } from "./config-service";
 import * as wabaClient from "./client";
 import type { AdminUser } from "@/lib/session";
+import { addPhoto } from "@/lib/photos/service";
 import { saveContentText } from "@/lib/invitations/editor";
-import { buildWabaBodyParameters, validateTemplateName } from "./templates-guide";
+import {
+  buildWabaBodyParameters,
+  formatWabaSingleVariableContent,
+  validateTemplateName,
+} from "./templates-guide";
 import {
   getUserWabaStatus,
   listWabaMessages,
@@ -16,6 +21,28 @@ import {
 } from "./service";
 
 let db: TestDb;
+
+function jpeg(isi = 1): Buffer {
+  const bytes = Buffer.alloc(64, isi);
+  bytes[0] = 0xff;
+  bytes[1] = 0xd8;
+  bytes[2] = 0xff;
+  return bytes;
+}
+
+async function seedInvitationWithCover(
+  targetDb: TestDb,
+  options?: { title?: string },
+) {
+  const seeded = await seedInvitation(targetDb, options?.title ? { title: options.title } : undefined);
+  const photoRes = await addPhoto(targetDb, seeded.invitation.id, {
+    kind: "cover",
+    fileName: "sampul.jpg",
+    bytes: jpeg(1),
+  });
+  if (!photoRes.ok) throw new Error("Gagal seed foto cover");
+  return seeded;
+}
 
 beforeAll(async () => {
   db = await createTestDb();
@@ -40,6 +67,11 @@ describe("WABA Service", () => {
       apiKey: "secret-waba-key",
       defaultTemplate: "undangan_resmi",
       language: "id",
+    });
+    // Default mock upload media WhatsApp
+    vi.spyOn(wabaClient, "uploadWabaMedia").mockResolvedValue({
+      ok: true,
+      mediaId: "waba-media-meta-123",
     });
   });
 
@@ -136,7 +168,7 @@ describe("WABA Service", () => {
   });
 
   it("mengurangi 1 kuota, menambah wabaSentCount, dan mencatat wabaMessage saat berhasil dikirim", async () => {
-    const { invitation, ownerId } = await seedInvitation(db);
+    const { invitation, ownerId } = await seedInvitationWithCover(db);
     await updateUserWabaQuota(db, adminUser, ownerId, {
       wabaAllowed: true,
       mode: "atur",
@@ -160,7 +192,7 @@ describe("WABA Service", () => {
         id: "msg-gateway-123",
         to: tamu.phone!,
         status: "sent",
-        template: "undangan_resmi",
+        template: "lim_undangan_resmi",
       },
     });
 
@@ -193,7 +225,7 @@ describe("WABA Service", () => {
   });
 
   it("merefund kuota kredit jika gateway WABA gagal merespons", async () => {
-    const { invitation, ownerId } = await seedInvitation(db);
+    const { invitation, ownerId } = await seedInvitationWithCover(db);
     await updateUserWabaQuota(db, adminUser, ownerId, {
       wabaAllowed: true,
       mode: "atur",
@@ -240,7 +272,7 @@ describe("WABA Service", () => {
   });
 
   it("sendBatchInvitationViaWaba mengirim tamu yang belum terkirim hingga batas kuota", async () => {
-    const { invitation, ownerId } = await seedInvitation(db);
+    const { invitation, ownerId } = await seedInvitationWithCover(db);
     await updateUserWabaQuota(db, adminUser, ownerId, {
       wabaAllowed: true,
       mode: "atur",
@@ -263,7 +295,7 @@ describe("WABA Service", () => {
         id: "batch-msg",
         to: "081200000001",
         status: "sent",
-        template: "undangan_resmi",
+        template: "lim_undangan_resmi",
       },
     });
 
@@ -282,7 +314,7 @@ describe("WABA Service", () => {
   });
 
   it("anggota tim yang memiliki izin WABA dapat mengirim dan memotong kuotanya sendiri meskipun pemilik tidak punya izin WABA", async () => {
-    const { invitation } = await seedInvitation(db);
+    const { invitation } = await seedInvitationWithCover(db);
     // Pemilik tidak punya izin WABA
 
     const memberId = "team-member-waba";
@@ -315,7 +347,7 @@ describe("WABA Service", () => {
         id: "msg-member-123",
         to: tamu.phone!,
         status: "sent",
-        template: "undangan_resmi",
+        template: "lim_undangan_resmi",
       },
     });
 
@@ -335,17 +367,18 @@ describe("WABA Service", () => {
     expect(memberAfter.wabaSentCount).toBe(1);
   });
 
-  it("memilih template yang disimpan pada invitation.content dan menyesuaikan parameter body secara akurat", async () => {
-    const { invitation, ownerId } = await seedInvitation(db);
+  it("pengiriman WABA resmi standar LIM-RSVP: 1 header image, 1 variabel konten gabungan tanpa line break, tanpa tombol", async () => {
+    const { invitation, ownerId } = await seedInvitationWithCover(db);
     await updateUserWabaQuota(db, adminUser, ownerId, {
       wabaAllowed: true,
       mode: "atur",
       jumlah: 5,
     });
 
-    // Simpan wabaTemplate di konten undangan
+    // Simpan template pesan dengan banyak baris dan line breaks di konten undangan
     await saveContentText(db, invitation.id, {
-      wabaTemplate: "lim_undangan_kustom_acara",
+      wabaTemplate: "lim_undangan_resmi",
+      pesanWa: "Yth. {nama},\n\nKami mengundang ke {event}.\nBuka: {link}\n\nRSVP {batas_rsvp}.\nTerima kasih.",
     });
 
     const [tamu] = await db
@@ -354,15 +387,79 @@ describe("WABA Service", () => {
         invitationId: invitation.id,
         name: "Ibu Ratna",
         phone: "081233445566",
-        token: "token-ratna",
+        token: "token-ratna-std",
       })
       .returning();
 
-    let sentTemplate = "";
+    let capturedOptions: wabaClient.SendWabaOptions | null = null;
+
+    vi.spyOn(wabaClient, "sendWabaNotification").mockImplementation(async (_cfg, opts) => {
+      capturedOptions = opts;
+      return {
+        ok: true,
+        data: {
+          id: "msg-lim-standard",
+          to: opts.to,
+          status: "sent",
+          template: opts.template,
+        },
+      };
+    });
+
+    const res = await sendGuestInvitationViaWaba(db, {
+      invitationId: invitation.id,
+      guestId: tamu.id,
+      senderUserId: ownerId,
+    });
+
+    expect(res.ok).toBe(true);
+    const sentOpts = capturedOptions as unknown as wabaClient.SendWabaOptions;
+    expect(sentOpts).not.toBeNull();
+    expect(sentOpts.template).toBe("lim_undangan_resmi");
+
+    // 1. Verifikasi Header Image dengan Media ID resmi
+    expect(sentOpts.parameters?.header).toBeDefined();
+    expect(sentOpts.parameters?.header?.type).toBe("image");
+    expect(sentOpts.parameters?.header?.mediaId).toBe("waba-media-meta-123");
+    expect(sentOpts.parameters?.header?.id).toBe("waba-media-meta-123");
+    expect(sentOpts.parameters?.header?.mediaUrl).toMatch(/\/foto\//);
+
+    // 2. Verifikasi 1 variabel konten gabungan
+    const bodyParams = sentOpts.parameters?.body || [];
+    expect(bodyParams.length).toBe(1);
+    const contentVar = bodyParams[0];
+
+    // 3. Verifikasi TIDAK ADA line break di dalam variabel
+    expect(contentVar).not.toMatch(/[\r\n]/);
+    expect(contentVar).toContain("Ibu Ratna");
+    expect(contentVar).toContain("token-ratna");
+    expect(contentVar).toContain("Terima kasih.");
+
+    // 4. Verifikasi TANPA TOMBOL
+    expect(sentOpts.parameters?.buttons).toBeUndefined();
+  });
+
+  it("mendukung template multi-variabel lama jika templateBodyText memiliki {{2}}", async () => {
+    const { invitation, ownerId } = await seedInvitationWithCover(db);
+    await updateUserWabaQuota(db, adminUser, ownerId, {
+      wabaAllowed: true,
+      mode: "atur",
+      jumlah: 5,
+    });
+
+    const [tamu] = await db
+      .insert(guestTable)
+      .values({
+        invitationId: invitation.id,
+        name: "Ibu Ratna",
+        phone: "081233445566",
+        token: "token-ratna-multi",
+      })
+      .returning();
+
     let sentBody: string[] = [];
 
     vi.spyOn(wabaClient, "sendWabaNotification").mockImplementation(async (_cfg, opts) => {
-      sentTemplate = opts.template;
       sentBody = opts.parameters?.body || [];
       return {
         ok: true,
@@ -379,14 +476,164 @@ describe("WABA Service", () => {
       invitationId: invitation.id,
       guestId: tamu.id,
       senderUserId: ownerId,
+      templateOverride: "template_multi_var",
+      templateBodyText: "Halo {{1}}, hadir di {{2}}, rsvp {{3}}, tautan {{4}}",
     });
 
     expect(res.ok).toBe(true);
-    expect(sentTemplate).toBe("lim_undangan_kustom_acara");
-    // Verifikasi urutan parameter body: 1 -> Nama Tamu, 2 -> Nama Acara, 3 -> Batas RSVP, 4 -> Link
+    expect(sentBody.length).toBe(4);
     expect(sentBody[0]).toBe("Ibu Ratna");
     expect(sentBody[1]).toContain("Event");
     expect(sentBody[3]).toContain("token-ratna");
+  });
+
+  it("gagal mengirim dan tidak mengurangi kuota jika poster khusus aktif tetapi belum diunggah", async () => {
+    const { invitation, ownerId } = await seedInvitationWithCover(db);
+    await updateUserWabaQuota(db, adminUser, ownerId, {
+      wabaAllowed: true,
+      mode: "atur",
+      jumlah: 5,
+    });
+
+    // Aktifkan pilihan poster khusus di waPoster
+    await saveContentText(db, invitation.id, {
+      waPoster: { kirim: true, sumber: "khusus" },
+    });
+
+    const [tamu] = await db
+      .insert(guestTable)
+      .values({
+        invitationId: invitation.id,
+        name: "Tamu Khusus",
+        phone: "081299991111",
+        token: "token-khusus",
+      })
+      .returning();
+
+    const res = await sendGuestInvitationViaWaba(db, {
+      invitationId: invitation.id,
+      guestId: tamu.id,
+      senderUserId: ownerId,
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.error).toContain("Poster khusus WhatsApp belum diunggah");
+    }
+
+    // Kuota tidak terpotong
+    const [userAfter] = await db.select().from(userTable).where(eq(userTable.id, ownerId));
+    expect(userAfter.wabaQuota).toBe(5);
+  });
+
+  it("gagal mengirim jika foto cover atau poster belum diunggah sama sekali untuk header gambar", async () => {
+    const { invitation, ownerId } = await seedInvitation(db); // Tanpa cover foto
+    await updateUserWabaQuota(db, adminUser, ownerId, {
+      wabaAllowed: true,
+      mode: "atur",
+      jumlah: 5,
+    });
+
+    const [tamu] = await db
+      .insert(guestTable)
+      .values({
+        invitationId: invitation.id,
+        name: "Tamu Tanpa Foto",
+        phone: "081299992222",
+        token: "token-tanpa-foto",
+      })
+      .returning();
+
+    const res = await sendGuestInvitationViaWaba(db, {
+      invitationId: invitation.id,
+      guestId: tamu.id,
+      senderUserId: ownerId,
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.error).toContain("Foto sampul atau poster undangan belum diunggah");
+    }
+  });
+
+  it("mengunggah media ke WhatsApp terlebih dahulu untuk mendapatkan mediaId dan mencache-nya agar tidak upload berulang", async () => {
+    const { invitation, ownerId } = await seedInvitationWithCover(db);
+    await updateUserWabaQuota(db, adminUser, ownerId, {
+      wabaAllowed: true,
+      mode: "atur",
+      jumlah: 5,
+    });
+
+    const [tamu1] = await db
+      .insert(guestTable)
+      .values({
+        invitationId: invitation.id,
+        name: "Tamu Satu",
+        phone: "081211110001",
+        token: "token-media-1",
+      })
+      .returning();
+
+    const [tamu2] = await db
+      .insert(guestTable)
+      .values({
+        invitationId: invitation.id,
+        name: "Tamu Dua",
+        phone: "081211110002",
+        token: "token-media-2",
+      })
+      .returning();
+
+    const uploadSpy = vi.spyOn(wabaClient, "uploadWabaMedia").mockResolvedValue({
+      ok: true,
+      mediaId: "waba-media-meta-unique",
+    });
+
+    vi.spyOn(wabaClient, "sendWabaNotification").mockResolvedValue({
+      ok: true,
+      data: {
+        id: "msg-upload",
+        to: "081211110001",
+        status: "sent",
+        template: "lim_undangan_resmi",
+      },
+    });
+
+    // Kirim tamu pertama: harus memicu uploadWabaMedia
+    const res1 = await sendGuestInvitationViaWaba(db, {
+      invitationId: invitation.id,
+      guestId: tamu1.id,
+      senderUserId: ownerId,
+    });
+    expect(res1.ok).toBe(true);
+    expect(uploadSpy).toHaveBeenCalledTimes(1);
+
+    // Kirim tamu kedua: harus menggunakan cache dari wabaMedia sehingga uploadSpy TIDAK dipanggil lagi
+    const res2 = await sendGuestInvitationViaWaba(db, {
+      invitationId: invitation.id,
+      guestId: tamu2.id,
+      senderUserId: ownerId,
+    });
+    expect(res2.ok).toBe(true);
+    expect(uploadSpy).toHaveBeenCalledTimes(1); // Tetap 1 kali karena di-cache!
+  });
+
+  it("formatWabaSingleVariableContent membersihkan seluruh line break dan menormalkan spasi", () => {
+    const raw = `Yth. Bapak Ahmad,
+    
+Kami mengundang Anda pada:
+The Wedding of Sarah & Dimas
+
+Tautan:
+https://lim.id/ahmad-123
+
+Terima kasih.`;
+
+    const cleaned = formatWabaSingleVariableContent(raw);
+    expect(cleaned).not.toMatch(/[\r\n]/);
+    expect(cleaned).toBe(
+      "Yth. Bapak Ahmad, Kami mengundang Anda pada: The Wedding of Sarah & Dimas Tautan: https://lim.id/ahmad-123 Terima kasih.",
+    );
   });
 
   it("buildWabaBodyParameters memetakan variabel sesuai jumlah placeholder di template Meta", () => {

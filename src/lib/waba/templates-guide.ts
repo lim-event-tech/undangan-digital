@@ -10,73 +10,44 @@ export interface WabaTemplatePreset {
 export const WABA_TEMPLATE_PRESETS: WabaTemplatePreset[] = [
   {
     id: "undangan_resmi",
-    label: "Undangan Resmi & Formal (Sangat Direkomendasikan)",
+    label: "Undangan Resmi LIM-RSVP (Header Gambar & Tanpa Tombol)",
     deskripsi:
-      "Format baku untuk acara formal, pernikahan, atau dinas. Dilengkapi tombol tautan langsung ke undangan tamu.",
+      "Format baku LIM-RSVP: 1 Header Gambar (poster/cover acara), tanpa tombol, dan 1 variabel konten gabungan {{1}} tanpa line break.",
     payload: {
       name: "lim_undangan_resmi",
       category: "UTILITY",
       language: "id",
-      headerFormat: "TEXT",
-      headerContent: "Undangan Resmi",
-      bodyText:
-        "Yth. Bapak/Ibu/Saudara/i {{1}},\n\nKami mengundang Anda untuk menghadiri acara {{2}}.\n\nBatas konfirmasi kehadiran (RSVP): {{3}}.\nBuka tautan undangan digital Anda di bawah ini:\n{{4}}",
+      headerFormat: "IMAGE",
+      bodyText: "{{1}}",
       footerText: "LIM-RSVP · Lingkar Ide Manajemen",
-      buttons: [
-        {
-          type: "URL",
-          text: "Buka Undangan",
-          url: "https://event.lingkaridemanajemen.id/{{1}}",
-          example: ["demo-token"],
-        },
-      ],
-    },
-  },
-  {
-    id: "undangan_gathering",
-    label: "Undangan Semi-Formal / Gathering / Reuni",
-    deskripsi:
-      "Gaya sapaan hangat dan santai untuk pertemuan keluarga, temu alumni, atau internal perusahaan.",
-    payload: {
-      name: "lim_acara_gathering",
-      category: "UTILITY",
-      language: "id",
-      headerFormat: "NONE",
-      bodyText:
-        "Halo {{1}},\n\nAnda diundang untuk hadir pada agenda {{2}}.\n\nMohon konfirmasi kehadiran sebelum {{3}} melalui tautan undangan berikut:\n{{4}}",
-      footerText: "LIM-RSVP",
-      buttons: [
-        {
-          type: "URL",
-          text: "Lihat Undangan",
-          url: "https://event.lingkaridemanajemen.id/{{1}}",
-          example: ["demo-token"],
-        },
-      ],
     },
   },
   {
     id: "pengingat_rsvp",
-    label: "Pengingat Konfirmasi Kehadiran (RSVP Reminder)",
+    label: "Pengingat Tamu LIM-RSVP (Header Gambar & Tanpa Tombol)",
     deskripsi:
-      "Format pengingat ramah bagi tamu yang belum mengisi konfirmasi kehadiran.",
+      "Format pengingat konfirmasi RSVP resmi: 1 Header Gambar, tanpa tombol, dan 1 variabel konten {{1}} tanpa line break.",
     payload: {
       name: "lim_pengingat_tamu",
       category: "UTILITY",
       language: "id",
-      headerFormat: "TEXT",
-      headerContent: "Pengingat Undangan",
-      bodyText:
-        "Halo {{1}},\n\nMengingatkan kembali terkait undangan acara {{2}}.\nBatas RSVP adalah {{3}}.\n\nMohon kesediaannya mengisi konfirmasi kehadiran melalui tautan berikut:\n{{4}}",
+      headerFormat: "IMAGE",
+      bodyText: "{{1}}",
+      footerText: "LIM-RSVP · Lingkar Ide Manajemen",
+    },
+  },
+  {
+    id: "undangan_gathering",
+    label: "Undangan Gathering LIM-RSVP (Header Gambar & Tanpa Tombol)",
+    deskripsi:
+      "Format temu/gathering santai dengan Header Gambar, tanpa tombol, dan 1 variabel konten {{1}} tanpa line break.",
+    payload: {
+      name: "lim_acara_gathering",
+      category: "UTILITY",
+      language: "id",
+      headerFormat: "IMAGE",
+      bodyText: "{{1}}",
       footerText: "LIM-RSVP",
-      buttons: [
-        {
-          type: "URL",
-          text: "Konfirmasi Kehadiran",
-          url: "https://event.lingkaridemanajemen.id/{{1}}",
-          example: ["demo-token"],
-        },
-      ],
     },
   },
 ];
@@ -87,10 +58,27 @@ export type TemplateVariableContext = {
   deadlinePhrase: string;
   link: string;
   token: string;
+  fullMessage?: string;
 };
 
 /**
- * Memetakan variabel secara dinamis berdasarkan pola {{1}}, {{2}}, dst pada bodyText template Meta
+ * Mengolah teks pesan menjadi 1 variabel konten gabungan untuk Meta WABA.
+ * Menghilangkan seluruh line break (\r\n, \r, \n) dan menormalkan spasi
+ * sehingga sesuai regulasi ketat Meta Cloud API untuk parameter variabel.
+ */
+export function formatWabaSingleVariableContent(rawMessage: string): string {
+  return rawMessage
+    .split(/\r\n|\r|\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Memetakan variabel secara dinamis berdasarkan pola {{1}}, {{2}}, dst pada bodyText template Meta.
+ * Jika hanya ada 1 variabel {{1}}, otomatis menggunakan format gabungan 1 variabel tanpa line break.
  */
 export function buildWabaBodyParameters(
   bodyText: string,
@@ -104,16 +92,15 @@ export function buildWabaBodyParameters(
     if (idx > maxVarIndex) maxVarIndex = idx;
   }
 
-  // Jika tidak ditemukan placeholder sama sekali, default ke 4 variabel standar jika string kosong
-  if (maxVarIndex === 0) {
-    maxVarIndex = 4;
+  // Jika template hanya memiliki 1 variabel {{1}} (standar LIM-RSVP)
+  if (maxVarIndex <= 1) {
+    const baseText =
+      context.fullMessage ||
+      `Yth. ${context.guestName}, Kami mengundang Anda untuk menghadiri ${context.eventTitle}. Detail acara dan konfirmasi kehadiran di link pribadi: ${context.link}. Mohon konfirmasi kehadiran ${context.deadlinePhrase}. Terima kasih.`;
+    return [formatWabaSingleVariableContent(baseText)];
   }
 
-  // Urutan semantik variabel standar:
-  // 1: Nama Tamu
-  // 2: Nama Acara
-  // 3: Batas RSVP
-  // 4: Link Undangan
+  // Multi-variabel (format khusus / lama dengan placeholder terpisah)
   const values: string[] = [
     context.guestName,
     context.eventTitle,
@@ -137,7 +124,8 @@ export function renderTemplatePreview(
   context: TemplateVariableContext,
   headerContent?: string,
   footerText?: string,
-): { header?: string; body: string; footer?: string } {
+  headerFormat?: "NONE" | "TEXT" | "IMAGE" | "DOCUMENT",
+): { header?: string; body: string; footer?: string; isImageHeader?: boolean } {
   let renderedBody = bodyText;
   const params = buildWabaBodyParameters(bodyText, context);
 
@@ -145,10 +133,13 @@ export function renderTemplatePreview(
     renderedBody = renderedBody.replaceAll(`{{${idx + 1}}}`, val);
   });
 
+  const isImage = headerFormat === "IMAGE" || (!headerContent && headerFormat !== "NONE" && headerFormat !== "TEXT");
+
   return {
-    header: headerContent?.trim() || undefined,
+    header: headerFormat === "TEXT" ? headerContent?.trim() || undefined : undefined,
     body: renderedBody,
     footer: footerText?.trim() || undefined,
+    isImageHeader: isImage,
   };
 }
 

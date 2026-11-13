@@ -168,13 +168,16 @@ Sistem secara otomatis menormalisasi format `081234567890`, `+62 812-3456-7890`,
 ```json
 "parameters": {
   "header": {
-    "type": "document",
-    "mediaUrl": "https://catering.lim.id/invoices/INV-991.pdf",
-    "filename": "Invoice-ORD-2026-991.pdf"
+    "type": "image",
+    "mediaId": "481029384756102",
+    "mediaUrl": "https://event.lingkaridemanajemen.id/foto/sampul.jpg"
   },
-  "body": ["Siti Aminah", "ORD-2026-991"]
+  "body": ["Yth. Bapak Hendra, Kami mengundang ke Acara Kami di link https://lim.id/abc. Terima kasih."]
 }
 ```
+
+> **Catatan Media (Anti-Blokir Cloudflare)**:
+> Jika domain Anda berada di balik **Cloudflare**, Meta seringkali gagal mengunduh gambar bila hanya mengandalkan `mediaUrl` karena terkena tantangan bot (*Cloudflare challenge*). Anda dapat mengunggah berkas terlebih dahulu via `POST /api/v1/waba/media` (multipart `file`) untuk mendapatkan `mediaId` resmi Meta, kemudian menyertakan `mediaId` tersebut di dalam objek `header`.
 
 **Contoh Response (`202 Accepted`)**:
 ```json

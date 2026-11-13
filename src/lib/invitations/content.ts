@@ -68,6 +68,11 @@ export type InvitationContent = {
   susunan: Susunan;
   wabaTemplate?: string;
   wabaTemplatePengingat?: string;
+  wabaMedia?: {
+    photoId: string;
+    mediaId: string;
+    uploadedAt: string;
+  };
 };
 export const DEFAULT_CHECKIN: CheckinSettings = { aktif: true };
 export const DEFAULT_WA_POSTER: WaPosterSettings = { kirim: false, sumber: "sama" };
@@ -107,5 +112,20 @@ export function readContent(raw: unknown): InvitationContent {
     susunan: normalizeSusunan(record(source.susunan)),
     wabaTemplate: typeof source.wabaTemplate === "string" ? source.wabaTemplate.trim() : undefined,
     wabaTemplatePengingat: typeof source.wabaTemplatePengingat === "string" ? source.wabaTemplatePengingat.trim() : undefined,
+    wabaMedia:
+      source.wabaMedia &&
+      typeof source.wabaMedia === "object" &&
+      !Array.isArray(source.wabaMedia) &&
+      typeof (source.wabaMedia as Record<string, unknown>).photoId === "string" &&
+      typeof (source.wabaMedia as Record<string, unknown>).mediaId === "string"
+        ? {
+            photoId: (source.wabaMedia as Record<string, unknown>).photoId as string,
+            mediaId: (source.wabaMedia as Record<string, unknown>).mediaId as string,
+            uploadedAt:
+              typeof (source.wabaMedia as Record<string, unknown>).uploadedAt === "string"
+                ? ((source.wabaMedia as Record<string, unknown>).uploadedAt as string)
+                : new Date().toISOString(),
+          }
+        : undefined,
   };
 }

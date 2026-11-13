@@ -196,6 +196,7 @@ export default async function KirimPage({ params, searchParams }: PageProps<"/un
             deadlinePhrase: sample.batas_rsvp,
             link: sample.link,
             token: firstGuest?.token ?? "kode-tamu",
+            fullMessage: renderMessage(template, sample),
           }}
         />
       ) : null}
