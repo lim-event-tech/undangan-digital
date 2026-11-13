@@ -52,11 +52,9 @@ pipeline {
             steps {
                 echo 'Menjalankan unit test & lint check menggunakan Node Docker container...'
                 sh '''
-                    docker run --rm \
-                        -v "${WORKSPACE}":/app \
-                        -w /app \
-                        node:22-alpine \
-                        sh -c "npm ci && npm run lint && npm run test"
+                    tar -cf - --exclude=node_modules --exclude=.next --exclude=.git . | \
+                    docker run --rm -i -w /app node:22-alpine \
+                        sh -c "tar -xf - && npm ci && npm run lint && npm run test"
                 '''
             }
         }
@@ -66,9 +64,10 @@ pipeline {
                 anyOf {
                     branch 'main'
                     branch 'staging'
+                    branch 'production'
                     expression {
                         def currentBranch = env.BRANCH_NAME ?: env.GIT_BRANCH ?: ''
-                        return currentBranch.contains('main') || currentBranch.contains('staging')
+                        return currentBranch.contains('main') || currentBranch.contains('staging') || currentBranch.contains('production')
                     }
                 }
             }
