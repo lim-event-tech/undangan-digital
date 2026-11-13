@@ -368,6 +368,16 @@ describe("anggota tim pada konteks undangan", () => {
     expect((await mocks.db.select().from(waJob).where(eq(waJob.invitationId, first.id))).every((job) => job.status === "dibatalkan")).toBe(true);
   });
 
+  it("mengekspor ringkasan RSVP anggota hanya untuk tamu yang ditambahkannya", async () => {
+    const response = await exportRsvp(new Request(`http://localhost/undangan/${first.id}/ringkasan/ekspor?format=csv`), {
+      params: Promise.resolve({ id: first.id }),
+    });
+    const csv = await response.text();
+    expect(csv).toContain("Tamu Anggota");
+    expect(csv).not.toContain("Tamu Pemilik");
+    await expect(exportRsvp(new Request("http://localhost/ekspor"), { params: Promise.resolve({ id: other.id }) })).rejects.toThrow("not-found");
+  });
+
   it("pemilik bisa mengundang, mencabut undangan, dan mengeluarkan anggota", async () => {
     mocks.session.mockResolvedValue(session(ownerId));
     const hasil = await teamActions.undangAnggotaAction(first.id, null, form({ email: "calon@example.com" }));

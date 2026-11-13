@@ -12,7 +12,7 @@ import {
   type DashboardGuest,
   type GuestStatus,
 } from "@/lib/rsvp/dashboard";
-import { requireInvitationById } from "@/lib/session";
+import { requireInvitationAccess } from "@/lib/session";
 import { isUuid } from "@/lib/uuid";
 import { GrafikRingkasan } from "./grafik";
 
@@ -81,7 +81,7 @@ function Jawaban({ guest }: { guest: DashboardGuest }) {
 }
 
 export default async function RingkasanPage({ params, searchParams }: PageProps<"/undangan/[id]/ringkasan">) {
-  const { invitation } = await requireInvitationById((await params).id);
+  const { invitation, role, scope } = await requireInvitationAccess((await params).id);
   const sp = await searchParams;
 
   const statusParam = satu(sp.status);
@@ -93,8 +93,8 @@ export default async function RingkasanPage({ params, searchParams }: PageProps<
   const q = satu(sp.q)?.slice(0, 100);
 
   const [data, groups] = await Promise.all([
-    getDashboard(db, invitation.id, { status, groupId, eventId, q }),
-    listGroups(db, invitation.id),
+    getDashboard(db, invitation.id, { status, groupId, eventId, q }, scope ?? undefined),
+    listGroups(db, invitation.id, scope ?? undefined),
   ]);
   const { totals } = data;
   const disaring = Boolean(status || groupId || eventId || q);
@@ -122,7 +122,9 @@ export default async function RingkasanPage({ params, searchParams }: PageProps<
         <div>
           <h1 className={`m-0 ${judulHalaman}`}>Ringkasan RSVP</h1>
           <p className="mt-1 mb-0 text-sm text-redup">
-            Jawaban tamu yang masuk lewat link pribadi masing-masing
+            {role === "anggota"
+              ? "Jawaban RSVP untuk tamu yang Anda undang"
+              : "Jawaban tamu yang masuk lewat link pribadi masing-masing"}
           </p>
         </div>
         <Link href={`/undangan/${invitation.id}/kirim`} className={`${tombolGelap} no-underline`}>
