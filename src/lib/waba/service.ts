@@ -4,11 +4,13 @@ import type { AppDb } from "@/db/types";
 import { appBaseUrl } from "@/lib/app-url";
 import { formatDeadline } from "@/lib/datetime";
 import { readContent } from "@/lib/invitations/content";
-import { deadlinePhrase } from "@/lib/whatsapp";
+import { listPhotos } from "@/lib/photos/service";
+import { getSettings } from "@/lib/platform/service";
+import { DEFAULT_MESSAGE, deadlinePhrase, pickTemplate, renderMessage } from "@/lib/whatsapp";
 import type { AdminUser } from "@/lib/session";
 import { getWabaConfig } from "./config-service";
 import { sendWabaNotification } from "./client";
-import { buildWabaBodyParameters } from "./templates-guide";
+import { buildWabaBodyParameters, formatWabaSingleVariableContent } from "./templates-guide";
 
 export type UserWabaStatus = {
   allowed: boolean;
@@ -128,7 +130,42 @@ export type SendWabaInviteParams = {
   senderUserId: string;
   templateOverride?: string;
   templateBodyText?: string;
+  templateHeaderFormat?: "NONE" | "TEXT" | "IMAGE" | "DOCUMENT";
+  templateHasButtons?: boolean;
+  kind?: "undangan" | "pengingat";
 };
+
+export async function resolveInvitationHeaderImageUrl(
+  db: AppDb,
+  invitationId: string,
+  content: ReturnType<typeof readContent>,
+): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  const photos = await listPhotos(db, invitationId);
+
+  if (content.waPoster.kirim && content.waPoster.sumber === "khusus") {
+    const poster = photos.find((p) => p.kind === "poster_wa");
+    if (!poster) {
+      return {
+        ok: false,
+        error:
+          "Poster khusus WhatsApp belum diunggah. Unggah poster khusus di halaman Kirim Undangan atau matikan pilihan poster khusus.",
+      };
+    }
+    return { ok: true, url: `${appBaseUrl()}/foto/${poster.id}` };
+  }
+
+  const coverOrPoster =
+    photos.find((p) => p.kind === "cover") || photos.find((p) => p.kind === "poster_wa");
+  if (!coverOrPoster) {
+    return {
+      ok: false,
+      error:
+        "Foto sampul atau poster undangan belum diunggah untuk header gambar WhatsApp. Unggah foto sampul di menu Isi Undangan.",
+    };
+  }
+
+  return { ok: true, url: `${appBaseUrl()}/foto/${coverOrPoster.id}` };
+}
 
 export type SendWabaInviteResult =
   | { ok: true; messageId: string; remainingQuota: number }
@@ -194,6 +231,30 @@ export async function sendGuestInvitationViaWaba(
   if (!guest) return { ok: false, error: "Tamu tidak ditemukan." };
   if (!guest.phone) return { ok: false, error: "Nomor telepon tamu belum diisi." };
 
+  const content = readContent(invRow.invitation.content);
+  const templateName =
+    params.templateOverride ||
+    content.wabaTemplate ||
+    config.defaultTemplate ||
+    "lim_undangan_resmi";
+
+  // Header image (sesuai pengiriman Baileys: poster khusus jika diaktifkan, atau cover)
+  const isImageHeader = params.templateHeaderFormat !== "NONE" && params.templateHeaderFormat !== "TEXT";
+  let headerPayload: { type: "image"; mediaUrl: string } | undefined;
+  if (isImageHeader) {
+    const headerImgRes = await resolveInvitationHeaderImageUrl(db, invRow.invitation.id, content);
+    if (!headerImgRes.ok) {
+      return {
+        ok: false,
+        error: headerImgRes.error,
+      };
+    }
+    headerPayload = {
+      type: "image",
+      mediaUrl: headerImgRes.url,
+    };
+  }
+
   // Kurangi 1 kredit dan tambah 1 ke waba_sent_count secara atomik pada akun penanggung
   const [updatedUser] = await db
     .update(userTable)
@@ -213,30 +274,45 @@ export async function sendGuestInvitationViaWaba(
     };
   }
 
-  const content = readContent(invRow.invitation.content);
-  const templateName =
-    params.templateOverride ||
-    content.wabaTemplate ||
-    config.defaultTemplate ||
-    "undangan_resmi";
+  // Siapkan teks pesan sesuai template yang dibuat pengguna di halaman pengiriman
+  const settings = await getSettings(db);
+  const templateText = pickTemplate(params.kind ?? "undangan", content, settings.pesanWaBawaan || DEFAULT_MESSAGE);
   const deadlineText = formatDeadline(invRow.invitation.rsvpDeadline);
   const phrase = deadlinePhrase(deadlineText);
   const link = `${appBaseUrl()}/${guest.token}`;
 
-  const bodyParams = params.templateBodyText
-    ? buildWabaBodyParameters(params.templateBodyText, {
-        guestName: guest.name,
-        eventTitle: invRow.invitation.title,
-        deadlinePhrase: phrase,
-        link,
-        token: guest.token,
-      })
-    : [
-        guest.name,
-        invRow.invitation.title,
-        phrase || "Mohon konfirmasi kehadiran Anda",
-        link,
-      ];
+  const renderedMessage = renderMessage(templateText, {
+    nama: guest.name,
+    link,
+    batas_rsvp: phrase,
+    event: invRow.invitation.title,
+  });
+
+  // 1 variabel konten yang digabung tanpa line break
+  const singleVarContent = formatWabaSingleVariableContent(renderedMessage);
+
+  const bodyParams =
+    params.templateBodyText && /\{\{2\}\}/.test(params.templateBodyText)
+      ? buildWabaBodyParameters(params.templateBodyText, {
+          guestName: guest.name,
+          eventTitle: invRow.invitation.title,
+          deadlinePhrase: phrase,
+          link,
+          token: guest.token,
+          fullMessage: renderedMessage,
+        })
+      : [singleVarContent];
+
+  // Tombol: tanpa tombol untuk format standar LIM-RSVP
+  const buttonPayload = params.templateHasButtons
+    ? [
+        {
+          index: 0,
+          type: "url" as const,
+          parameter: guest.token,
+        },
+      ]
+    : undefined;
 
   // Kirim ke Gateway WABA
   const sendRes = await sendWabaNotification(config, {
@@ -245,14 +321,9 @@ export async function sendGuestInvitationViaWaba(
     template: templateName,
     referenceId: guest.id,
     parameters: {
+      ...(headerPayload ? { header: headerPayload } : {}),
       body: bodyParams,
-      buttons: [
-        {
-          index: 0,
-          type: "url",
-          parameter: guest.token,
-        },
-      ],
+      ...(buttonPayload ? { buttons: buttonPayload } : {}),
     },
   });
 
@@ -351,6 +422,9 @@ export async function sendBatchInvitationViaWaba(
     limit?: number;
     templateOverride?: string;
     templateBodyText?: string;
+    templateHeaderFormat?: "NONE" | "TEXT" | "IMAGE" | "DOCUMENT";
+    templateHasButtons?: boolean;
+    kind?: "undangan" | "pengingat";
   },
 ): Promise<BatchWabaResult> {
   const [invRow] = await db
@@ -431,6 +505,9 @@ export async function sendBatchInvitationViaWaba(
       senderUserId: params.senderUserId,
       templateOverride: params.templateOverride,
       templateBodyText: params.templateBodyText,
+      templateHeaderFormat: params.templateHeaderFormat,
+      templateHasButtons: params.templateHasButtons,
+      kind: params.kind,
     });
     if (res.ok) {
       totalSent++;

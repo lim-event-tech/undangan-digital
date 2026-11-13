@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Ikon } from "@/components/ikon";
 import { kartu, tombolEmas, tombolTerang } from "@/components/ui";
 import { useInvitationAction } from "@/components/invitation-context";
 import type { WabaTemplateItem } from "@/lib/waba/client";
@@ -114,12 +115,15 @@ export function PanelWaba({
         currentTemplateItem.bodyText,
         sampleContext,
         currentTemplateItem.headerFormat === "TEXT" ? "Undangan Resmi" : undefined,
+        "LIM-RSVP · Lingkar Ide Manajemen",
+        currentTemplateItem.headerFormat,
       )
     : renderTemplatePreview(
-        "Yth. {{1}},\n\nKami mengundang Anda untuk hadir pada acara {{2}}.\nBatas RSVP: {{3}}.\nTautan undangan:\n{{4}}",
+        "{{1}}",
         sampleContext,
-        "Undangan Resmi",
-        "LIM-RSVP",
+        undefined,
+        "LIM-RSVP · Lingkar Ide Manajemen",
+        "IMAGE",
       );
 
   return (
@@ -233,18 +237,29 @@ export function PanelWaba({
         {/* Pratinjau Tampilan Template Terpilih */}
         <details className="mt-1 text-xs">
           <summary className="cursor-pointer font-medium text-emas hover:underline">
-            Lihat Pratinjau Teks Pesan Template &quot;{selectedTemplate}&quot;
+            Lihat Pratinjau Pesan Template &quot;{selectedTemplate}&quot;
           </summary>
           <div className="mt-2.5 rounded-lg border border-garis bg-[#EFEAE2] p-3">
-            <div className="max-w-md rounded-lg bg-white p-3 text-xs text-[#111B21] shadow-xs">
+            <div className="max-w-md overflow-hidden rounded-lg bg-white p-3 text-xs text-[#111B21] shadow-xs">
+              {preview.isImageHeader ? (
+                <div className="mb-2 -mx-3 -mt-3 flex aspect-[16/9] items-center justify-center bg-stone-200 text-stone-500">
+                  <div className="flex flex-col items-center gap-1">
+                    <Ikon nama="gambar" ukuran={20} />
+                    <span className="text-[10px] font-medium">Header Poster / Cover Acara</span>
+                  </div>
+                </div>
+              ) : null}
               {preview.header ? (
                 <div className="mb-1 font-bold text-gray-800">{preview.header}</div>
               ) : null}
-              <div className="whitespace-pre-line leading-relaxed">{preview.body}</div>
+              <div className="leading-relaxed">{preview.body}</div>
               {preview.footer ? (
                 <div className="mt-1.5 text-[10px] text-gray-400">{preview.footer}</div>
               ) : null}
             </div>
+            <p className="mt-2 mb-0 text-[11px] text-stone-600">
+              <em>Format resmi LIM-RSVP:</em> 1 Header Gambar poster/cover, 1 variabel gabungan tanpa line break, tanpa tombol.
+            </p>
           </div>
         </details>
       </div>
