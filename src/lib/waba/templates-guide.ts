@@ -126,7 +126,7 @@ const DEFAULT_MULTI_VAR_EXPRESSIONS = [
   "{nama}",
   "{event}",
   "{batas_rsvp}",
-  "Detail acara & konfirmasi kehadiran tersedia pada tombol di bawah",
+  "{link}",
 ];
 
 export function defaultWabaVariableMappings(maxVarIndex: number): Record<string, string> {
