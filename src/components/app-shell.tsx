@@ -18,6 +18,7 @@ function invitationNav(id: string, peran: "pemilik" | "anggota", templateKey?: s
   const pratinjauHref = `/pratinjau/${templateKey || "bersama"}?undangan=${id}`;
   if (peran === "anggota") {
     return [
+      { label: "Ringkasan RSVP", ikon: "dasbor", href: `${base}/ringkasan` },
       { label: "Daftar undangan", ikon: "tamu", href: `${base}/tamu` },
       { label: "Kirim undangan", ikon: "kirim", href: `${base}/kirim` },
       { label: "Narahubung saya", ikon: "surat", href: `${base}/kontak` },

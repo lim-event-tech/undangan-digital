@@ -136,7 +136,40 @@ export function ImportClient({ context }: { context: ImportContext }) {
 
   return (
     <div className="flex flex-col gap-5">
+      <section className={`${kartu} flex flex-wrap items-center justify-between gap-4 p-5`}>
+        <div className="flex min-w-64 flex-[1_1_300px] flex-col gap-1">
+          <h2 className="m-0 font-judul text-lg font-medium text-tinta">
+            1. Unduh template Excel
+          </h2>
+          <p className="m-0 text-[13px] leading-normal text-redup-2">
+            Isi daftar tamu di sheet <strong className="font-medium text-tinta">Daftar undangan</strong> sesuai panduan kolom, lalu unggah kembali di bawah ini.
+          </p>
+          <p className="m-0 text-xs text-redup">
+            Atau unduh contoh terisi:{" "}
+            <a href={`/undangan/${invitationId}/tamu/contoh.xlsx`} className="text-emas">
+              Excel
+            </a>{" "}
+            ·{" "}
+            <a href={`/undangan/${invitationId}/tamu/contoh.csv`} className="text-emas">
+              CSV
+            </a>
+          </p>
+        </div>
+        <a
+          href={`/undangan/${invitationId}/tamu/template.xlsx`}
+          className={`${tombolGelap} inline-flex items-center gap-2 no-underline`}
+        >
+          <Ikon nama="unduh" ukuran={18} />
+          Unduh Template Excel (.xlsx)
+        </a>
+      </section>
+
       <section className={`${kartu} flex flex-wrap items-center gap-5 p-5`}>
+        <div className="w-full">
+          <h2 className="m-0 font-judul text-lg font-medium text-tinta">
+            2. Unggah file yang sudah diisi
+          </h2>
+        </div>
         {namaBerkas ? (
           <div className="flex min-w-70 flex-[1_1_280px] items-center gap-3.5 rounded-[10px] border-2 border-dashed border-[#c5d0b8] bg-[#f3fbf9] p-4">
             <span
@@ -197,17 +230,13 @@ export function ImportClient({ context }: { context: ImportContext }) {
           </code>
           <span>
             Acara dipisah titik koma, mis.{" "}
-            <code className="rounded bg-krem-2 px-1.5 py-px">utama;lanjutan</code>
+            <code className="rounded bg-krem-2 px-1.5 py-px">
+              {context.events.length > 0
+                ? context.events.map((e) => e.name).slice(0, 2).join(";")
+                : "utama;lanjutan"}
+            </code>
             . Acara kosong berarti semua acara. Kosongkan maks untuk memakai
-            bawaan.{" "}
-            Unduh contoh:{" "}
-            <a href={`/undangan/${invitationId}/tamu/contoh.xlsx`} className="text-emas">
-              Excel
-            </a>{" "}
-            atau{" "}
-            <a href={`/undangan/${invitationId}/tamu/contoh.csv`} className="text-emas">
-              CSV
-            </a>
+            bawaan ({context.defaults.maxAttendees}).
           </span>
         </div>
       </section>
