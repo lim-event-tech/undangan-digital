@@ -140,7 +140,7 @@ export async function kirimWabaTamuAction(
   guestId: string,
   templateOverride?: string,
 ): Promise<{ ok: boolean; error?: string; remainingQuota?: number }> {
-  const { invitation, user, scope } = await requireInvitationAccess(invitationId);
+  const { invitation, user, role, scope } = await requireInvitationAccess(invitationId);
   if (!isUuid(guestId) || !(await getGuest(db, invitation.id, guestId, scope ?? undefined))) {
     return { ok: false, error: "Tamu tidak ditemukan." };
   }
@@ -149,7 +149,7 @@ export async function kirimWabaTamuAction(
     invitationId: invitation.id,
     guestId,
     senderUserId: user.id,
-    templateOverride,
+    templateOverride: role === "pemilik" ? templateOverride : undefined,
   });
 
   if (result.ok) {
@@ -163,35 +163,62 @@ export async function kirimBatchWabaAction(
   invitationId: string,
   templateOverride?: string,
 ): Promise<BatchWabaResult> {
-  const { invitation, user, scope } = await requireInvitationAccess(invitationId);
+  const { invitation, user, role, scope } = await requireInvitationAccess(invitationId);
 
   const result = await sendBatchInvitationViaWaba(db, {
     invitationId: invitation.id,
     senderUserId: user.id,
     addedBy: scope ?? undefined,
-    templateOverride,
+    templateOverride: role === "pemilik" ? templateOverride : undefined,
   });
 
   revalidatePath(`/undangan/${invitation.id}/kirim`);
   return result;
 }
 
+export type SimpanWabaConfigInput = {
+  variables?: Record<string, string>;
+  hasButton?: boolean;
+  bodyText?: string;
+  headerFormat?: "NONE" | "TEXT" | "IMAGE" | "DOCUMENT";
+};
+
 export async function simpanPilihanTemplateWabaAction(
   invitationId: string,
   templateName: string,
+  wabaConfig?: SimpanWabaConfigInput,
 ): Promise<{ ok: boolean; error?: string }> {
-  const { invitation } = await requireInvitationAccess(invitationId);
+  const { invitation } = await requireInvitationById(invitationId);
   const trimmed = templateName.trim();
   if (!trimmed) {
     return { ok: false, error: "Nama template tidak valid." };
   }
 
+  const cleanVars: Record<string, string> = {};
+  if (wabaConfig?.variables) {
+    for (const [k, v] of Object.entries(wabaConfig.variables)) {
+      if (/^[1-9]\d?$/.test(k) && typeof v === "string") {
+        cleanVars[k] = v.slice(0, 500);
+      }
+    }
+  }
+
   const success = await saveContentText(db, invitation.id, {
     wabaTemplate: trimmed,
+    ...(wabaConfig
+      ? {
+          wabaConfig: {
+            variables: cleanVars,
+            hasButton: Boolean(wabaConfig.hasButton),
+            bodyText: typeof wabaConfig.bodyText === "string" ? wabaConfig.bodyText.slice(0, 1500) : undefined,
+            headerFormat: wabaConfig.headerFormat,
+          },
+        }
+      : {}),
   });
 
   if (!success) {
-    return { ok: false, error: "Gagal menyimpan pilihan template." };
+    return { ok: false, error: "Gagal menyimpan pengaturan template WABA." };
   }
 
   revalidatePath(`/undangan/${invitation.id}/kirim`);
@@ -202,7 +229,7 @@ export async function ajukanTemplateWabaAction(
   invitationId: string,
   payload: CreateWabaTemplatePayload,
 ): Promise<{ ok: boolean; data?: WabaTemplateItem; error?: string }> {
-  await requireInvitationAccess(invitationId);
+  await requireInvitationById(invitationId);
 
   const validName = validateTemplateName(payload.name);
   if (!validName.ok) {

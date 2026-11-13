@@ -1,5 +1,5 @@
 import { and, desc, eq, sql } from "drizzle-orm";
-import { auditLog, guest as guestTable, invitation as invitationTable, user as userTable, wabaMessage } from "@/db/schema";
+import { auditLog, guest as guestTable, guestGroup as guestGroupTable, invitation as invitationTable, user as userTable, wabaMessage } from "@/db/schema";
 import type { AppDb } from "@/db/types";
 import { appBaseUrl } from "@/lib/app-url";
 import { formatDeadline } from "@/lib/datetime";
@@ -11,7 +11,7 @@ import { DEFAULT_MESSAGE, deadlinePhrase, pickTemplate, renderMessage } from "@/
 import type { AdminUser } from "@/lib/session";
 import { getWabaConfig } from "./config-service";
 import { sendWabaNotification, uploadWabaMedia } from "./client";
-import { buildWabaBodyParameters, formatWabaSingleVariableContent } from "./templates-guide";
+import { buildWabaBodyParameters } from "./templates-guide";
 
 export type UserWabaStatus = {
   allowed: boolean;
@@ -268,12 +268,17 @@ export async function sendGuestInvitationViaWaba(
     };
   }
 
-  // Ambil tamu
-  const [guest] = await db
-    .select()
+  // Ambil tamu (beserta nama grup jika ada)
+  const [guestRow] = await db
+    .select({
+      guest: guestTable,
+      groupName: guestGroupTable.name,
+    })
     .from(guestTable)
+    .leftJoin(guestGroupTable, eq(guestGroupTable.id, guestTable.groupId))
     .where(and(eq(guestTable.id, params.guestId), eq(guestTable.invitationId, params.invitationId)));
 
+  const guest = guestRow?.guest;
   if (!guest) return { ok: false, error: "Tamu tidak ditemukan." };
   if (!guest.phone) return { ok: false, error: "Nomor telepon tamu belum diisi." };
 
@@ -283,9 +288,14 @@ export async function sendGuestInvitationViaWaba(
     content.wabaTemplate ||
     config.defaultTemplate ||
     "lim_undangan_resmi";
+  const sameSavedTemplate = !content.wabaTemplate || templateName === content.wabaTemplate;
+  const savedConfig = sameSavedTemplate ? content.wabaConfig : undefined;
+  const effectiveHeaderFormat = params.templateHeaderFormat ?? savedConfig?.headerFormat;
+  const effectiveBodyText = params.templateBodyText ?? savedConfig?.bodyText;
+  const effectiveHasButtons = params.templateHasButtons ?? savedConfig?.hasButton ?? false;
 
   // Header image (sesuai pengiriman Baileys: poster khusus jika diaktifkan, atau cover)
-  const isImageHeader = params.templateHeaderFormat !== "NONE" && params.templateHeaderFormat !== "TEXT";
+  const isImageHeader = effectiveHeaderFormat !== "NONE" && effectiveHeaderFormat !== "TEXT";
   let headerPayload:
     | { type: "image"; mediaUrl: string; mediaId?: string; id?: string }
     | undefined;
@@ -370,23 +380,21 @@ export async function sendGuestInvitationViaWaba(
     event: invRow.invitation.title,
   });
 
-  // 1 variabel konten yang digabung tanpa line break
-  const singleVarContent = formatWabaSingleVariableContent(renderedMessage);
+  const bodyParams = buildWabaBodyParameters(effectiveBodyText || "{{1}}", {
+    guestName: guest.name,
+    eventTitle: invRow.invitation.title,
+    deadlinePhrase: phrase,
+    link,
+    token: guest.token,
+    organizerName: content.penyelenggara.nama || content.penyelenggara.namaEo || "",
+    eventType: content.identitas.jenis || "",
+    guestGroup: guestRow?.groupName || "",
+    variableMappings: savedConfig?.variables,
+    fullMessage: renderedMessage,
+  });
 
-  const bodyParams =
-    params.templateBodyText && /\{\{2\}\}/.test(params.templateBodyText)
-      ? buildWabaBodyParameters(params.templateBodyText, {
-          guestName: guest.name,
-          eventTitle: invRow.invitation.title,
-          deadlinePhrase: phrase,
-          link,
-          token: guest.token,
-          fullMessage: renderedMessage,
-        })
-      : [singleVarContent];
-
-  // Tombol: tanpa tombol untuk format standar LIM-RSVP
-  const buttonPayload = params.templateHasButtons
+  // Tombol URL dinamis diisi token link undangan pribadi bila template memakai tombol
+  const buttonPayload = effectiveHasButtons
     ? [
         {
           index: 0,
@@ -551,10 +559,18 @@ export async function sendBatchInvitationViaWaba(
 
   const content = readContent(invRow.invitation.content);
   const config = await getWabaConfig(db);
+  const templateName =
+    params.templateOverride ||
+    content.wabaTemplate ||
+    config.defaultTemplate ||
+    "lim_undangan_resmi";
+  const sameSavedTemplate = !content.wabaTemplate || templateName === content.wabaTemplate;
+  const effectiveHeaderFormat =
+    params.templateHeaderFormat ?? (sameSavedTemplate ? content.wabaConfig?.headerFormat : undefined);
 
   // Resolusi dan unggah mediaId ke WhatsApp SATU KALI sebelum loop batch tamu
   let batchMediaId: string | undefined = undefined;
-  if (params.templateHeaderFormat !== "NONE" && params.templateHeaderFormat !== "TEXT") {
+  if (effectiveHeaderFormat !== "NONE" && effectiveHeaderFormat !== "TEXT") {
     const headerImgRes = await resolveInvitationHeaderImage(db, invRow.invitation.id, content);
     if (!headerImgRes.ok) {
       return {

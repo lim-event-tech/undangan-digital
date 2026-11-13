@@ -52,6 +52,13 @@ export function normalizeSusunan(raw: { urutan?: unknown; sembunyi?: unknown }):
   return { urutan: ["sampul", ...urutan, "penutup"], sembunyi: [...new Set(hidden)].filter((id) => !fixed.has(id)) };
 }
 export const DEFAULT_SUSUNAN: Susunan = normalizeSusunan({});
+export type WabaTemplateConfig = {
+  variables: Record<string, string>;
+  hasButton?: boolean;
+  bodyText?: string;
+  headerFormat?: "NONE" | "TEXT" | "IMAGE" | "DOCUMENT";
+};
+
 export type InvitationContent = {
   identitas: IdentitasEvent;
   penyelenggara: Penyelenggara;
@@ -68,6 +75,7 @@ export type InvitationContent = {
   susunan: Susunan;
   wabaTemplate?: string;
   wabaTemplatePengingat?: string;
+  wabaConfig?: WabaTemplateConfig;
   wabaMedia?: {
     photoId: string;
     mediaId: string;
@@ -82,6 +90,30 @@ function flag(value: unknown, fallback: boolean): boolean { return typeof value 
 function record(value: unknown): Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
+function readWabaConfig(raw: unknown): WabaTemplateConfig | undefined {
+  const source = record(raw);
+  const rawVars = record(source.variables);
+  const variables: Record<string, string> = {};
+  for (const [key, val] of Object.entries(rawVars)) {
+    if (/^[1-9]\d?$/.test(key) && typeof val === "string") {
+      variables[key] = val.slice(0, 500);
+    }
+  }
+  const headerFormat =
+    source.headerFormat === "NONE" ||
+    source.headerFormat === "TEXT" ||
+    source.headerFormat === "IMAGE" ||
+    source.headerFormat === "DOCUMENT"
+      ? source.headerFormat
+      : undefined;
+  const hasButton = typeof source.hasButton === "boolean" ? source.hasButton : undefined;
+  const bodyText = typeof source.bodyText === "string" ? source.bodyText.slice(0, 1500) : undefined;
+  if (Object.keys(variables).length === 0 && hasButton === undefined && !bodyText && !headerFormat) {
+    return undefined;
+  }
+  return { variables, hasButton, bodyText, headerFormat };
+}
+
 export function readContent(raw: unknown): InvitationContent {
   const source = record(raw);
   const identitas = record(source.identitas);
@@ -112,6 +144,7 @@ export function readContent(raw: unknown): InvitationContent {
     susunan: normalizeSusunan(record(source.susunan)),
     wabaTemplate: typeof source.wabaTemplate === "string" ? source.wabaTemplate.trim() : undefined,
     wabaTemplatePengingat: typeof source.wabaTemplatePengingat === "string" ? source.wabaTemplatePengingat.trim() : undefined,
+    wabaConfig: readWabaConfig(source.wabaConfig),
     wabaMedia:
       source.wabaMedia &&
       typeof source.wabaMedia === "object" &&

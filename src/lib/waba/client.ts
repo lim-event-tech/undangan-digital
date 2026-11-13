@@ -7,6 +7,12 @@ export interface WabaTemplateItem {
   language: string;
   headerFormat?: "NONE" | "TEXT" | "IMAGE" | "DOCUMENT";
   bodyText: string;
+  footerText?: string | null;
+  buttons?: Array<{
+    type: string;
+    text?: string;
+    url?: string;
+  }>;
   status: "APPROVED" | "PENDING" | "REJECTED";
   rejectionReason?: string | null;
   isGlobal?: boolean;

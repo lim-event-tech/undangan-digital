@@ -24,22 +24,36 @@ export function ModalAjukanTemplate({
   onTutup,
   onBerhasil,
   submitAction,
+  appUrl = "https://rsvp.lingkaride.com",
 }: {
   terbuka: boolean;
   onTutup: () => void;
   onBerhasil: (template: WabaTemplateItem) => void;
   submitAction: (payload: CreateWabaTemplatePayload) => Promise<{ ok: boolean; data?: WabaTemplateItem; error?: string }>;
+  appUrl?: string;
 }) {
-  const [selectedPresetId, setSelectedPresetId] = useState<string>("undangan_resmi");
-  const [name, setName] = useState<string>("lim_undangan_resmi");
-  const [category, setCategory] = useState<"UTILITY" | "MARKETING">("UTILITY");
-  const [headerFormat, setHeaderFormat] = useState<"NONE" | "TEXT" | "IMAGE">("IMAGE");
-  const [headerContent, setHeaderContent] = useState<string>("");
-  const [bodyText, setBodyText] = useState<string>("{{1}}");
-  const [footerText, setFooterText] = useState<string>("LIM-RSVP · Lingkar Ide Manajemen");
-  const [sertakanTombol, setSertakanTombol] = useState<boolean>(false);
-  const [buttonText, setButtonText] = useState<string>("Buka Undangan");
-  const [buttonUrl, setButtonUrl] = useState<string>("https://event.lingkaridemanajemen.id/{{1}}");
+  const defaultPreset = WABA_TEMPLATE_PRESETS[0];
+  const baseDomain = appUrl.replace(/\/+$/, "");
+  const [selectedPresetId, setSelectedPresetId] = useState<string>(defaultPreset.id);
+  const [name, setName] = useState<string>(defaultPreset.payload.name);
+  const [category, setCategory] = useState<"UTILITY" | "MARKETING">(
+    defaultPreset.payload.category === "MARKETING" ? "MARKETING" : "UTILITY",
+  );
+  const [headerFormat, setHeaderFormat] = useState<"NONE" | "TEXT" | "IMAGE">(
+    defaultPreset.payload.headerFormat === "TEXT"
+      ? "TEXT"
+      : defaultPreset.payload.headerFormat === "NONE"
+      ? "NONE"
+      : "IMAGE",
+  );
+  const [headerContent, setHeaderContent] = useState<string>(defaultPreset.payload.headerContent || "");
+  const [bodyText, setBodyText] = useState<string>(defaultPreset.payload.bodyText);
+  const [footerText, setFooterText] = useState<string>(defaultPreset.payload.footerText || "");
+  const [sertakanTombol, setSertakanTombol] = useState<boolean>(
+    Boolean(defaultPreset.payload.buttons && defaultPreset.payload.buttons.length > 0),
+  );
+  const [buttonText, setButtonText] = useState<string>(defaultPreset.payload.buttons?.[0]?.text || "Buka Undangan");
+  const [buttonUrl, setButtonUrl] = useState<string>(`${baseDomain}/{{1}}`);
 
   const [isPending, startTransition] = useTransition();
   const [galat, setGalat] = useState<string | null>(null);
@@ -66,7 +80,7 @@ export function ModalAjukanTemplate({
     if (preset.payload.buttons && preset.payload.buttons.length > 0) {
       setSertakanTombol(true);
       setButtonText(preset.payload.buttons[0].text);
-      setButtonUrl(preset.payload.buttons[0].url || "https://event.lingkaridemanajemen.id/{{1}}");
+      setButtonUrl(`${baseDomain}/{{1}}`);
     } else {
       setSertakanTombol(false);
     }
@@ -381,7 +395,7 @@ export function ModalAjukanTemplate({
                   </div>
                 ) : null}
 
-                <div className="leading-relaxed">{preview.body}</div>
+                <div className="leading-relaxed whitespace-pre-line">{preview.body}</div>
 
                 {preview.footer ? (
                   <div className="mt-2 text-[10px] text-gray-400">{preview.footer}</div>

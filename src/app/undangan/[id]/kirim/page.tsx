@@ -80,13 +80,13 @@ export default async function KirimPage({ params, searchParams }: PageProps<"/un
   const activeWaba = userWaba.wabaAllowed ? userWaba : (ownerWaba?.wabaAllowed ? ownerWaba : userWaba);
   const wabaAllowed = userWaba.wabaAllowed || Boolean(ownerWaba?.wabaAllowed);
   const templatesRes =
-    wabaAllowed && wabaConfigResmi.apiKey ? await fetchWabaTemplates(wabaConfigResmi) : null;
+    pemilik && wabaAllowed && wabaConfigResmi.apiKey ? await fetchWabaTemplates(wabaConfigResmi) : null;
   const daftarTemplate =
     templatesRes && templatesRes.ok && Array.isArray(templatesRes.templates)
       ? templatesRes.templates
       : [];
   const chosenWabaTemplate =
-    content.wabaTemplate || wabaConfigResmi.defaultTemplate || "undangan_resmi";
+    content.wabaTemplate || wabaConfigResmi.defaultTemplate || "lim_undangan_resmi";
 
   const fotoList = await listPhotos(db, invitation.id);
   const waSnapshot = getWaManager().for(user.id).snapshot();
@@ -184,18 +184,25 @@ export default async function KirimPage({ params, searchParams }: PageProps<"/un
         <PanelWaba
           key={`waba-${invitation.id}`}
           tersedia={true}
+          pemilik={pemilik}
           gatewayAktif={wabaConfigResmi.aktif}
           kuota={activeWaba.wabaQuota}
           terkirim={activeWaba.wabaSentCount}
           templateName={chosenWabaTemplate}
+          savedConfig={content.wabaConfig}
           tamuBelumTerkirim={counts.total - counts.sent}
           daftarTemplate={daftarTemplate}
+          appUrl={appBaseUrl()}
           sampleContext={{
             guestName: sample.nama,
             eventTitle: sample.event,
             deadlinePhrase: sample.batas_rsvp,
             link: sample.link,
             token: firstGuest?.token ?? "kode-tamu",
+            organizerName: content.penyelenggara.nama || content.penyelenggara.namaEo || "",
+            eventType: content.identitas.jenis || "",
+            guestGroup: firstGuest?.groupName ?? "",
+            variableMappings: content.wabaConfig?.variables,
             fullMessage: renderMessage(template, sample),
           }}
         />
@@ -328,7 +335,7 @@ export default async function KirimPage({ params, searchParams }: PageProps<"/un
                     wabaAllowed={wabaAllowed}
                     gatewayAktif={wabaConfigResmi.aktif}
                     wabaQuota={activeWaba.wabaQuota}
-                    templateOverride={chosenWabaTemplate}
+                    templateOverride={pemilik ? chosenWabaTemplate : undefined}
                   />
                 </li>
               );
