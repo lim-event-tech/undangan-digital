@@ -16,7 +16,8 @@ export function TombolKirim({
   nama,
   terkirim,
   pengingat = false,
-  wabaTersedia = false,
+  wabaAllowed = false,
+  gatewayAktif = false,
   wabaQuota = 0,
 }: {
   guestId: string;
@@ -24,7 +25,8 @@ export function TombolKirim({
   nama: string;
   terkirim: boolean;
   pengingat?: boolean;
-  wabaTersedia?: boolean;
+  wabaAllowed?: boolean;
+  gatewayAktif?: boolean;
   wabaQuota?: number;
 }) {
   const tandaiDiingatkanActionForInvitation = useInvitationAction(tandaiDiingatkanAction);
@@ -35,6 +37,10 @@ export function TombolKirim({
   const [isWabaPending, startWabaTransition] = useTransition();
 
   const handleKirimWaba = () => {
+    if (!gatewayAktif) {
+      alert("Koneksi Gateway WABA belum diaktifkan oleh Administrator di Admin Panel.");
+      return;
+    }
     if (wabaQuota <= 0) {
       alert("Kredit pesan WABA Anda sudah habis. Silakan hubungi admin.");
       return;
@@ -56,17 +62,19 @@ export function TombolKirim({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {wabaTersedia ? (
+      {wabaAllowed ? (
         <button
           type="button"
           onClick={handleKirimWaba}
-          disabled={isWabaPending || wabaQuota <= 0}
+          disabled={isWabaPending || !gatewayAktif || wabaQuota <= 0}
           title={
-            wabaQuota <= 0
+            !gatewayAktif
+              ? "Gateway WABA sistem belum diaktifkan oleh Admin di Admin Panel"
+              : wabaQuota <= 0
               ? "Kredit WABA habis"
               : `Kirim ke ${nama} via WhatsApp Business API Resmi (Kurangi 1 kredit)`
           }
-          className={`${tombolEmas} min-h-10 px-3 text-xs font-semibold disabled:opacity-50`}
+          className={`${tombolEmas} min-h-10 px-3 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50`}
         >
           {isWabaPending ? "Mengirim..." : "Kirim WABA Resmi"}
         </button>

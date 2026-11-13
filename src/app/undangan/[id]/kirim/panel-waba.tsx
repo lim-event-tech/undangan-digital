@@ -8,12 +8,14 @@ import { kirimBatchWabaAction } from "./actions";
 
 export function PanelWaba({
   tersedia,
+  gatewayAktif = false,
   kuota,
   terkirim,
   templateName,
   tamuBelumTerkirim,
 }: {
   tersedia: boolean;
+  gatewayAktif?: boolean;
   kuota: number;
   terkirim: number;
   templateName: string;
@@ -31,6 +33,10 @@ export function PanelWaba({
   if (!tersedia) return null;
 
   const handleKirimMassal = () => {
+    if (!gatewayAktif) {
+      alert("Koneksi Gateway WABA belum diaktifkan oleh Administrator di Admin Panel.");
+      return;
+    }
     if (kuota <= 0) return;
     const konfirmasi = confirm(
       `Kirim undangan ke tamu yang belum terkirim via WhatsApp Business API Resmi? Maksimal ${Math.min(
@@ -72,8 +78,12 @@ export function PanelWaba({
             <h2 id="judul-waba-resmi" className="m-0 font-judul text-2xl font-medium">
               WhatsApp Business API (WABA) Resmi
             </h2>
-            <span className="rounded-full bg-hijau-bg px-2.5 py-0.5 text-xs font-semibold text-hijau">
-              Resmi Meta
+            <span
+              className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                gatewayAktif ? "bg-hijau-bg text-hijau" : "bg-jingga-bg text-jingga"
+              }`}
+            >
+              {gatewayAktif ? "Resmi Meta (Aktif)" : "Resmi Meta (Gateway Nonaktif)"}
             </span>
           </div>
           <p className="m-0 text-sm text-redup">
@@ -99,7 +109,11 @@ export function PanelWaba({
         </div>
       </div>
 
-      {kuota <= 0 ? (
+      {!gatewayAktif ? (
+        <div className="rounded-lg border border-jingga/30 bg-jingga-bg p-3.5 text-xs leading-relaxed text-jingga">
+          <strong className="font-semibold">Gateway WABA Sistem Belum Diaktifkan.</strong> Akun Anda telah diberi izin resmi WABA Meta, namun koneksi Gateway WABA di sistem saat ini berstatus <em>Nonaktif</em> di pengaturan sistem. Silakan hubungi Super Admin untuk mengaktifkan saklar WABA di menu <strong>Admin &gt; WhatsApp</strong> agar pengiriman dapat berjalan.
+        </div>
+      ) : kuota <= 0 ? (
         <div className="rounded-lg border border-merah/20 bg-merah-bg p-3.5 text-xs text-merah">
           <strong>Kredit pesan WABA Anda telah habis.</strong> Silakan hubungi Super Admin untuk penambahan kredit kuota pesan resmi.
         </div>

@@ -22,6 +22,10 @@ export function readWabaConfig(raw: unknown): WabaConfig {
 
   const envBaseUrl = process.env.LIM_WABA_BASE_URL?.trim();
   const envApiKey = process.env.LIM_WABA_API_KEY?.trim();
+  const envAktif =
+    process.env.LIM_WABA_ENABLED === "true" ||
+    process.env.LIM_WABA_ENABLED === "1" ||
+    Boolean(envApiKey);
 
   const baseUrl =
     typeof source.baseUrl === "string" && source.baseUrl.trim()
@@ -44,7 +48,7 @@ export function readWabaConfig(raw: unknown): WabaConfig {
       : DEFAULT_WABA_CONFIG.language;
 
   return {
-    aktif: typeof source.aktif === "boolean" ? source.aktif : false,
+    aktif: typeof source.aktif === "boolean" ? source.aktif : envAktif,
     baseUrl: baseUrl.replace(/\/+$/, ""),
     apiKey,
     defaultTemplate,

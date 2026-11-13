@@ -61,7 +61,7 @@ export default async function KirimPage({ params, searchParams }: PageProps<"/un
   const phrase = deadlinePhrase(deadlineText);
 
   const jenisAntrean = pengingat ? "pengingat" : "undangan";
-  const [all, counts, dashboard, waConfig, ringkasan, kegagalan, antre, targetOtomatis, wabaConfigResmi, ownerWaba] =
+  const [all, counts, dashboard, waConfig, ringkasan, kegagalan, antre, targetOtomatis, wabaConfigResmi, userWaba, ownerWaba] =
     await Promise.all([
       listGuests(db, invitation.id, { q, addedBy: batas }),
       countSent(db, invitation.id, batas),
@@ -72,8 +72,12 @@ export default async function KirimPage({ params, searchParams }: PageProps<"/un
       queuedGuestIds(db, invitation.id, jenisAntrean),
       countTargets(db, invitation.id, jenisAntrean, new Date(), batas),
       getPlatformWabaConfig(db),
-      getUserWabaStatus(db, invitation.ownerId),
+      getUserWabaStatus(db, user.id),
+      user.id === invitation.ownerId ? null : getUserWabaStatus(db, invitation.ownerId),
     ]);
+
+  const activeWaba = userWaba.wabaAllowed ? userWaba : (ownerWaba?.wabaAllowed ? ownerWaba : userWaba);
+  const wabaAllowed = userWaba.wabaAllowed || Boolean(ownerWaba?.wabaAllowed);
   const fotoList = await listPhotos(db, invitation.id);
   const waSnapshot = getWaManager().for(user.id).snapshot();
   const qrImage = waSnapshot.qr ? await QRCode.toDataURL(waSnapshot.qr, { margin: 1, width: 280, errorCorrectionLevel: "M" }) : null;
@@ -166,12 +170,13 @@ export default async function KirimPage({ params, searchParams }: PageProps<"/un
         />
       )}
 
-      {wabaConfigResmi.aktif && ownerWaba.wabaAllowed ? (
+      {wabaAllowed ? (
         <PanelWaba
           key={`waba-${invitation.id}`}
           tersedia={true}
-          kuota={ownerWaba.wabaQuota}
-          terkirim={ownerWaba.wabaSentCount}
+          gatewayAktif={wabaConfigResmi.aktif}
+          kuota={activeWaba.wabaQuota}
+          terkirim={activeWaba.wabaSentCount}
           templateName={wabaConfigResmi.defaultTemplate || "undangan_resmi"}
           tamuBelumTerkirim={counts.total - counts.sent}
         />
@@ -301,8 +306,9 @@ export default async function KirimPage({ params, searchParams }: PageProps<"/un
                     href={whatsappLink(g.phone, message)}
                     terkirim={pengingat ? Boolean(detail.get(g.id)?.remindedAt) : Boolean(g.sentAt)}
                     pengingat={pengingat}
-                    wabaTersedia={wabaConfigResmi.aktif && ownerWaba.wabaAllowed}
-                    wabaQuota={ownerWaba.wabaQuota}
+                    wabaAllowed={wabaAllowed}
+                    gatewayAktif={wabaConfigResmi.aktif}
+                    wabaQuota={activeWaba.wabaQuota}
                   />
                 </li>
               );

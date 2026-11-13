@@ -278,4 +278,58 @@ describe("WABA Service", () => {
     expect(userAfter.wabaQuota).toBe(0);
     expect(userAfter.wabaSentCount).toBe(2);
   });
+
+  it("anggota tim yang memiliki izin WABA dapat mengirim dan memotong kuotanya sendiri meskipun pemilik tidak punya izin WABA", async () => {
+    const { invitation } = await seedInvitation(db);
+    // Pemilik tidak punya izin WABA
+
+    const memberId = "team-member-waba";
+    await db.insert(userTable).values({
+      id: memberId,
+      name: "Anggota Tim",
+      email: "member@example.com",
+    });
+
+    // Beri izin WABA ke anggota tim
+    await updateUserWabaQuota(db, adminUser, memberId, {
+      wabaAllowed: true,
+      mode: "atur",
+      jumlah: 10,
+    });
+
+    const [tamu] = await db
+      .insert(guestTable)
+      .values({
+        invitationId: invitation.id,
+        name: "Tamu Tim",
+        phone: "081298765432",
+        token: "token-tamu-tim",
+      })
+      .returning();
+
+    vi.spyOn(wabaClient, "sendWabaNotification").mockResolvedValue({
+      ok: true,
+      data: {
+        id: "msg-member-123",
+        to: tamu.phone!,
+        status: "sent",
+        template: "undangan_resmi",
+      },
+    });
+
+    const res = await sendGuestInvitationViaWaba(db, {
+      invitationId: invitation.id,
+      guestId: tamu.id,
+      senderUserId: memberId,
+    });
+
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.remainingQuota).toBe(9);
+    }
+
+    const [memberAfter] = await db.select().from(userTable).where(eq(userTable.id, memberId));
+    expect(memberAfter.wabaQuota).toBe(9);
+    expect(memberAfter.wabaSentCount).toBe(1);
+  });
 });

@@ -157,15 +157,24 @@ export async function sendGuestInvitationViaWaba(
   if (!invRow) return { ok: false, error: "Undangan tidak ditemukan." };
 
   const owner = invRow.owner;
-  if (!owner.wabaAllowed) {
+
+  // Cek apakah akun pengirim memiliki hak WABA, atau pemilik undangan
+  const [senderUser] = await db
+    .select()
+    .from(userTable)
+    .where(eq(userTable.id, params.senderUserId));
+
+  const payer = senderUser?.wabaAllowed ? senderUser : (owner.wabaAllowed ? owner : null);
+
+  if (!payer) {
     return {
       ok: false,
       code: "NOT_ALLOWED",
-      error: "Akun pemilik undangan belum diizinkan menggunakan sistem WABA resmi. Silakan hubungi admin.",
+      error: "Akun Anda belum diizinkan menggunakan sistem WABA resmi. Silakan hubungi admin.",
     };
   }
 
-  if (owner.wabaQuota <= 0) {
+  if (payer.wabaQuota <= 0) {
     return {
       ok: false,
       code: "NO_CREDIT",
@@ -182,7 +191,7 @@ export async function sendGuestInvitationViaWaba(
   if (!guest) return { ok: false, error: "Tamu tidak ditemukan." };
   if (!guest.phone) return { ok: false, error: "Nomor telepon tamu belum diisi." };
 
-  // Kurangi 1 kredit dan tambah 1 ke waba_sent_count secara atomik
+  // Kurangi 1 kredit dan tambah 1 ke waba_sent_count secara atomik pada akun penanggung
   const [updatedUser] = await db
     .update(userTable)
     .set({
@@ -190,7 +199,7 @@ export async function sendGuestInvitationViaWaba(
       wabaSentCount: sql`${userTable.wabaSentCount} + 1`,
       updatedAt: new Date(),
     })
-    .where(and(eq(userTable.id, owner.id), sql`${userTable.wabaQuota} > 0`))
+    .where(and(eq(userTable.id, payer.id), sql`${userTable.wabaQuota} > 0`))
     .returning({ quota: userTable.wabaQuota });
 
   if (!updatedUser) {
@@ -238,7 +247,7 @@ export async function sendGuestInvitationViaWaba(
         wabaSentCount: sql`GREATEST(0, ${userTable.wabaSentCount} - 1)`,
         updatedAt: new Date(),
       })
-      .where(eq(userTable.id, owner.id));
+      .where(eq(userTable.id, payer.id));
 
     // Catat kegagalan di wabaMessage
     await db.insert(wabaMessage).values({
@@ -336,17 +345,25 @@ export async function sendBatchInvitationViaWaba(
   if (!invRow) return { ok: false, totalSent: 0, totalFailed: 0, remainingQuota: 0, error: "Undangan tidak ditemukan." };
 
   const owner = invRow.owner;
-  if (!owner.wabaAllowed) {
+
+  const [senderUser] = await db
+    .select()
+    .from(userTable)
+    .where(eq(userTable.id, params.senderUserId));
+
+  const payer = senderUser?.wabaAllowed ? senderUser : (owner.wabaAllowed ? owner : null);
+
+  if (!payer) {
     return {
       ok: false,
       totalSent: 0,
       totalFailed: 0,
-      remainingQuota: owner.wabaQuota,
-      error: "Akun pemilik undangan belum diizinkan menggunakan sistem WABA resmi.",
+      remainingQuota: 0,
+      error: "Akun Anda belum diizinkan menggunakan sistem WABA resmi.",
     };
   }
 
-  if (owner.wabaQuota <= 0) {
+  if (payer.wabaQuota <= 0) {
     return {
       ok: false,
       totalSent: 0,
@@ -371,20 +388,20 @@ export async function sendBatchInvitationViaWaba(
     .from(guestTable)
     .where(and(...conditions))
     .orderBy(guestTable.createdAt)
-    .limit(params.limit ?? Math.min(owner.wabaQuota, 200));
+    .limit(params.limit ?? Math.min(payer.wabaQuota, 200));
 
   if (guests.length === 0) {
     return {
       ok: true,
       totalSent: 0,
       totalFailed: 0,
-      remainingQuota: owner.wabaQuota,
+      remainingQuota: payer.wabaQuota,
     };
   }
 
   let totalSent = 0;
   let totalFailed = 0;
-  let remainingQuota = owner.wabaQuota;
+  let remainingQuota = payer.wabaQuota;
 
   for (const g of guests) {
     if (remainingQuota <= 0) break;
