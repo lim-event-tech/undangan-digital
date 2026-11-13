@@ -23,6 +23,8 @@ export interface SendWabaOptions {
       type: "text" | "image" | "document";
       text?: string;
       mediaUrl?: string;
+      mediaId?: string;
+      id?: string;
       filename?: string;
     };
     body?: string[];
@@ -228,5 +230,88 @@ export async function submitWabaTemplate(
     };
   }
 }
+
+export interface UploadWabaMediaPayload {
+  data: Buffer;
+  contentType: string;
+  fileName: string;
+}
+
+/**
+ * Mengunggah media (gambar/dokumen) ke WhatsApp via WABA Gateway
+ * untuk mendapatkan mediaId resmi. Mengatasi kendala domain yang berada
+ * di balik Cloudflare agar Meta tidak perlu melakukan download via URL publik.
+ */
+export async function uploadWabaMedia(
+  config: WabaConfig,
+  file: UploadWabaMediaPayload,
+): Promise<{ ok: true; mediaId: string } | { ok: false; error: string }> {
+  if (!config.apiKey) {
+    return { ok: false, error: "API Key WABA belum diatur" };
+  }
+
+  try {
+    const formData = new FormData();
+    const blob = new Blob([new Uint8Array(file.data)], { type: file.contentType });
+    formData.append("file", blob, file.fileName);
+    formData.append("type", file.contentType);
+
+    let res = await fetch(`${config.baseUrl}/api/v1/waba/media`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${config.apiKey}`,
+      },
+      body: formData,
+    });
+
+    if (res.status === 404) {
+      // Fallback ke endpoint alternatif /upload jika /media belum didefinisikan
+      const fallbackFormData = new FormData();
+      const fallbackBlob = new Blob([new Uint8Array(file.data)], { type: file.contentType });
+      fallbackFormData.append("file", fallbackBlob, file.fileName);
+      fallbackFormData.append("type", file.contentType);
+
+      res = await fetch(`${config.baseUrl}/api/v1/waba/upload`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${config.apiKey}`,
+        },
+        body: fallbackFormData,
+      });
+    }
+
+    const body = await res.json().catch(() => null);
+    if (!res.ok || (body && body.success === false)) {
+      return {
+        ok: false,
+        error: body?.message || `Gagal mengunggah media ke WhatsApp (HTTP ${res.status})`,
+      };
+    }
+
+    const mediaId =
+      body?.data?.mediaId ||
+      body?.data?.id ||
+      body?.mediaId ||
+      body?.id;
+
+    if (!mediaId || typeof mediaId !== "string") {
+      return {
+        ok: false,
+        error: "Gateway WABA tidak mengembalikan Media ID yang valid.",
+      };
+    }
+
+    return {
+      ok: true,
+      mediaId,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Gagal terhubung saat mengunggah media ke WhatsApp",
+    };
+  }
+}
+
 
 

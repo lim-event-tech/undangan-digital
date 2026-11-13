@@ -68,6 +68,11 @@ describe("WABA Service", () => {
       defaultTemplate: "undangan_resmi",
       language: "id",
     });
+    // Default mock upload media WhatsApp
+    vi.spyOn(wabaClient, "uploadWabaMedia").mockResolvedValue({
+      ok: true,
+      mediaId: "waba-media-meta-123",
+    });
   });
 
   it("membaca status default WABA pengguna (allowed: false, quota: 0, sentCount: 0)", async () => {
@@ -412,9 +417,11 @@ describe("WABA Service", () => {
     expect(sentOpts).not.toBeNull();
     expect(sentOpts.template).toBe("lim_undangan_resmi");
 
-    // 1. Verifikasi Header Image
+    // 1. Verifikasi Header Image dengan Media ID resmi
     expect(sentOpts.parameters?.header).toBeDefined();
     expect(sentOpts.parameters?.header?.type).toBe("image");
+    expect(sentOpts.parameters?.header?.mediaId).toBe("waba-media-meta-123");
+    expect(sentOpts.parameters?.header?.id).toBe("waba-media-meta-123");
     expect(sentOpts.parameters?.header?.mediaUrl).toMatch(/\/foto\//);
 
     // 2. Verifikasi 1 variabel konten gabungan
@@ -547,6 +554,68 @@ describe("WABA Service", () => {
     if (!res.ok) {
       expect(res.error).toContain("Foto sampul atau poster undangan belum diunggah");
     }
+  });
+
+  it("mengunggah media ke WhatsApp terlebih dahulu untuk mendapatkan mediaId dan mencache-nya agar tidak upload berulang", async () => {
+    const { invitation, ownerId } = await seedInvitationWithCover(db);
+    await updateUserWabaQuota(db, adminUser, ownerId, {
+      wabaAllowed: true,
+      mode: "atur",
+      jumlah: 5,
+    });
+
+    const [tamu1] = await db
+      .insert(guestTable)
+      .values({
+        invitationId: invitation.id,
+        name: "Tamu Satu",
+        phone: "081211110001",
+        token: "token-media-1",
+      })
+      .returning();
+
+    const [tamu2] = await db
+      .insert(guestTable)
+      .values({
+        invitationId: invitation.id,
+        name: "Tamu Dua",
+        phone: "081211110002",
+        token: "token-media-2",
+      })
+      .returning();
+
+    const uploadSpy = vi.spyOn(wabaClient, "uploadWabaMedia").mockResolvedValue({
+      ok: true,
+      mediaId: "waba-media-meta-unique",
+    });
+
+    vi.spyOn(wabaClient, "sendWabaNotification").mockResolvedValue({
+      ok: true,
+      data: {
+        id: "msg-upload",
+        to: "081211110001",
+        status: "sent",
+        template: "lim_undangan_resmi",
+      },
+    });
+
+    // Kirim tamu pertama: harus memicu uploadWabaMedia
+    const res1 = await sendGuestInvitationViaWaba(db, {
+      invitationId: invitation.id,
+      guestId: tamu1.id,
+      senderUserId: ownerId,
+    });
+    expect(res1.ok).toBe(true);
+    expect(uploadSpy).toHaveBeenCalledTimes(1);
+
+    // Kirim tamu kedua: harus menggunakan cache dari wabaMedia sehingga uploadSpy TIDAK dipanggil lagi
+    const res2 = await sendGuestInvitationViaWaba(db, {
+      invitationId: invitation.id,
+      guestId: tamu2.id,
+      senderUserId: ownerId,
+    });
+    expect(res2.ok).toBe(true);
+    expect(uploadSpy).toHaveBeenCalledTimes(1); // Tetap 1 kali karena di-cache!
   });
 
   it("formatWabaSingleVariableContent membersihkan seluruh line break dan menormalkan spasi", () => {

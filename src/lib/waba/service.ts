@@ -4,12 +4,13 @@ import type { AppDb } from "@/db/types";
 import { appBaseUrl } from "@/lib/app-url";
 import { formatDeadline } from "@/lib/datetime";
 import { readContent } from "@/lib/invitations/content";
-import { listPhotos } from "@/lib/photos/service";
+import { saveContentText } from "@/lib/invitations/editor";
+import { getPhotoData, listPhotos } from "@/lib/photos/service";
 import { getSettings } from "@/lib/platform/service";
 import { DEFAULT_MESSAGE, deadlinePhrase, pickTemplate, renderMessage } from "@/lib/whatsapp";
 import type { AdminUser } from "@/lib/session";
 import { getWabaConfig } from "./config-service";
-import { sendWabaNotification } from "./client";
+import { sendWabaNotification, uploadWabaMedia } from "./client";
 import { buildWabaBodyParameters, formatWabaSingleVariableContent } from "./templates-guide";
 
 export type UserWabaStatus = {
@@ -133,13 +134,25 @@ export type SendWabaInviteParams = {
   templateHeaderFormat?: "NONE" | "TEXT" | "IMAGE" | "DOCUMENT";
   templateHasButtons?: boolean;
   kind?: "undangan" | "pengingat";
+  mediaIdOverride?: string;
 };
 
-export async function resolveInvitationHeaderImageUrl(
+export type InvitationHeaderImageResult =
+  | {
+      ok: true;
+      photoId: string;
+      contentType: string;
+      data: Buffer;
+      fileName: string;
+      url: string;
+    }
+  | { ok: false; error: string };
+
+export async function resolveInvitationHeaderImage(
   db: AppDb,
   invitationId: string,
   content: ReturnType<typeof readContent>,
-): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+): Promise<InvitationHeaderImageResult> {
   const photos = await listPhotos(db, invitationId);
 
   if (content.waPoster.kirim && content.waPoster.sumber === "khusus") {
@@ -151,7 +164,18 @@ export async function resolveInvitationHeaderImageUrl(
           "Poster khusus WhatsApp belum diunggah. Unggah poster khusus di halaman Kirim Undangan atau matikan pilihan poster khusus.",
       };
     }
-    return { ok: true, url: `${appBaseUrl()}/foto/${poster.id}` };
+    const fullPhoto = await getPhotoData(db, poster.id);
+    if (!fullPhoto) {
+      return { ok: false, error: "Data file poster khusus WhatsApp tidak ditemukan di database." };
+    }
+    return {
+      ok: true,
+      photoId: poster.id,
+      contentType: fullPhoto.contentType,
+      data: fullPhoto.data,
+      fileName: poster.fileName || "poster-wa.jpg",
+      url: `${appBaseUrl()}/foto/${poster.id}`,
+    };
   }
 
   const coverOrPoster =
@@ -164,7 +188,29 @@ export async function resolveInvitationHeaderImageUrl(
     };
   }
 
-  return { ok: true, url: `${appBaseUrl()}/foto/${coverOrPoster.id}` };
+  const fullPhoto = await getPhotoData(db, coverOrPoster.id);
+  if (!fullPhoto) {
+    return { ok: false, error: "Data file foto sampul tidak ditemukan di database." };
+  }
+
+  return {
+    ok: true,
+    photoId: coverOrPoster.id,
+    contentType: fullPhoto.contentType,
+    data: fullPhoto.data,
+    fileName: coverOrPoster.fileName || "sampul.jpg",
+    url: `${appBaseUrl()}/foto/${coverOrPoster.id}`,
+  };
+}
+
+export async function resolveInvitationHeaderImageUrl(
+  db: AppDb,
+  invitationId: string,
+  content: ReturnType<typeof readContent>,
+): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  const res = await resolveInvitationHeaderImage(db, invitationId, content);
+  if (!res.ok) return res;
+  return { ok: true, url: res.url };
 }
 
 export type SendWabaInviteResult =
@@ -240,17 +286,53 @@ export async function sendGuestInvitationViaWaba(
 
   // Header image (sesuai pengiriman Baileys: poster khusus jika diaktifkan, atau cover)
   const isImageHeader = params.templateHeaderFormat !== "NONE" && params.templateHeaderFormat !== "TEXT";
-  let headerPayload: { type: "image"; mediaUrl: string } | undefined;
+  let headerPayload:
+    | { type: "image"; mediaUrl: string; mediaId?: string; id?: string }
+    | undefined;
   if (isImageHeader) {
-    const headerImgRes = await resolveInvitationHeaderImageUrl(db, invRow.invitation.id, content);
+    const headerImgRes = await resolveInvitationHeaderImage(db, invRow.invitation.id, content);
     if (!headerImgRes.ok) {
       return {
         ok: false,
         error: headerImgRes.error,
       };
     }
+
+    // Gunakan mediaId: upload ke WhatsApp terlebih dahulu untuk menghindari limit/blokir Cloudflare
+    let mediaId = params.mediaIdOverride;
+    const cached = content.wabaMedia;
+    const isCachedValid =
+      cached &&
+      cached.photoId === headerImgRes.photoId &&
+      cached.mediaId &&
+      Date.now() - new Date(cached.uploadedAt).getTime() < 25 * 24 * 60 * 60 * 1000;
+
+    if (!mediaId && isCachedValid) {
+      mediaId = cached.mediaId;
+    }
+
+    if (!mediaId) {
+      const uploadRes = await uploadWabaMedia(config, {
+        data: headerImgRes.data,
+        contentType: headerImgRes.contentType,
+        fileName: headerImgRes.fileName,
+      });
+      if (uploadRes.ok) {
+        mediaId = uploadRes.mediaId;
+        // Simpan cache agar tidak perlu upload ulang ke WhatsApp selama 25 hari
+        await saveContentText(db, invRow.invitation.id, {
+          wabaMedia: {
+            photoId: headerImgRes.photoId,
+            mediaId,
+            uploadedAt: new Date().toISOString(),
+          },
+        });
+      }
+    }
+
     headerPayload = {
       type: "image",
+      ...(mediaId ? { mediaId, id: mediaId } : {}),
       mediaUrl: headerImgRes.url,
     };
   }
@@ -467,6 +549,51 @@ export async function sendBatchInvitationViaWaba(
     };
   }
 
+  const content = readContent(invRow.invitation.content);
+  const config = await getWabaConfig(db);
+
+  // Resolusi dan unggah mediaId ke WhatsApp SATU KALI sebelum loop batch tamu
+  let batchMediaId: string | undefined = undefined;
+  if (params.templateHeaderFormat !== "NONE" && params.templateHeaderFormat !== "TEXT") {
+    const headerImgRes = await resolveInvitationHeaderImage(db, invRow.invitation.id, content);
+    if (!headerImgRes.ok) {
+      return {
+        ok: false,
+        totalSent: 0,
+        totalFailed: 0,
+        remainingQuota: payer.wabaQuota,
+        error: headerImgRes.error,
+      };
+    }
+
+    const cached = content.wabaMedia;
+    const isCachedValid =
+      cached &&
+      cached.photoId === headerImgRes.photoId &&
+      cached.mediaId &&
+      Date.now() - new Date(cached.uploadedAt).getTime() < 25 * 24 * 60 * 60 * 1000;
+
+    if (isCachedValid) {
+      batchMediaId = cached.mediaId;
+    } else {
+      const uploadRes = await uploadWabaMedia(config, {
+        data: headerImgRes.data,
+        contentType: headerImgRes.contentType,
+        fileName: headerImgRes.fileName,
+      });
+      if (uploadRes.ok) {
+        batchMediaId = uploadRes.mediaId;
+        await saveContentText(db, invRow.invitation.id, {
+          wabaMedia: {
+            photoId: headerImgRes.photoId,
+            mediaId: batchMediaId,
+            uploadedAt: new Date().toISOString(),
+          },
+        });
+      }
+    }
+  }
+
   // Cari tamu yang belum terkirim dan memiliki nomor telepon
   const conditions = [
     eq(guestTable.invitationId, params.invitationId),
@@ -508,6 +635,7 @@ export async function sendBatchInvitationViaWaba(
       templateHeaderFormat: params.templateHeaderFormat,
       templateHasButtons: params.templateHasButtons,
       kind: params.kind,
+      mediaIdOverride: batchMediaId,
     });
     if (res.ok) {
       totalSent++;
