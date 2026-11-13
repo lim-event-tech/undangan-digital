@@ -13,6 +13,14 @@ function Galat({ pesan }: { pesan?: string }) {
   return <span role="alert" className={pesanGalat}>{pesan}</span>;
 }
 
+const DEFAULT_PORT_BY_SECURITY: Record<SmtpSecurity, string> = {
+  starttls: "587",
+  ssl: "465",
+  tanpa: "25",
+};
+
+const STANDARD_PORTS = new Set(["", "25", "465", "587"]);
+
 export function FormSurel({ config }: { config: SmtpView }) {
   const [hasil, aksi, memproses] = useActionState<SaveResult | null, FormData>(simpanSurelAction, null);
   const galat = hasil && !hasil.ok ? (hasil.errors ?? {}) : {};
@@ -21,6 +29,12 @@ export function FormSurel({ config }: { config: SmtpView }) {
   const [keamanan, setKeamanan] = useState<SmtpSecurity>(config.keamanan);
   const [user, setUser] = useState(config.user);
   const [dariEmail, setDariEmail] = useState(config.dariEmail);
+  const handleKeamananChange = (next: SmtpSecurity) => {
+    setKeamanan(next);
+    if (STANDARD_PORTS.has(port.trim())) {
+      setPort(DEFAULT_PORT_BY_SECURITY[next]);
+    }
+  };
   const pakaiGoogle = () => {
     setHost("smtp.gmail.com");
     setPort("465");
@@ -48,7 +62,7 @@ export function FormSurel({ config }: { config: SmtpView }) {
         </label>
         <label className={`${labelKolom} sm:col-span-2`}>
           Koneksi
-          <select name="keamanan" value={keamanan} onChange={(e) => setKeamanan(e.target.value as SmtpSecurity)} className={kolom}>
+          <select name="keamanan" value={keamanan} onChange={(e) => handleKeamananChange(e.target.value as SmtpSecurity)} className={kolom}>
             <option value="starttls">STARTTLS (port 587)</option>
             <option value="ssl">SSL/TLS (port 465)</option>
             <option value="tanpa">Tanpa enkripsi (tidak disarankan)</option>
