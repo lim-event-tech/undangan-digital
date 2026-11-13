@@ -5,6 +5,8 @@ import { createTestDb, seedInvitation, type TestDb } from "@/test/db";
 import { saveWabaConfig } from "./config-service";
 import * as wabaClient from "./client";
 import type { AdminUser } from "@/lib/session";
+import { saveContentText } from "@/lib/invitations/editor";
+import { buildWabaBodyParameters, validateTemplateName } from "./templates-guide";
 import {
   getUserWabaStatus,
   listWabaMessages,
@@ -331,5 +333,86 @@ describe("WABA Service", () => {
     const [memberAfter] = await db.select().from(userTable).where(eq(userTable.id, memberId));
     expect(memberAfter.wabaQuota).toBe(9);
     expect(memberAfter.wabaSentCount).toBe(1);
+  });
+
+  it("memilih template yang disimpan pada invitation.content dan menyesuaikan parameter body secara akurat", async () => {
+    const { invitation, ownerId } = await seedInvitation(db);
+    await updateUserWabaQuota(db, adminUser, ownerId, {
+      wabaAllowed: true,
+      mode: "atur",
+      jumlah: 5,
+    });
+
+    // Simpan wabaTemplate di konten undangan
+    await saveContentText(db, invitation.id, {
+      wabaTemplate: "lim_undangan_kustom_acara",
+    });
+
+    const [tamu] = await db
+      .insert(guestTable)
+      .values({
+        invitationId: invitation.id,
+        name: "Ibu Ratna",
+        phone: "081233445566",
+        token: "token-ratna",
+      })
+      .returning();
+
+    let sentTemplate = "";
+    let sentBody: string[] = [];
+
+    vi.spyOn(wabaClient, "sendWabaNotification").mockImplementation(async (_cfg, opts) => {
+      sentTemplate = opts.template;
+      sentBody = opts.parameters?.body || [];
+      return {
+        ok: true,
+        data: {
+          id: "msg-kustom",
+          to: opts.to,
+          status: "sent",
+          template: opts.template,
+        },
+      };
+    });
+
+    const res = await sendGuestInvitationViaWaba(db, {
+      invitationId: invitation.id,
+      guestId: tamu.id,
+      senderUserId: ownerId,
+    });
+
+    expect(res.ok).toBe(true);
+    expect(sentTemplate).toBe("lim_undangan_kustom_acara");
+    // Verifikasi urutan parameter body: 1 -> Nama Tamu, 2 -> Nama Acara, 3 -> Batas RSVP, 4 -> Link
+    expect(sentBody[0]).toBe("Ibu Ratna");
+    expect(sentBody[1]).toContain("Event");
+    expect(sentBody[3]).toContain("token-ratna");
+  });
+
+  it("buildWabaBodyParameters memetakan variabel sesuai jumlah placeholder di template Meta", () => {
+    const ctx = {
+      guestName: "Budi",
+      eventTitle: "Nikah",
+      deadlinePhrase: "sebelum besok",
+      link: "https://lim.id/budi",
+      token: "budi",
+    };
+
+    // 2 variabel: {{1}} dan {{2}}
+    const p2 = buildWabaBodyParameters("Halo {{1}}, hadir di {{2}} ya", ctx);
+    expect(p2).toEqual(["Budi", "Nikah"]);
+
+    // 4 variabel
+    const p4 = buildWabaBodyParameters("Halo {{1}}, hadir {{2}}, rsvp {{3}}, link {{4}}", ctx);
+    expect(p4).toEqual(["Budi", "Nikah", "sebelum besok", "https://lim.id/budi"]);
+  });
+
+  it("validateTemplateName memvalidasi format nama template Meta", () => {
+    expect(validateTemplateName("lim_undangan_resmi").ok).toBe(true);
+    expect(validateTemplateName("undangan123").ok).toBe(true);
+    // Tidak boleh huruf besar, spasi, atau simbol lain
+    expect(validateTemplateName("Undangan Resmi").ok).toBe(false);
+    expect(validateTemplateName("undangan-resmi").ok).toBe(false);
+    expect(validateTemplateName("").ok).toBe(false);
   });
 });

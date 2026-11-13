@@ -19,6 +19,7 @@ import { estimateMinutes } from "@/lib/wa/config";
 import { getWaConfig } from "@/lib/wa/config-service";
 import { getWaManager } from "@/lib/wa/manager";
 import { invitationSummary, queuedGuestIds, recentFailures } from "@/lib/wa/queue";
+import { fetchWabaTemplates } from "@/lib/waba/client";
 import { getWabaConfig as getPlatformWabaConfig } from "@/lib/waba/config-service";
 import { getUserWabaStatus } from "@/lib/waba/service";
 import { tandaiBelumTerkirimAction } from "./actions";
@@ -78,6 +79,15 @@ export default async function KirimPage({ params, searchParams }: PageProps<"/un
 
   const activeWaba = userWaba.wabaAllowed ? userWaba : (ownerWaba?.wabaAllowed ? ownerWaba : userWaba);
   const wabaAllowed = userWaba.wabaAllowed || Boolean(ownerWaba?.wabaAllowed);
+  const templatesRes =
+    wabaAllowed && wabaConfigResmi.apiKey ? await fetchWabaTemplates(wabaConfigResmi) : null;
+  const daftarTemplate =
+    templatesRes && templatesRes.ok && Array.isArray(templatesRes.templates)
+      ? templatesRes.templates
+      : [];
+  const chosenWabaTemplate =
+    content.wabaTemplate || wabaConfigResmi.defaultTemplate || "undangan_resmi";
+
   const fotoList = await listPhotos(db, invitation.id);
   const waSnapshot = getWaManager().for(user.id).snapshot();
   const qrImage = waSnapshot.qr ? await QRCode.toDataURL(waSnapshot.qr, { margin: 1, width: 280, errorCorrectionLevel: "M" }) : null;
@@ -177,8 +187,16 @@ export default async function KirimPage({ params, searchParams }: PageProps<"/un
           gatewayAktif={wabaConfigResmi.aktif}
           kuota={activeWaba.wabaQuota}
           terkirim={activeWaba.wabaSentCount}
-          templateName={wabaConfigResmi.defaultTemplate || "undangan_resmi"}
+          templateName={chosenWabaTemplate}
           tamuBelumTerkirim={counts.total - counts.sent}
+          daftarTemplate={daftarTemplate}
+          sampleContext={{
+            guestName: sample.nama,
+            eventTitle: sample.event,
+            deadlinePhrase: sample.batas_rsvp,
+            link: sample.link,
+            token: firstGuest?.token ?? "kode-tamu",
+          }}
         />
       ) : null}
 
@@ -309,6 +327,7 @@ export default async function KirimPage({ params, searchParams }: PageProps<"/un
                     wabaAllowed={wabaAllowed}
                     gatewayAktif={wabaConfigResmi.aktif}
                     wabaQuota={activeWaba.wabaQuota}
+                    templateOverride={chosenWabaTemplate}
                   />
                 </li>
               );

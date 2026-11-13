@@ -19,6 +19,7 @@ export function TombolKirim({
   wabaAllowed = false,
   gatewayAktif = false,
   wabaQuota = 0,
+  templateOverride,
 }: {
   guestId: string;
   href: string;
@@ -28,6 +29,7 @@ export function TombolKirim({
   wabaAllowed?: boolean;
   gatewayAktif?: boolean;
   wabaQuota?: number;
+  templateOverride?: string;
 }) {
   const tandaiDiingatkanActionForInvitation = useInvitationAction(tandaiDiingatkanAction);
   const tandaiTerkirimActionForInvitation = useInvitationAction(tandaiTerkirimAction);
@@ -47,7 +49,7 @@ export function TombolKirim({
     }
     startWabaTransition(async () => {
       try {
-        const res = await kirimWabaAction(guestId);
+        const res = await kirimWabaAction(guestId, templateOverride);
         if (!res.ok) {
           alert(res.error || "Gagal mengirim via WABA.");
         } else {

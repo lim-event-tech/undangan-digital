@@ -8,7 +8,7 @@ import { SAVED, type SaveResult } from "@/lib/save-result";
 import { describeWaChanges, parseWaForm } from "@/lib/wa/config";
 import { getWaConfig, saveWaConfig } from "@/lib/wa/config-service";
 import { getWaManager } from "@/lib/wa/manager";
-import { fetchWabaTemplates, type WabaTemplateItem } from "@/lib/waba/client";
+import { fetchWabaTemplates, submitWabaTemplate, type CreateWabaTemplatePayload, type WabaTemplateItem } from "@/lib/waba/client";
 import { getWabaConfig as getDbWabaConfig, saveWabaConfig as saveDbWabaConfig } from "@/lib/waba/config-service";
 
 const PATH = "/admin/whatsapp";
@@ -111,5 +111,28 @@ export async function ujiWabaAction(): Promise<UjiWabaState> {
   await requireAdmin("pengaturan");
   const config = await getDbWabaConfig(db);
   const result = await fetchWabaTemplates(config);
+  return result;
+}
+
+export async function ajukanTemplateAdminAction(
+  payload: CreateWabaTemplatePayload,
+): Promise<{ ok: boolean; data?: WabaTemplateItem; error?: string }> {
+  const admin = await requireAdmin("pengaturan");
+  const config = await getDbWabaConfig(db);
+  if (!config.apiKey) {
+    return { ok: false, error: "API Key WABA belum diatur di pengaturan WhatsApp." };
+  }
+
+  const result = await submitWabaTemplate(config, payload);
+  if (result.ok) {
+    await recordAudit(db, {
+      actor: admin,
+      category: "pengaturan",
+      action: "Mengajukan template WABA baru ke Meta",
+      target: payload.name,
+      detail: `Template: ${payload.name}, Kategori: ${payload.category || "UTILITY"}`,
+    });
+    revalidatePath(PATH);
+  }
   return result;
 }
