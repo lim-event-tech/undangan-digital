@@ -66,6 +66,8 @@ export type InvitationContent = {
   sampul: SampulSettings;
   tampilan: TampilanSettings;
   susunan: Susunan;
+  wabaTemplate?: string;
+  wabaTemplatePengingat?: string;
 };
 export const DEFAULT_CHECKIN: CheckinSettings = { aktif: true };
 export const DEFAULT_WA_POSTER: WaPosterSettings = { kirim: false, sumber: "sama" };
@@ -103,5 +105,7 @@ export function readContent(raw: unknown): InvitationContent {
     sampul: readSampul(source.sampul),
     tampilan: readTampilan(source.tampilan),
     susunan: normalizeSusunan(record(source.susunan)),
+    wabaTemplate: typeof source.wabaTemplate === "string" ? source.wabaTemplate.trim() : undefined,
+    wabaTemplatePengingat: typeof source.wabaTemplatePengingat === "string" ? source.wabaTemplatePengingat.trim() : undefined,
   };
 }

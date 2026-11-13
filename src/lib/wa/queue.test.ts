@@ -44,11 +44,7 @@ async function guestRow(id: string) {
 }
 
 async function drain() {
-  for (;;) {
-    const job = await claimNextJob(db);
-    if (!job) return;
-    await finishJob(db, job, { skipped: "bersih" });
-  }
+  await db.delete(waJob);
 }
 
 describe("antrean WhatsApp", () => {
@@ -72,6 +68,7 @@ describe("antrean WhatsApp", () => {
     await enqueueJobs(db, invitation.id, "undangan", [
       { guestId: a.id, phone: a.phone, message: "A" },
     ]);
+    await new Promise((r) => setTimeout(r, 10));
     await enqueueJobs(db, invitation.id, "undangan", [
       { guestId: b.id, phone: b.phone, message: "B" },
     ]);

@@ -20,6 +20,13 @@ import {
   sendGuestInvitationViaWaba,
   type BatchWabaResult,
 } from "@/lib/waba/service";
+import { getWabaConfig as getPlatformWabaConfig } from "@/lib/waba/config-service";
+import {
+  submitWabaTemplate,
+  type CreateWabaTemplatePayload,
+  type WabaTemplateItem,
+} from "@/lib/waba/client";
+import { validateTemplateName } from "@/lib/waba/templates-guide";
 
 
 export async function simpanPesanAction(invitationId: string, formData: FormData): Promise<SaveResult> {
@@ -131,6 +138,7 @@ export async function keluarkanSayaAction(invitationId: string): Promise<void> {
 export async function kirimWabaTamuAction(
   invitationId: string,
   guestId: string,
+  templateOverride?: string,
 ): Promise<{ ok: boolean; error?: string; remainingQuota?: number }> {
   const { invitation, user, scope } = await requireInvitationAccess(invitationId);
   if (!isUuid(guestId) || !(await getGuest(db, invitation.id, guestId, scope ?? undefined))) {
@@ -141,6 +149,7 @@ export async function kirimWabaTamuAction(
     invitationId: invitation.id,
     guestId,
     senderUserId: user.id,
+    templateOverride,
   });
 
   if (result.ok) {
@@ -152,6 +161,7 @@ export async function kirimWabaTamuAction(
 
 export async function kirimBatchWabaAction(
   invitationId: string,
+  templateOverride?: string,
 ): Promise<BatchWabaResult> {
   const { invitation, user, scope } = await requireInvitationAccess(invitationId);
 
@@ -159,8 +169,64 @@ export async function kirimBatchWabaAction(
     invitationId: invitation.id,
     senderUserId: user.id,
     addedBy: scope ?? undefined,
+    templateOverride,
   });
 
   revalidatePath(`/undangan/${invitation.id}/kirim`);
   return result;
+}
+
+export async function simpanPilihanTemplateWabaAction(
+  invitationId: string,
+  templateName: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const { invitation } = await requireInvitationAccess(invitationId);
+  const trimmed = templateName.trim();
+  if (!trimmed) {
+    return { ok: false, error: "Nama template tidak valid." };
+  }
+
+  const success = await saveContentText(db, invitation.id, {
+    wabaTemplate: trimmed,
+  });
+
+  if (!success) {
+    return { ok: false, error: "Gagal menyimpan pilihan template." };
+  }
+
+  revalidatePath(`/undangan/${invitation.id}/kirim`);
+  return { ok: true };
+}
+
+export async function ajukanTemplateWabaAction(
+  invitationId: string,
+  payload: CreateWabaTemplatePayload,
+): Promise<{ ok: boolean; data?: WabaTemplateItem; error?: string }> {
+  await requireInvitationAccess(invitationId);
+
+  const validName = validateTemplateName(payload.name);
+  if (!validName.ok) {
+    return { ok: false, error: validName.error };
+  }
+
+  if (!payload.bodyText?.trim()) {
+    return { ok: false, error: "Teks isi (Body Text) template wajib diisi." };
+  }
+
+  const config = await getPlatformWabaConfig(db);
+  if (!config.apiKey) {
+    return { ok: false, error: "WABA Gateway belum dikonfigurasi di Admin Panel." };
+  }
+
+  const result = await submitWabaTemplate(config, {
+    ...payload,
+    name: validName.name,
+  });
+
+  if (!result.ok) {
+    return { ok: false, error: result.error };
+  }
+
+  revalidatePath(`/undangan/${invitationId}/kirim`);
+  return { ok: true, data: result.data };
 }

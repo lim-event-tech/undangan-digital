@@ -171,3 +171,62 @@ export async function getWabaDeliveryStatus(
   }
 }
 
+export interface CreateWabaTemplatePayload {
+  name: string;
+  category?: "UTILITY" | "AUTHENTICATION" | "MARKETING";
+  language?: string;
+  headerFormat?: "NONE" | "TEXT" | "IMAGE" | "DOCUMENT";
+  headerContent?: string;
+  bodyText: string;
+  footerText?: string;
+  buttons?: Array<{
+    type: string;
+    text: string;
+    url?: string;
+    example?: string[];
+  }>;
+}
+
+export async function submitWabaTemplate(
+  config: WabaConfig,
+  payload: CreateWabaTemplatePayload,
+): Promise<{ ok: true; data: WabaTemplateItem } | { ok: false; error: string }> {
+  if (!config.apiKey) {
+    return { ok: false, error: "API Key WABA belum diatur" };
+  }
+  try {
+    const url = `${config.baseUrl}/api/v1/waba/templates`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${config.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...payload,
+        category: payload.category || "UTILITY",
+        language: payload.language || config.language || "id",
+      }),
+    });
+
+    const body = await res.json().catch(() => null);
+    if (!res.ok || !body?.success) {
+      return {
+        ok: false,
+        error: body?.message || `Gagal mengajukan template (${res.status})`,
+      };
+    }
+
+    return {
+      ok: true,
+      data: body.data,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Gagal menghubungi WABA Gateway",
+    };
+  }
+}
+
+

@@ -2,17 +2,22 @@
 
 import { useActionState, useState } from "react";
 import { Ikon } from "@/components/ikon";
-import { tombolGelap, tombolTerang } from "@/components/ui";
+import { tombolEmas, tombolGelap, tombolTerang } from "@/components/ui";
 import type { WabaConfig } from "@/lib/waba/config";
 import type { WabaTemplateItem } from "@/lib/waba/client";
-import { simpanWabaAction, ujiWabaAction } from "./actions";
+import { ModalAjukanTemplate } from "@/components/waba/modal-ajukan-template";
+import { ajukanTemplateAdminAction, simpanWabaAction, ujiWabaAction } from "./actions";
 
 export function FormWaba({ config }: { config: WabaConfig }) {
   const [saveState, saveAction, isSaving] = useActionState(simpanWabaAction, null);
   const [testState, testAction, isTesting] = useActionState(ujiWabaAction, null);
   const [selectedTemplate, setSelectedTemplate] = useState(config.defaultTemplate);
+  const [bukaModalAjukan, setBukaModalAjukan] = useState(false);
+  const [extraTemplates, setExtraTemplates] = useState<WabaTemplateItem[]>([]);
 
-  const templates: WabaTemplateItem[] = testState?.ok && testState.templates ? testState.templates : [];
+  const rawTemplates: WabaTemplateItem[] =
+    testState?.ok && testState.templates ? testState.templates : [];
+  const templates = [...extraTemplates, ...rawTemplates.filter((t) => !extraTemplates.some((e) => e.name === t.name))];
 
   return (
     <div className="flex flex-col gap-5">
@@ -137,15 +142,24 @@ export function FormWaba({ config }: { config: WabaConfig }) {
               Periksa status autentikasi ke Aplikasi Induk dan tampilkan daftar template yang siap digunakan.
             </p>
           </div>
-          <form action={testAction}>
+          <div className="flex items-center gap-2">
             <button
-              type="submit"
-              disabled={isTesting || !config.apiKey}
-              className={`${tombolTerang} text-xs disabled:opacity-50`}
+              type="button"
+              onClick={() => setBukaModalAjukan(true)}
+              className={`${tombolEmas} min-h-9 px-3 text-xs font-semibold`}
             >
-              {isTesting ? "Memeriksa..." : "Uji Koneksi & Muat Template"}
+              + Ajukan Template Baru
             </button>
-          </form>
+            <form action={testAction}>
+              <button
+                type="submit"
+                disabled={isTesting || !config.apiKey}
+                className={`${tombolTerang} min-h-9 px-3 text-xs disabled:opacity-50`}
+              >
+                {isTesting ? "Memeriksa..." : "Uji Koneksi & Muat Template"}
+              </button>
+            </form>
+          </div>
         </div>
 
         {testState ? (
@@ -199,6 +213,16 @@ export function FormWaba({ config }: { config: WabaConfig }) {
           )
         ) : null}
       </div>
+
+      <ModalAjukanTemplate
+        terbuka={bukaModalAjukan}
+        onTutup={() => setBukaModalAjukan(false)}
+        onBerhasil={(templateBaru) => {
+          setExtraTemplates((prev) => [templateBaru, ...prev]);
+          setSelectedTemplate(templateBaru.name);
+        }}
+        submitAction={ajukanTemplateAdminAction}
+      />
     </div>
   );
 }

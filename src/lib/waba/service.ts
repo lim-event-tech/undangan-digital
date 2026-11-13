@@ -3,10 +3,12 @@ import { auditLog, guest as guestTable, invitation as invitationTable, user as u
 import type { AppDb } from "@/db/types";
 import { appBaseUrl } from "@/lib/app-url";
 import { formatDeadline } from "@/lib/datetime";
+import { readContent } from "@/lib/invitations/content";
 import { deadlinePhrase } from "@/lib/whatsapp";
 import type { AdminUser } from "@/lib/session";
 import { getWabaConfig } from "./config-service";
 import { sendWabaNotification } from "./client";
+import { buildWabaBodyParameters } from "./templates-guide";
 
 export type UserWabaStatus = {
   allowed: boolean;
@@ -125,6 +127,7 @@ export type SendWabaInviteParams = {
   guestId: string;
   senderUserId: string;
   templateOverride?: string;
+  templateBodyText?: string;
 };
 
 export type SendWabaInviteResult =
@@ -210,10 +213,30 @@ export async function sendGuestInvitationViaWaba(
     };
   }
 
-  const templateName = params.templateOverride || config.defaultTemplate || "undangan_resmi";
+  const content = readContent(invRow.invitation.content);
+  const templateName =
+    params.templateOverride ||
+    content.wabaTemplate ||
+    config.defaultTemplate ||
+    "undangan_resmi";
   const deadlineText = formatDeadline(invRow.invitation.rsvpDeadline);
   const phrase = deadlinePhrase(deadlineText);
   const link = `${appBaseUrl()}/${guest.token}`;
+
+  const bodyParams = params.templateBodyText
+    ? buildWabaBodyParameters(params.templateBodyText, {
+        guestName: guest.name,
+        eventTitle: invRow.invitation.title,
+        deadlinePhrase: phrase,
+        link,
+        token: guest.token,
+      })
+    : [
+        guest.name,
+        invRow.invitation.title,
+        phrase || "Mohon konfirmasi kehadiran Anda",
+        link,
+      ];
 
   // Kirim ke Gateway WABA
   const sendRes = await sendWabaNotification(config, {
@@ -222,12 +245,7 @@ export async function sendGuestInvitationViaWaba(
     template: templateName,
     referenceId: guest.id,
     parameters: {
-      body: [
-        guest.name,
-        link,
-        invRow.invitation.title,
-        phrase || "Mohon konfirmasi kehadiran Anda",
-      ],
+      body: bodyParams,
       buttons: [
         {
           index: 0,
@@ -331,6 +349,8 @@ export async function sendBatchInvitationViaWaba(
     senderUserId: string;
     addedBy?: string;
     limit?: number;
+    templateOverride?: string;
+    templateBodyText?: string;
   },
 ): Promise<BatchWabaResult> {
   const [invRow] = await db
@@ -409,6 +429,8 @@ export async function sendBatchInvitationViaWaba(
       invitationId: params.invitationId,
       guestId: g.id,
       senderUserId: params.senderUserId,
+      templateOverride: params.templateOverride,
+      templateBodyText: params.templateBodyText,
     });
     if (res.ok) {
       totalSent++;
