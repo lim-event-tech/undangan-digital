@@ -6,6 +6,7 @@ import { isEmailAddress } from "@/lib/mail/config";
 import { getOwnedInvitation, type Invitation, type OwnedInvitationSummary } from "@/lib/invitations/service";
 import { isUuid } from "@/lib/uuid";
 import { effectiveCheckinAccess, parseCheckinAccess, parseMemberRole, type CheckinAccess, type Role } from "./access";
+import type { TeamImportContext } from "./import";
 
 export { effectiveCheckinAccess, parseCheckinAccess, parseMemberRole };
 export type { CheckinAccess, Role };
@@ -357,4 +358,26 @@ export async function saveMemberContact(
     .where(and(eq(invitationMember.invitationId, invitationId), eq(invitationMember.userId, userId)))
     .returning({ id: invitationMember.id });
   return result.length > 0;
+}
+
+export async function getTeamImportContext(
+  db: AppDb,
+  invitationId: string,
+): Promise<TeamImportContext> {
+  const [[owner], members, pending] = await Promise.all([
+    db
+      .select({ email: user.email })
+      .from(invitation)
+      .innerJoin(user, eq(user.id, invitation.ownerId))
+      .where(eq(invitation.id, invitationId)),
+    listMembers(db, invitationId),
+    listPendingInvites(db, invitationId),
+  ]);
+  if (!owner) throw new Error("Undangan tidak ditemukan.");
+  return {
+    ownerEmail: owner.email,
+    memberEmails: members.map((m) => m.email),
+    pendingEmails: pending.map((p) => p.email),
+    maxMembers: MAX_MEMBERS,
+  };
 }

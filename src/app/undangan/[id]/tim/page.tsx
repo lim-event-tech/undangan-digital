@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { judulHalaman, kartu } from "@/components/ui";
+import Link from "next/link";
+import { judulHalaman, kartu, tombolTerang } from "@/components/ui";
 import { db } from "@/db";
 import { formatStamp } from "@/lib/datetime";
 import { isMailReady } from "@/lib/mail/send";
@@ -30,7 +31,12 @@ export default async function TimPage({ params }: PageProps<"/undangan/[id]/tim"
       </div>
 
       <section aria-labelledby="judul-undang" className={`${kartu} flex flex-col gap-4 p-5 sm:p-6`}>
-        <h2 id="judul-undang" className="m-0 font-judul text-2xl font-medium">Undang anggota</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 id="judul-undang" className="m-0 font-judul text-2xl font-medium">Undang anggota</h2>
+          <Link href={`/undangan/${invitation.id}/tim/impor`} className={`${tombolTerang} no-underline`}>
+            Impor Excel / CSV
+          </Link>
+        </div>
         {!surel ? (
           <p role="status" className="m-0 rounded-[10px] bg-krem p-3 text-sm leading-relaxed text-emas-tua">
             Pengiriman surel belum diaktifkan admin. Undangan tetap dibuat, dan tautannya bisa Anda salin lalu kirim sendiri.
