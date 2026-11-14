@@ -24,10 +24,10 @@ export default async function UndanganLayout({
   const invitations = settings.pemeliharaan.aktif
     ? []
     : acting
-      ? [{ ...acting.invitation, peran: "pemilik" as const }]
+      ? [{ ...acting.invitation, peran: "pemilik" as const, checkinAccess: "semua" as const }]
       : [
-          ...(await listInvitationsForOwner(db, user.id)).map((item) => ({ ...item, peran: "pemilik" as const })),
-          ...(await listInvitationsForMember(db, user.id)).map((item) => ({ ...item, peran: "anggota" as const })),
+          ...(await listInvitationsForOwner(db, user.id)).map((item) => ({ ...item, peran: "pemilik" as const, checkinAccess: "semua" as const })),
+          ...(await listInvitationsForMember(db, user.id)),
         ];
   const announcement = activeAnnouncement(settings, todayWib());
 
@@ -35,7 +35,7 @@ export default async function UndanganLayout({
     <AppShell
       kelola={acting ? { admin: acting.admin.name } : null}
       user={{ name: user.name, email: user.email }}
-      invitations={invitations.map(({ id, title, status, peran, templateKey }) => ({ id, title, status, peran, templateKey }))}
+      invitations={invitations.map(({ id, title, status, peran, templateKey, checkinAccess }) => ({ id, title, status, peran, templateKey, checkin: checkinAccess !== "tidak" }))}
       pengumuman={
         announcement
           ? { teks: announcement.teks, jenis: ANNOUNCEMENT_LABEL[announcement.jenis] }

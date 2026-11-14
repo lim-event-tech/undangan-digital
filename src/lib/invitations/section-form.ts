@@ -17,6 +17,10 @@ export function parseCheckinForm(formData: FormData): Parsed<{ checkin: CheckinS
   return { ok: true, input: { checkin: { aktif: flag(formData, "aktif") } } };
 }
 
+export function parseWabaForm(formData: FormData): Parsed<{ wabaAktif: boolean }> {
+  return { ok: true, input: { wabaAktif: flag(formData, "aktif") } };
+}
+
 export function parseWaPosterForm(formData: FormData): Parsed<{ waPoster: WaPosterSettings }> {
   return {
     ok: true,

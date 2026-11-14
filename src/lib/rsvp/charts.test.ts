@@ -11,6 +11,8 @@ function guest(overrides: Partial<DashboardGuest> & { id: string }): DashboardGu
     sentAt: null,
     openedAt: null,
     remindedAt: null,
+    addedByName: "",
+    checkedInAt: null,
     invitedEventIds: [],
     status: "belum",
     answers: [],

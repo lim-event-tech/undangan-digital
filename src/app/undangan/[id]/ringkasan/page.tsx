@@ -127,9 +127,16 @@ export default async function RingkasanPage({ params, searchParams }: PageProps<
               : "Jawaban tamu yang masuk lewat link pribadi masing-masing"}
           </p>
         </div>
-        <Link href={`/undangan/${invitation.id}/kirim`} className={`${tombolGelap} no-underline`}>
-          Kirim undangan
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          {role === "pemilik" ? (
+            <a href={`/undangan/${invitation.id}/ringkasan/ekspor-semua`} download className={`${tombolTerang} no-underline`}>
+              Ekspor semua data (Excel)
+            </a>
+          ) : null}
+          <Link href={`/undangan/${invitation.id}/kirim`} className={`${tombolGelap} no-underline`}>
+            Kirim undangan
+          </Link>
+        </div>
       </div>
 
       {totals.invited === 0 ? (

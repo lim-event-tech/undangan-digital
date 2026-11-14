@@ -12,6 +12,7 @@ import {
   setInvitationStatusAdmin,
 } from "@/lib/admin/queries";
 import { formatDeadline } from "@/lib/datetime";
+import { saveContentText } from "@/lib/invitations/editor";
 import { parseRsvpDeadline } from "@/lib/rsvp/shared";
 import { SAVED, type SaveResult } from "@/lib/save-result";
 import { isUuid } from "@/lib/uuid";
@@ -45,6 +46,28 @@ export async function ubahStatusAction(formData: FormData): Promise<void> {
     detail: `Status ${detail.status} menjadi ${hasil ?? detail.status}`,
   });
   refresh(id);
+}
+
+export async function ubahWabaAction(
+  _state: SaveResult | null,
+  formData: FormData,
+): Promise<SaveResult> {
+  const id = field(formData, "id");
+  if (!isUuid(id)) return NOT_FOUND;
+  const admin = await requireAdmin("ubah-undangan");
+  const detail = await getInvitationAdmin(db, id);
+  if (!detail) return NOT_FOUND;
+  const aktif = formData.get("aktif") !== null;
+  if (!(await saveContentText(db, id, { wabaAktif: aktif }))) return NOT_FOUND;
+  await recordAudit(db, {
+    actor: admin,
+    category: "undangan",
+    action: aktif ? "Mengaktifkan WABA resmi untuk undangan" : "Menonaktifkan WABA resmi untuk undangan",
+    target: `/u/${detail.slug}`,
+    detail: `WABA resmi ${detail.wabaAktif ? "aktif" : "nonaktif"} menjadi ${aktif ? "aktif" : "nonaktif"}`,
+  });
+  refresh(id);
+  return SAVED;
 }
 
 export async function ubahBatasAction(

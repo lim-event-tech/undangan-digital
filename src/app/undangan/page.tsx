@@ -21,7 +21,7 @@ export default async function UndanganIndex() {
   const acting = await getActing();
   if (acting) redirect(`/undangan/${acting.invitation.id}/isi`);
   const [dimiliki, diikuti] = await Promise.all([listInvitationsForOwner(db, user.id), listInvitationsForMember(db, user.id)]);
-  const invitations = [...dimiliki.map((item) => ({ ...item, peran: "pemilik" as const })), ...diikuti.map((item) => ({ ...item, peran: "anggota" as const }))];
+  const invitations = [...dimiliki.map((item) => ({ ...item, peran: "pemilik" as const, bersama: false })), ...diikuti.map((item) => ({ ...item, bersama: true }))];
   const tanggal = new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeZone: "Asia/Jakarta" });
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
@@ -40,7 +40,7 @@ export default async function UndanganIndex() {
               <article key={item.id} className={`${kartu} flex min-w-0 flex-col items-start gap-4 p-6`}>
                 <div className="flex flex-wrap gap-2">
                   <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${status.kelas}`}>{status.label}</span>
-                  {item.peran === "anggota" ? <span className="rounded-full bg-krem px-2.5 py-1 text-xs font-medium text-emas-tua">Anggota tim</span> : null}
+                  {item.bersama ? <span className="rounded-full bg-krem px-2.5 py-1 text-xs font-medium text-emas-tua">{item.peran === "pemilik" ? "Pemilik tim" : "Anggota tim"}</span> : null}
                 </div>
                 <h2 className="m-0 font-judul text-[28px] leading-tight font-medium wrap-anywhere">{item.title}</h2>
                 <p className="m-0 text-xs leading-relaxed text-redup">Template {templateInfo(item.templateKey).label}<br />Dibuat {tanggal.format(item.createdAt)}</p>

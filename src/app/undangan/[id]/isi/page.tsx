@@ -19,7 +19,7 @@ import {
   FormSambutan,
 } from "./form-bagian";
 import { FormSusunan } from "./form-susunan";
-import { FormCheckin } from "./form-tambahan";
+import { FormCheckin, FormWaba } from "./form-tambahan";
 import { FormTampilan } from "./form-tampilan";
 import { HapusUndangan } from "./hapus-undangan";
 import { PanelTerbit } from "./panel-terbit";
@@ -30,7 +30,7 @@ import { UnggahLogo } from "./unggah-tambahan";
 export const metadata: Metadata = { title: "Isi undangan" };
 
 export default async function IsiUndanganPage({ params }: PageProps<"/undangan/[id]/isi">) {
-  const { invitation } = await requireInvitationById((await params).id);
+  const { invitation, user } = await requireInvitationById((await params).id);
 
   const [events, photos, jumlahTamu, tokenPratinjau] = await Promise.all([
     listEventDetails(db, invitation.id),
@@ -115,10 +115,11 @@ export default async function IsiUndanganPage({ params }: PageProps<"/undangan/[
         maksPeserta={invitation.defaultMaxAttendees}
       />
       <FormCheckin pengaturan={content.checkin} />
+      <FormWaba aktif={content.wabaAktif} />
       <FormPenutup penutup={content.penutup} />
       <FormSusunan susunan={content.susunan} />
 
-      <HapusUndangan invitationId={invitation.id} jumlahTamu={jumlahTamu} />
+      {invitation.ownerId === user.id ? <HapusUndangan invitationId={invitation.id} jumlahTamu={jumlahTamu} /> : null}
     </div>
   );
 }

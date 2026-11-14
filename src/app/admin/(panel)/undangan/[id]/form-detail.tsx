@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { kolom, labelKolom, pesanGalat, tombolBahaya, tombolTerang } from "@/components/ui";
 import type { SaveResult } from "@/lib/save-result";
-import { hapusPermanenAction, ubahBatasAction } from "./actions";
+import { hapusPermanenAction, ubahBatasAction, ubahWabaAction } from "./actions";
 
 type Aksi = (state: SaveResult | null, formData: FormData) => Promise<SaveResult>;
 
@@ -69,6 +69,30 @@ export function FormBatasAdmin({ id, batas, jam, hariIni, boleh }: { id: string;
         <div>
           <button type="submit" disabled={memproses} className={tombolTerang}>
             {memproses ? "Menyimpan…" : "Simpan batas"}
+          </button>
+        </div>
+      ) : null}
+    </form>
+  );
+}
+
+export function FormWabaAdmin({ id, aktif, boleh }: { id: string; aktif: boolean; boleh: boolean }) {
+  const { aksi, memproses, galat, sukses } = useForm(ubahWabaAction);
+  return (
+    <form action={aksi} className="flex flex-col gap-2.5">
+      <input type="hidden" name="id" value={id} />
+      <label className="flex items-start gap-3 text-sm font-medium text-redup-2">
+        <input type="checkbox" name="aktif" defaultChecked={aktif} disabled={!boleh} className="mt-1 size-5" />
+        <span className="flex flex-col gap-0.5">
+          WhatsApp resmi (WABA) aktif untuk undangan ini
+          <span className="text-xs font-normal text-redup">Bila dimatikan, pengiriman lewat WABA resmi untuk undangan ini ditolak. Pengiriman Baileys dan tombol wa.me tidak terpengaruh.</span>
+        </span>
+      </label>
+      <Pesan galat={galat} sukses={sukses} teks="Pengaturan WABA diperbarui." />
+      {boleh ? (
+        <div>
+          <button type="submit" disabled={memproses} className={tombolTerang}>
+            {memproses ? "Menyimpan…" : "Simpan WABA"}
           </button>
         </div>
       ) : null}

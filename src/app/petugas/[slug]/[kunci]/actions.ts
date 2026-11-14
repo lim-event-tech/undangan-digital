@@ -9,44 +9,12 @@ import {
   listCheckinGuests,
   scanCheckin,
   undoCheckIn,
-  type CheckinGuest,
-  type ScanResult,
   type UsherInvitation,
 } from "@/lib/checkin/service";
+import { toInfo, toResult, type CariResult, type UsherResult } from "@/lib/checkin/usher";
 import { looksLikeSlug } from "@/lib/token";
 import { currentClientKey, tokenGuard } from "@/lib/token-guard-instance";
 import { isUuid } from "@/lib/uuid";
-
-export type GuestInfo = {
-  id: string;
-  name: string;
-  groupName: string | null;
-  attending: boolean;
-  attendeeCount: number;
-  checkedInAt: string | null;
-};
-
-export type UsherResult =
-  | { status: "ditolak"; pesan: string }
-  | { status: ScanResult["result"]; guest: GuestInfo | null };
-
-function toInfo(guest: CheckinGuest): GuestInfo {
-  return {
-    id: guest.id,
-    name: guest.name,
-    groupName: guest.groupName,
-    attending: guest.attending,
-    attendeeCount: guest.attendeeCount,
-    checkedInAt: guest.checkedInAt ? guest.checkedInAt.toISOString() : null,
-  };
-}
-
-function toResult(result: ScanResult): UsherResult {
-  return {
-    status: result.result,
-    guest: "guest" in result ? toInfo(result.guest) : null,
-  };
-}
 
 async function authorize(
   slug: string,
@@ -107,7 +75,7 @@ export async function cariAction(
   slug: string,
   key: string,
   query: string,
-): Promise<{ status: "ok"; guests: GuestInfo[] } | { status: "ditolak"; pesan: string }> {
+): Promise<CariResult> {
   const auth = await authorize(slug, key);
   if ("ditolak" in auth) return { status: "ditolak", pesan: auth.ditolak.status === "ditolak" ? auth.ditolak.pesan : "" };
   const guests = await listCheckinGuests(db, auth.invitation.id, { q: String(query).slice(0, 80), limit: 30 });

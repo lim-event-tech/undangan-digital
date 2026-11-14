@@ -78,7 +78,8 @@ export default async function KirimPage({ params, searchParams }: PageProps<"/un
     ]);
 
   const activeWaba = userWaba.wabaAllowed ? userWaba : (ownerWaba?.wabaAllowed ? ownerWaba : userWaba);
-  const wabaAllowed = userWaba.wabaAllowed || Boolean(ownerWaba?.wabaAllowed);
+  const wabaAkunBerizin = userWaba.wabaAllowed || Boolean(ownerWaba?.wabaAllowed);
+  const wabaAllowed = wabaAkunBerizin && content.wabaAktif;
   const templatesRes =
     pemilik && wabaAllowed && wabaConfigResmi.apiKey ? await fetchWabaTemplates(wabaConfigResmi) : null;
   const daftarTemplate =
@@ -179,6 +180,18 @@ export default async function KirimPage({ params, searchParams }: PageProps<"/un
           posterWa={fotoList.find((p) => p.kind === "poster_wa") ?? null}
         />
       )}
+
+      {wabaAkunBerizin && !content.wabaAktif ? (
+        <p role="status" className="m-0 rounded-[10px] bg-krem p-3 text-sm leading-relaxed text-emas-tua">
+          WhatsApp resmi (WABA) dinonaktifkan untuk undangan ini.
+          {pemilik ? (
+            <>
+              {" "}
+              <Link href={`/undangan/${invitation.id}/isi#waba`} className="font-medium text-emas-tua underline">Ubah di pengaturan undangan</Link>.
+            </>
+          ) : " Hubungi pemilik undangan bila perlu mengaktifkannya."}
+        </p>
+      ) : null}
 
       {wabaAllowed ? (
         <PanelWaba

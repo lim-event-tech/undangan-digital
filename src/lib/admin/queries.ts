@@ -242,6 +242,7 @@ export type AdminInvitationDetail = AdminInvitationRow & {
   events: number;
   photos: number;
   checkedIn: number;
+  wabaAktif: boolean;
   ownerStatus: "aktif" | "diblokir";
   ownerCreatedAt: Date;
   ownerMethods: string[];
@@ -274,6 +275,7 @@ export async function getInvitationAdmin(
       events: sql<number>`(select count(*)::int from event where event.invitation_id = ${invitation.id})`,
       photos: sql<number>`(select count(*)::int from photo where photo.invitation_id = ${invitation.id} and photo.kind = 'cover')`,
       checkedIn: sql<number>`(select count(*)::int from guest where guest.invitation_id = ${invitation.id} and guest.checked_in_at is not null)`,
+      wabaAktif: sql<boolean>`coalesce((${invitation.content} ->> 'wabaAktif')::boolean, true)`,
       createdAt: invitation.createdAt,
     })
     .from(invitation)
