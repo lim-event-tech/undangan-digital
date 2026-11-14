@@ -28,17 +28,18 @@ const PESAN: Record<string, string> = {
 export async function undangAnggotaAction(invitationId: string, _state: UndangState, formData: FormData): Promise<UndangState> {
   const { invitation, user } = await requireInvitationById(invitationId);
   const raw = formData.get("email");
+  const peran = parseMemberRole(formData.get("peran"));
   const result = await createInvite(db, {
     invitationId: invitation.id,
     email: typeof raw === "string" ? raw : "",
     invitedBy: user.id,
-    role: parseMemberRole(formData.get("peran")),
+    role: peran,
     checkinAccess: parseCheckinAccess(formData.get("checkin")),
   });
   if (!result.ok) return { ok: false, error: PESAN[result.error] ?? "Undangan gagal dibuat." };
   const link = `${appBaseUrl()}/terima/${result.token}`;
   const [pemilik] = await db.select({ name: userTable.name }).from(userTable).where(eq(userTable.id, user.id));
-  const kirim = await sendMail(db, inviteMail({ to: result.email, title: invitation.title, ownerName: pemilik?.name ?? user.name, link, expiresAt: result.expiresAt }));
+  const kirim = await sendMail(db, inviteMail({ to: result.email, title: invitation.title, ownerName: pemilik?.name ?? user.name, link, expiresAt: result.expiresAt, role: peran }));
   revalidatePath(`/undangan/${invitation.id}/tim`);
   if (kirim.ok) return { ok: true, email: result.email, link, surel: "terkirim" };
   const belumDiatur = kirim.error.includes("belum diaktifkan");

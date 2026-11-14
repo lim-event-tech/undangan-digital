@@ -130,6 +130,25 @@ describe("undangan anggota tim", () => {
     expect(surat.html).toContain("Ani &amp; Budi");
     expect(surat.text).toContain("https://x.test/terima/abc");
   });
+
+  it("menyesuaikan isi surel dengan peran dan menyertakan tautan serta batas berlaku", () => {
+    const dasar = { to: "a@b.co", title: "Forum", ownerName: "Ani", link: "https://x.test/terima/abc", expiresAt: new Date("2026-11-17T00:00:00.000Z") };
+    const anggota = inviteMail(dasar);
+    const pemilik = inviteMail({ ...dasar, role: "pemilik" });
+    expect(anggota.html).toContain("anggota tim");
+    expect(anggota.html).toContain('href="https://x.test/terima/abc"');
+    expect(anggota.html).toContain("17 November 2026");
+    expect(anggota.text).toContain("17 November 2026");
+    expect(pemilik.html).toContain("pemilik tim");
+    expect(pemilik.text).toContain("Mengundang dan mengatur anggota tim lainnya");
+    expect(anggota.subject).toBe('Ani mengundang Anda ke tim "Forum"');
+  });
+
+  it("tidak membiarkan tanda kutip tunggal merusak atribut HTML", () => {
+    const surat = inviteMail({ to: "a@b.co", title: "x", ownerName: "O'Brien", link: "https://x.test/terima/a'b", expiresAt: new Date("2026-11-17T00:00:00.000Z") });
+    expect(surat.html).toContain("O&#39;Brien");
+    expect(surat.html).not.toContain("a'b");
+  });
 });
 
 describe("akses menurut peran", () => {
