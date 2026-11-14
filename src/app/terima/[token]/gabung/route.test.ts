@@ -52,10 +52,10 @@ describe("GET /terima/[token]/gabung", () => {
   });
 
   it("menerima undangan dan langsung membuka daftar tamu", async () => {
-    getSession.mockResolvedValue({ user: { id: "u1", status: "aktif", adminRole: null } });
-    acceptInvite.mockResolvedValue({ ok: true, invitationId: "inv-1" });
+    getSession.mockResolvedValue({ user: { id: "u1", email: "u1@example.com", status: "aktif", adminRole: null } });
+    acceptInvite.mockResolvedValue({ ok: true, invitationId: "inv-1", role: "anggota" });
     expect(await jalankan()).toBe(`${BASE}/undangan/inv-1/tamu`);
-    expect(acceptInvite).toHaveBeenCalledWith({}, TOKEN, { id: "u1", adminRole: null });
+    expect(acceptInvite).toHaveBeenCalledWith({}, TOKEN, { id: "u1", email: "u1@example.com", adminRole: null });
     expect(cookieDelete).toHaveBeenCalledWith(INVITE_COOKIE);
   });
 
@@ -74,9 +74,16 @@ describe("GET /terima/[token]/gabung", () => {
   });
 
   it("menandai akun admin lewat parameter galat", async () => {
-    getSession.mockResolvedValue({ user: { id: "a1", status: "aktif", adminRole: "super" } });
+    getSession.mockResolvedValue({ user: { id: "a1", email: "a1@example.com", status: "aktif", adminRole: "super" } });
     acceptInvite.mockResolvedValue({ ok: false, error: "akun-admin" });
     expect(await jalankan()).toBe(`${BASE}/terima/${TOKEN}?galat=akun-admin`);
+    expect(cookieDelete).not.toHaveBeenCalled();
+  });
+
+  it("menandai email tidak sesuai lewat parameter galat tanpa menghapus cookie", async () => {
+    getSession.mockResolvedValue({ user: { id: "u1", email: "salah@example.com", status: "aktif", adminRole: null } });
+    acceptInvite.mockResolvedValue({ ok: false, error: "email-tidak-sesuai" });
+    expect(await jalankan()).toBe(`${BASE}/terima/${TOKEN}?galat=email-tidak-sesuai`);
     expect(cookieDelete).not.toHaveBeenCalled();
   });
 

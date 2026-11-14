@@ -46,10 +46,10 @@ async function setup() {
   const seeded = await seedInvitation(db);
   const salesA = await akun(`sales-a-${seeded.ownerId}`);
   const salesB = await akun(`sales-b-${seeded.ownerId}`);
-  for (const [id, email] of [[salesA, "a"], [salesB, "b"]]) {
-    const invite = await createInvite(db, { invitationId: seeded.invitation.id, email: `${email}-${seeded.ownerId}@example.com`, invitedBy: seeded.ownerId });
+  for (const id of [salesA, salesB]) {
+    const invite = await createInvite(db, { invitationId: seeded.invitation.id, email: `${id}@example.com`, invitedBy: seeded.ownerId });
     if (!invite.ok) throw new Error("undangan gagal");
-    expect(await acceptInvite(db, invite.token, { id })).toEqual({ ok: true, invitationId: seeded.invitation.id });
+    expect(await acceptInvite(db, invite.token, { id })).toEqual({ ok: true, invitationId: seeded.invitation.id, role: "anggota" });
   }
   const events = await listEventDetails(db, seeded.invitation.id);
   return { ...seeded, salesA, salesB, eventIds: events.map((e) => e.id) };
@@ -92,16 +92,26 @@ describe("undangan anggota tim", () => {
 
   it("mengirim ulang membatalkan tautan lama dan tautan hanya bisa dipakai sekali", async () => {
     const { invitation, ownerId } = await seedInvitation(db);
-    const pertama = await createInvite(db, { invitationId: invitation.id, email: "ulang@example.com", invitedBy: ownerId });
-    const kedua = await createInvite(db, { invitationId: invitation.id, email: "ulang@example.com", invitedBy: ownerId });
+    const baru = await akun(`baru-${ownerId}`);
+    const pertama = await createInvite(db, { invitationId: invitation.id, email: `baru-${ownerId}@example.com`, invitedBy: ownerId });
+    const kedua = await createInvite(db, { invitationId: invitation.id, email: `baru-${ownerId}@example.com`, invitedBy: ownerId });
     if (!pertama.ok || !kedua.ok) throw new Error("gagal");
     expect((await previewInvite(db, pertama.token)).state).toBe("dicabut");
     expect((await previewInvite(db, kedua.token)).state).toBe("valid");
-    const baru = await akun(`baru-${ownerId}`);
     expect(await acceptInvite(db, pertama.token, { id: baru })).toEqual({ ok: false, error: "dicabut" });
-    expect(await acceptInvite(db, kedua.token, { id: baru })).toEqual({ ok: true, invitationId: invitation.id });
+    expect(await acceptInvite(db, kedua.token, { id: baru })).toEqual({ ok: true, invitationId: invitation.id, role: "anggota" });
     expect(await acceptInvite(db, kedua.token, { id: baru })).toEqual({ ok: false, error: "dipakai" });
     expect(await listPendingInvites(db, invitation.id)).toHaveLength(0);
+  });
+
+  it("menolak penerimaan jika email akun tidak sesuai dengan email undangan tanpa menghabiskan tautan", async () => {
+    const { invitation, ownerId } = await seedInvitation(db);
+    const hasil = await createInvite(db, { invitationId: invitation.id, email: "khusus@example.com", invitedBy: ownerId });
+    if (!hasil.ok) throw new Error("gagal");
+    const salah = await akun(`salah-${ownerId}`);
+    expect(await acceptInvite(db, hasil.token, { id: salah, email: "lain@example.com" })).toEqual({ ok: false, error: "email-tidak-sesuai" });
+    expect((await previewInvite(db, hasil.token)).state).toBe("valid");
+    expect(await acceptInvite(db, hasil.token, { id: salah, email: "Khusus@Example.com" })).toEqual({ ok: true, invitationId: invitation.id, role: "anggota" });
   });
 
   it("menolak token yang kedaluwarsa, tidak ada, akun admin, pemilik sendiri, dan tidak menghabiskan tautan saat sudah anggota", async () => {
@@ -282,7 +292,7 @@ describe("pemilik tambahan dan hak check-in anggota", () => {
     const hasil = await createInvite(db, { invitationId: invitation.id, email: `bersama-${ownerId}@example.com`, invitedBy: ownerId, role: "pemilik" });
     if (!hasil.ok) throw new Error("gagal");
     expect((await previewInvite(db, hasil.token)).invite).toMatchObject({ role: "pemilik" });
-    expect(await acceptInvite(db, hasil.token, { id: bersama })).toEqual({ ok: true, invitationId: invitation.id });
+    expect(await acceptInvite(db, hasil.token, { id: bersama })).toEqual({ ok: true, invitationId: invitation.id, role: "pemilik" });
     expect(await getInvitationAccess(db, bersama, invitation.id)).toMatchObject({ role: "pemilik", scope: null, creator: false, checkinAccess: "semua" });
     expect(await getInvitationAccess(db, ownerId, invitation.id)).toMatchObject({ role: "pemilik", scope: null, creator: true });
     expect((await listInvitationsForMember(db, bersama)).map((row) => ({ id: row.id, peran: row.peran }))).toEqual([{ id: invitation.id, peran: "pemilik" }]);

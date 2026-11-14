@@ -262,19 +262,33 @@ export async function previewInvite(
 }
 
 export type AcceptResult =
-  | { ok: true; invitationId: string }
-  | { ok: false; error: "tidak-ada" | "kedaluwarsa" | "dipakai" | "dicabut" | "pemilik" | "sudah-anggota" | "akun-admin" };
+  | { ok: true; invitationId: string; role: Role }
+  | {
+      ok: false;
+      error:
+        | "tidak-ada"
+        | "kedaluwarsa"
+        | "dipakai"
+        | "dicabut"
+        | "pemilik"
+        | "sudah-anggota"
+        | "akun-admin"
+        | "email-tidak-sesuai";
+    };
 
 export async function acceptInvite(
   db: AppDb,
   token: string,
-  account: { id: string; adminRole?: string | null },
+  account: { id: string; email?: string | null; adminRole?: string | null },
   now: Date = new Date(),
 ): Promise<AcceptResult> {
   const { state, invite } = await previewInvite(db, token, now);
   if (!invite || state === "tidak-ada") return { ok: false, error: "tidak-ada" };
   if (state !== "valid") return { ok: false, error: state };
   if (account.adminRole) return { ok: false, error: "akun-admin" };
+  const [akun] = account.email
+    ? [{ email: account.email }]
+    : await db.select({ email: user.email }).from(user).where(eq(user.id, account.id));
   return db.transaction(async (tx) => {
     const [target] = await tx
       .select({ ownerId: invitation.ownerId })
@@ -288,6 +302,9 @@ export async function acceptInvite(
       .from(invitationMember)
       .where(and(eq(invitationMember.invitationId, invite.invitationId), eq(invitationMember.userId, account.id)));
     if (already) return { ok: false, error: "sudah-anggota" } as const;
+    if (!akun || akun.email.trim().toLowerCase() !== invite.email.trim().toLowerCase()) {
+      return { ok: false, error: "email-tidak-sesuai" } as const;
+    }
     const claimed = await tx
       .update(invitationInvite)
       .set({ acceptedAt: now, acceptedBy: account.id })
@@ -298,7 +315,7 @@ export async function acceptInvite(
       .insert(invitationMember)
       .values({ invitationId: invite.invitationId, userId: account.id, role: invite.role, checkinAccess: invite.checkinAccess })
       .onConflictDoNothing();
-    return { ok: true, invitationId: invite.invitationId } as const;
+    return { ok: true, invitationId: invite.invitationId, role: invite.role } as const;
   });
 }
 

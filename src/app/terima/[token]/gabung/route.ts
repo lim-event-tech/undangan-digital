@@ -30,8 +30,20 @@ export async function GET(_request: Request, ctx: RouteContext<"/terima/[token]/
     }
   }
 
-  const hasil = await acceptInvite(db, token, { id: session.user.id, adminRole: session.user.adminRole });
-  if (!hasil.ok) return ke(`/terima/${token}?galat=${hasil.error === "akun-admin" ? "akun-admin" : "gagal"}`);
+  const hasil = await acceptInvite(db, token, {
+    id: session.user.id,
+    email: session.user.email,
+    adminRole: session.user.adminRole,
+  });
+  if (!hasil.ok) {
+    const galat =
+      hasil.error === "akun-admin"
+        ? "akun-admin"
+        : hasil.error === "email-tidak-sesuai"
+          ? "email-tidak-sesuai"
+          : "gagal";
+    return ke(`/terima/${token}?galat=${galat}`);
+  }
   jar.delete(INVITE_COOKIE);
-  return ke(`/undangan/${hasil.invitationId}/tamu`);
+  return ke(`/undangan/${hasil.invitationId}/${hasil.role === "pemilik" ? "isi" : "tamu"}`);
 }
