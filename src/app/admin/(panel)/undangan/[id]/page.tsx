@@ -16,7 +16,7 @@ import { isUuid } from "@/lib/uuid";
 import { TEMPLATES } from "@/templates/registry";
 import { mulaiKelolaAction } from "@/app/undangan/kelola-actions";
 import { ubahStatusAction } from "./actions";
-import { FormBatasAdmin, FormHapus } from "./form-detail";
+import { FormBatasAdmin, FormHapus, FormWabaAdmin } from "./form-detail";
 
 const STATUS_TAMU: Record<GuestStatus, string> = {
   hadir: "Hadir",
@@ -234,6 +234,7 @@ export default async function DetailUndanganAdminPage({ params }: PageProps<"/ad
               Pengaturan undangan
             </h2>
             <FormBatasAdmin id={detail.id} batas={dateFromDeadline(detail.rsvpDeadline)} jam={timeFromDeadline(detail.rsvpDeadline)} hariIni={todayWib()} boleh={bolehUbah} />
+            <FormWabaAdmin id={detail.id} aktif={detail.wabaAktif} boleh={bolehUbah} />
           </section>
 
           {bolehTangguhkan || bolehHapus ? (

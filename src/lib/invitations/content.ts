@@ -73,6 +73,7 @@ export type InvitationContent = {
   sampul: SampulSettings;
   tampilan: TampilanSettings;
   susunan: Susunan;
+  wabaAktif: boolean;
   wabaTemplate?: string;
   wabaTemplatePengingat?: string;
   wabaConfig?: WabaTemplateConfig;
@@ -142,6 +143,7 @@ export function readContent(raw: unknown): InvitationContent {
     sampul: readSampul(source.sampul),
     tampilan: readTampilan(source.tampilan),
     susunan: normalizeSusunan(record(source.susunan)),
+    wabaAktif: flag(source.wabaAktif, true),
     wabaTemplate: typeof source.wabaTemplate === "string" ? source.wabaTemplate.trim() : undefined,
     wabaTemplatePengingat: typeof source.wabaTemplatePengingat === "string" ? source.wabaTemplatePengingat.trim() : undefined,
     wabaConfig: readWabaConfig(source.wabaConfig),

@@ -62,7 +62,7 @@ export default async function TamuPage({
   params,
   searchParams,
 }: PageProps<"/undangan/[id]/tamu">) {
-  const { invitation, role, scope } = await requireInvitationAccess((await params).id);
+  const { invitation, role, scope, creator } = await requireInvitationAccess((await params).id);
   const sp = await searchParams;
   const pemilik = role === "pemilik";
 
@@ -115,7 +115,7 @@ export default async function TamuPage({
           </p>
         </div>
         <div className="flex flex-wrap gap-2.5">
-          {!pemilik ? <KeluarTim /> : null}
+          {!creator ? <KeluarTim /> : null}
           <a
             href={`/pratinjau/${invitation.templateKey}?undangan=${invitation.id}`}
             target="_blank"

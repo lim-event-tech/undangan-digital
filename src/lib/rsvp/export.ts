@@ -41,6 +41,7 @@ export function buildRsvpRows(events: DashboardEvent[], guests: DashboardGuest[]
   const header = [
     "Nama",
     "Grup",
+    "Anggota tim yang mengundang",
     "Nomor WhatsApp",
     "Status",
     "Peserta hadir",
@@ -59,6 +60,7 @@ export function buildRsvpRows(events: DashboardEvent[], guests: DashboardGuest[]
   const rows = guests.map((g) => [
     g.name,
     g.groupName ?? "",
+    g.addedByName,
     exportPhone(g.phone),
     STATUS_LABEL[g.status],
     g.status === "hadir" ? g.attendeeCount : "",
@@ -77,4 +79,73 @@ export function buildRsvpRows(events: DashboardEvent[], guests: DashboardGuest[]
 
 export function buildRsvpCsv(events: DashboardEvent[], guests: DashboardGuest[]): string {
   return toCsv(buildRsvpRows(events, guests));
+}
+
+export type FullExportEvent = {
+  id: string;
+  name: string;
+  date: string | null;
+  time: string | null;
+  endTime: string | null;
+  venueName: string | null;
+  address: string | null;
+};
+
+export type FullExportMember = {
+  name: string;
+  email: string;
+  role: string;
+  checkinAccess: string;
+  guests: number;
+  contact: string;
+  joinedAt: Date | null;
+};
+
+const CHECKIN_LABEL: Record<string, string> = {
+  tidak: "Tanpa check-in",
+  milik: "Tamu miliknya",
+  semua: "Semua tamu",
+};
+
+export function buildAnswerRows(guests: DashboardGuest[], events: DashboardEvent[]): Rows {
+  const header = ["Nama", "Anggota tim yang mengundang", "Sesi", "Jawaban", "Peserta", "Hari dan jam datang", "Pesan", "Dijawab"];
+  const rows: Rows = [];
+  for (const g of guests) {
+    for (const e of events) {
+      if (!g.invitedEventIds.includes(e.id)) continue;
+      const answer = eventAnswer(g, e.id);
+      const at = g.answers.find((a) => a.eventId === e.id)?.respondedAt ?? null;
+      rows.push([g.name, g.addedByName, e.name, answer.label, answer.attendeeCount, answer.days, answer.note, stamp(at)]);
+    }
+  }
+  return [header, ...rows];
+}
+
+export function buildCheckinRows(guests: DashboardGuest[]): Rows {
+  const header = ["Nama", "Anggota tim yang mengundang", "Status RSVP", "Peserta hadir", "Sudah check-in", "Waktu check-in"];
+  const rows = guests.map((g) => [
+    g.name,
+    g.addedByName,
+    STATUS_LABEL[g.status],
+    g.status === "hadir" ? g.attendeeCount : "",
+    g.checkedInAt ? "Ya" : "Belum",
+    stamp(g.checkedInAt),
+  ]);
+  return [header, ...rows];
+}
+
+export function buildEventRows(events: FullExportEvent[]): Rows {
+  const header = ["Sesi", "Tanggal", "Jam mulai", "Jam selesai", "Tempat", "Alamat"];
+  return [
+    header,
+    ...events.map((e) => [e.name, e.date ?? "", e.time ?? "", e.endTime ?? "", e.venueName ?? "", e.address ?? ""]),
+  ];
+}
+
+export function buildTeamRows(members: FullExportMember[]): Rows {
+  const header = ["Nama", "Email", "Peran", "Hak check-in", "Jumlah tamu", "Narahubung", "Bergabung"];
+  return [
+    header,
+    ...members.map((m) => [m.name, m.email, m.role, CHECKIN_LABEL[m.checkinAccess] ?? m.checkinAccess, m.guests, m.contact, stamp(m.joinedAt)]),
+  ];
 }

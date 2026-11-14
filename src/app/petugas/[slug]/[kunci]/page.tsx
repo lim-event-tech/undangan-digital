@@ -5,7 +5,8 @@ import { looksLikeCheckinKey } from "@/lib/checkin/code";
 import { checkinCounts, findInvitationByKey } from "@/lib/checkin/service";
 import { looksLikeSlug } from "@/lib/token";
 import { currentClientKey, tokenGuard } from "@/lib/token-guard-instance";
-import { Pemindai } from "./pemindai";
+import { Pemindai } from "@/components/pemindai-checkin";
+import { batalkanAction, cariAction, masukkanAction, pindaiAction } from "./actions";
 
 export const metadata: Metadata = { title: "Check-in tamu", robots: { index: false, follow: false } };
 
@@ -37,7 +38,14 @@ export default async function PetugasPage({ params }: PageProps<"/petugas/[slug]
             {counts.other > 0 ? `, ditambah ${counts.other} tamu tanpa konfirmasi` : ""}.
           </p>
         </header>
-        <Pemindai slug={invitation.slug} kunci={kunci} />
+        <Pemindai
+          aksi={{
+            pindai: pindaiAction.bind(null, invitation.slug, kunci),
+            masukkan: masukkanAction.bind(null, invitation.slug, kunci),
+            batalkan: batalkanAction.bind(null, invitation.slug, kunci),
+            cari: cariAction.bind(null, invitation.slug, kunci),
+          }}
+        />
       </div>
     </div>
   );

@@ -5,13 +5,16 @@ import type { AppDb } from "@/db/types";
 import { isEmailAddress } from "@/lib/mail/config";
 import { getOwnedInvitation, type Invitation, type OwnedInvitationSummary } from "@/lib/invitations/service";
 import { isUuid } from "@/lib/uuid";
+import { effectiveCheckinAccess, parseCheckinAccess, parseMemberRole, type CheckinAccess, type Role } from "./access";
+
+export { effectiveCheckinAccess, parseCheckinAccess, parseMemberRole };
+export type { CheckinAccess, Role };
 
 export const MAX_MEMBERS = 20;
 export const INVITE_VALID_DAYS = 7;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export type Role = "pemilik" | "anggota";
-export type Access = { invitation: Invitation; role: Role; scope: string | null };
+export type Access = { invitation: Invitation; role: Role; scope: string | null; creator: boolean; checkinAccess: CheckinAccess };
 
 export function hashInviteToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
@@ -28,18 +31,30 @@ export function looksLikeInviteToken(value: unknown): value is string {
 export async function getInvitationAccess(db: AppDb, userId: string, invitationId: unknown): Promise<Access | null> {
   if (!isUuid(invitationId)) return null;
   const owned = await getOwnedInvitation(db, userId, invitationId);
-  if (owned) return { invitation: owned, role: "pemilik", scope: null };
+  if (owned) return { invitation: owned, role: "pemilik", scope: null, creator: true, checkinAccess: "semua" };
   const [row] = await db
-    .select({ invitation })
+    .select({ invitation, role: invitationMember.role, checkinAccess: invitationMember.checkinAccess })
     .from(invitationMember)
     .innerJoin(invitation, eq(invitation.id, invitationMember.invitationId))
     .where(and(eq(invitationMember.userId, userId), eq(invitationMember.invitationId, invitationId)));
-  return row ? { invitation: row.invitation, role: "anggota", scope: userId } : null;
+  if (!row) return null;
+  const role = parseMemberRole(row.role);
+  return {
+    invitation: row.invitation,
+    role,
+    scope: role === "pemilik" ? null : userId,
+    creator: false,
+    checkinAccess: effectiveCheckinAccess(role, row.checkinAccess),
+  };
 }
 
-export async function listInvitationsForMember(db: AppDb, userId: string): Promise<OwnedInvitationSummary[]> {
-  return db
+export type MemberInvitationSummary = OwnedInvitationSummary & { peran: Role; checkinAccess: CheckinAccess };
+
+export async function listInvitationsForMember(db: AppDb, userId: string): Promise<MemberInvitationSummary[]> {
+  const rows = await db
     .select({
+      peran: invitationMember.role,
+      checkinAccess: invitationMember.checkinAccess,
       id: invitation.id,
       title: invitation.title,
       slug: invitation.slug,
@@ -52,6 +67,10 @@ export async function listInvitationsForMember(db: AppDb, userId: string): Promi
     .innerJoin(invitation, eq(invitation.id, invitationMember.invitationId))
     .where(eq(invitationMember.userId, userId))
     .orderBy(desc(invitation.createdAt), desc(invitation.id));
+  return rows.map((row) => {
+    const peran = parseMemberRole(row.peran);
+    return { ...row, peran, checkinAccess: effectiveCheckinAccess(peran, row.checkinAccess) };
+  });
 }
 
 export type MemberRow = {
@@ -59,6 +78,8 @@ export type MemberRow = {
   name: string;
   email: string;
   joinedAt: Date;
+  role: Role;
+  checkinAccess: CheckinAccess;
   guests: number;
   contactName: string | null;
   contactPhone: string | null;
@@ -66,12 +87,14 @@ export type MemberRow = {
 };
 
 export async function listMembers(db: AppDb, invitationId: string): Promise<MemberRow[]> {
-  return db
+  const rows = await db
     .select({
       userId: user.id,
       name: user.name,
       email: user.email,
       joinedAt: invitationMember.createdAt,
+      role: invitationMember.role,
+      checkinAccess: invitationMember.checkinAccess,
       guests: sql<number>`(select count(*)::int from guest where guest.invitation_id = ${invitationId} and guest.added_by = ${user.id})`,
       contactName: invitationMember.contactName,
       contactPhone: invitationMember.contactPhone,
@@ -81,6 +104,10 @@ export async function listMembers(db: AppDb, invitationId: string): Promise<Memb
     .innerJoin(user, eq(user.id, invitationMember.userId))
     .where(eq(invitationMember.invitationId, invitationId))
     .orderBy(asc(invitationMember.createdAt));
+  return rows.map((row) => {
+    const role = parseMemberRole(row.role);
+    return { ...row, role, checkinAccess: effectiveCheckinAccess(role, row.checkinAccess) };
+  });
 }
 
 export type InviteRow = { id: string; email: string; expiresAt: Date; createdAt: Date };
@@ -106,7 +133,7 @@ export type CreateInviteResult =
 
 export async function createInvite(
   db: AppDb,
-  input: { invitationId: string; email: string; invitedBy: string },
+  input: { invitationId: string; email: string; invitedBy: string; role?: Role; checkinAccess?: CheckinAccess },
   now: Date = new Date(),
 ): Promise<CreateInviteResult> {
   const email = input.email.trim().toLowerCase();
@@ -139,6 +166,8 @@ export async function createInvite(
       email,
       tokenHash: hashInviteToken(token),
       invitedBy: input.invitedBy,
+      role: parseMemberRole(input.role),
+      checkinAccess: parseCheckinAccess(input.checkinAccess),
       expiresAt,
     });
     return { ok: true, token, email, expiresAt } as const;
@@ -152,6 +181,24 @@ export async function revokeInvite(db: AppDb, invitationId: string, inviteId: st
     .set({ revokedAt: now })
     .where(and(eq(invitationInvite.id, inviteId), eq(invitationInvite.invitationId, invitationId), isNull(invitationInvite.acceptedAt), isNull(invitationInvite.revokedAt)))
     .returning({ id: invitationInvite.id });
+  return rows.length > 0;
+}
+
+export async function updateMember(
+  db: AppDb,
+  invitationId: string,
+  userId: string,
+  patch: { role?: Role; checkinAccess?: CheckinAccess },
+): Promise<boolean> {
+  const set: Partial<{ role: Role; checkinAccess: CheckinAccess }> = {};
+  if (patch.role) set.role = parseMemberRole(patch.role);
+  if (patch.checkinAccess) set.checkinAccess = parseCheckinAccess(patch.checkinAccess);
+  if (Object.keys(set).length === 0) return false;
+  const rows = await db
+    .update(invitationMember)
+    .set(set)
+    .where(and(eq(invitationMember.invitationId, invitationId), eq(invitationMember.userId, userId)))
+    .returning({ id: invitationMember.id });
   return rows.length > 0;
 }
 
@@ -180,7 +227,7 @@ export async function leaveInvitation(db: AppDb, invitationId: string, userId: s
   return removeMember(db, invitationId, userId);
 }
 
-export type InvitePreview = { id: string; email: string; invitationId: string; title: string; ownerName: string; expiresAt: Date };
+export type InvitePreview = { id: string; email: string; invitationId: string; title: string; ownerName: string; expiresAt: Date; role: Role; checkinAccess: CheckinAccess };
 export type InviteState = "valid" | "tidak-ada" | "kedaluwarsa" | "dipakai" | "dicabut";
 
 export async function previewInvite(
@@ -197,6 +244,8 @@ export async function previewInvite(
       expiresAt: invitationInvite.expiresAt,
       acceptedAt: invitationInvite.acceptedAt,
       revokedAt: invitationInvite.revokedAt,
+      role: invitationInvite.role,
+      checkinAccess: invitationInvite.checkinAccess,
       title: invitation.title,
       ownerName: user.name,
     })
@@ -205,7 +254,7 @@ export async function previewInvite(
     .innerJoin(user, eq(user.id, invitation.ownerId))
     .where(eq(invitationInvite.tokenHash, hashInviteToken(token)));
   if (!row) return { state: "tidak-ada", invite: null };
-  const invite: InvitePreview = { id: row.id, email: row.email, invitationId: row.invitationId, title: row.title, ownerName: row.ownerName, expiresAt: row.expiresAt };
+  const invite: InvitePreview = { id: row.id, email: row.email, invitationId: row.invitationId, title: row.title, ownerName: row.ownerName, expiresAt: row.expiresAt, role: parseMemberRole(row.role), checkinAccess: parseCheckinAccess(row.checkinAccess) };
   if (row.acceptedAt) return { state: "dipakai", invite };
   if (row.revokedAt) return { state: "dicabut", invite };
   if (row.expiresAt.getTime() <= now.getTime()) return { state: "kedaluwarsa", invite };
@@ -247,7 +296,7 @@ export async function acceptInvite(
     if (claimed.length === 0) return { ok: false, error: "dipakai" } as const;
     await tx
       .insert(invitationMember)
-      .values({ invitationId: invite.invitationId, userId: account.id })
+      .values({ invitationId: invite.invitationId, userId: account.id, role: invite.role, checkinAccess: invite.checkinAccess })
       .onConflictDoNothing();
     return { ok: true, invitationId: invite.invitationId } as const;
   });

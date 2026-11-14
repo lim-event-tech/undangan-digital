@@ -13,7 +13,7 @@ const STATUS_UNDANGAN = {
   ditangguhkan: { label: "Ditangguhkan", kelas: "bg-jingga-bg text-jingga" },
 } as const;
 
-function invitationNav(id: string, peran: "pemilik" | "anggota", templateKey?: string): ItemNav[] {
+function invitationNav(id: string, peran: "pemilik" | "anggota", templateKey?: string, checkin = true): ItemNav[] {
   const base = `/undangan/${id}`;
   const pratinjauHref = `/pratinjau/${templateKey || "bersama"}?undangan=${id}`;
   if (peran === "anggota") {
@@ -22,7 +22,7 @@ function invitationNav(id: string, peran: "pemilik" | "anggota", templateKey?: s
       { label: "Daftar undangan", ikon: "tamu", href: `${base}/tamu` },
       { label: "Kirim undangan", ikon: "kirim", href: `${base}/kirim` },
       { label: "Narahubung saya", ikon: "surat", href: `${base}/kontak` },
-      { label: "Check-in", ikon: "ceklis", href: `${base}/checkin` },
+      ...(checkin ? [{ label: "Check-in", ikon: "ceklis" as const, href: `${base}/checkin` }] : []),
       { label: "Pratinjau undangan", ikon: "mata", href: pratinjauHref, targetBlank: true },
     ];
   }
@@ -45,6 +45,7 @@ export type ShellInvitation = {
   status: keyof typeof STATUS_UNDANGAN;
   peran: "pemilik" | "anggota";
   templateKey?: string;
+  checkin?: boolean;
 };
 
 export function AppShell({
@@ -94,7 +95,7 @@ export function AppShell({
             { label: "Semua undangan", ikon: "surat" as const, href: "/undangan", tepat: true },
             { label: "Buat undangan", ikon: "pena" as const, href: "/undangan/baru" },
           ] : []),
-          ...(invitation ? invitationNav(invitation.id, invitation.peran, invitation.templateKey) : []),
+          ...(invitation ? invitationNav(invitation.id, invitation.peran, invitation.templateKey, invitation.checkin ?? true) : []),
           ...(!kelola ? [{ label: "Pengaturan akun", ikon: "kunci" as const, href: "/undangan/akun" }] : []),
         ]} />
 

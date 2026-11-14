@@ -7,9 +7,12 @@ import { appBaseUrl } from "@/lib/app-url";
 import { checkinCounts, getOrCreateCheckinKey, listCheckinGuests } from "@/lib/checkin/service";
 import { formatStamp } from "@/lib/datetime";
 import { readContent } from "@/lib/invitations/content";
+import { Pemindai } from "@/components/pemindai-checkin";
 import { requireInvitationAccess } from "@/lib/session";
+import { checkinScope } from "@/lib/team/access";
 import { TombolSalin } from "../tamu/tombol-salin";
 import { batalkanMasukAction, gantiKunciAction, masukkanTamuAction } from "./actions";
+import { batalkanAnggotaAction, cariAnggotaAction, masukkanAnggotaAction, pindaiAnggotaAction } from "./pindai-actions";
 
 export const metadata: Metadata = { title: "Check-in" };
 
@@ -21,11 +24,25 @@ function satu(value: string | string[] | undefined): string | undefined {
 }
 
 export default async function CheckinPage({ params, searchParams }: PageProps<"/undangan/[id]/checkin">) {
-  const { invitation, role, scope } = await requireInvitationAccess((await params).id);
+  const { invitation, role, scope, checkinAccess } = await requireInvitationAccess((await params).id);
   const pemilik = role === "pemilik";
+  const cakupan = checkinScope(checkinAccess, scope);
   const sp = await searchParams;
   const q = satu(sp.q)?.slice(0, 100);
   const semua = satu(sp.tampil) === "semua";
+
+  if (checkinAccess === "tidak") {
+    return (
+      <div className="mx-auto flex max-w-4xl flex-col gap-5">
+        <h1 className={`m-0 ${judulHalaman}`}>Check-in tamu</h1>
+        <section className={`${kartu} p-5`}>
+          <p className="m-0 text-sm leading-relaxed text-redup">
+            Anda belum mendapat akses check-in untuk undangan ini. Minta pemilik undangan mengaturnya di halaman Tim.
+          </p>
+        </section>
+      </div>
+    );
+  }
 
   if (!readContent(invitation.content).checkin.aktif) {
     return (
@@ -49,8 +66,8 @@ export default async function CheckinPage({ params, searchParams }: PageProps<"/
 
   const [key, counts, guests] = await Promise.all([
     pemilik ? getOrCreateCheckinKey(db, invitation.id) : Promise.resolve(null),
-    checkinCounts(db, invitation.id, scope ?? undefined),
-    listCheckinGuests(db, invitation.id, { q, onlyAttending: !semua, limit: MAKS_BARIS, addedBy: scope ?? undefined }),
+    checkinCounts(db, invitation.id, cakupan),
+    listCheckinGuests(db, invitation.id, { q, onlyAttending: !semua, limit: MAKS_BARIS, addedBy: cakupan }),
   ]);
   const usherPath = `/petugas/${invitation.slug}/${key}`;
 
@@ -59,7 +76,7 @@ export default async function CheckinPage({ params, searchParams }: PageProps<"/
       <div>
         <h1 className={`m-0 ${judulHalaman}`}>Check-in tamu</h1>
         <p className="mt-1 mb-0 text-sm text-redup">
-          {pemilik ? "Tamu yang konfirmasi hadir mendapat kode QR. Petugas penerima tamu memindainya di hari acara." : "Menampilkan tamu yang Anda tambahkan. Anda hanya bisa memasukkan tamu Anda sendiri."}
+          {pemilik ? "Tamu yang konfirmasi hadir mendapat kode QR. Petugas penerima tamu memindainya di hari acara." : cakupan ? "Menampilkan tamu yang Anda tambahkan. Anda hanya bisa memasukkan tamu Anda sendiri." : "Anda diizinkan memasukkan semua tamu undangan ini."}
         </p>
       </div>
 
@@ -75,6 +92,18 @@ export default async function CheckinPage({ params, searchParams }: PageProps<"/
           </div>
         ))}
       </dl>
+
+      <section aria-labelledby="judul-pindai-anggota" className="flex flex-col gap-3">
+        <h2 id="judul-pindai-anggota" className="sr-only">Pindai kode QR tamu</h2>
+        <Pemindai
+          aksi={{
+            pindai: pindaiAnggotaAction.bind(null, invitation.id),
+            masukkan: masukkanAnggotaAction.bind(null, invitation.id),
+            batalkan: batalkanAnggotaAction.bind(null, invitation.id),
+            cari: cariAnggotaAction.bind(null, invitation.id),
+          }}
+        />
+      </section>
 
       {pemilik ? <section aria-labelledby="judul-petugas" className={`${kartu} flex flex-col gap-3 p-5`}>
         <div>

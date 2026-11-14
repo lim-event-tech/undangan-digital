@@ -268,6 +268,8 @@ export const invitationMember = pgTable(
     contactName: text(),
     contactPhone: text(),
     contactEmail: text(),
+    role: text().notNull().default("anggota"),
+    checkinAccess: text().notNull().default("milik"),
     createdAt: createdAt(),
   },
   (t) => [
@@ -286,6 +288,8 @@ export const invitationInvite = pgTable(
     email: text().notNull(),
     tokenHash: text().notNull().unique(),
     invitedBy: text().references(() => user.id, { onDelete: "set null" }),
+    role: text().notNull().default("anggota"),
+    checkinAccess: text().notNull().default("milik"),
     expiresAt: timestamp({ withTimezone: true }).notNull(),
     acceptedAt: timestamp({ withTimezone: true }),
     acceptedBy: text().references(() => user.id, { onDelete: "set null" }),

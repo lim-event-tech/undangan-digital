@@ -167,6 +167,28 @@ describe("WABA Service", () => {
     }
   });
 
+  it("menolak pengiriman satu dan massal bila WABA dinonaktifkan untuk undangan tanpa memotong kredit", async () => {
+    const { invitation, ownerId } = await seedInvitationWithCover(db);
+    const [tamu] = await db
+      .insert(guestTable)
+      .values({ invitationId: invitation.id, name: "Tamu Mati", phone: "081200001111", token: "token-mati-1" })
+      .returning();
+    await updateUserWabaQuota(db, adminUser, ownerId, { wabaAllowed: true, deltaQuota: 5 });
+    await saveContentText(db, invitation.id, { wabaAktif: false });
+    const sendSpy = vi.spyOn(wabaClient, "sendWabaNotification");
+
+    const satu = await sendGuestInvitationViaWaba(db, { invitationId: invitation.id, guestId: tamu.id, senderUserId: ownerId });
+    expect(satu.ok).toBe(false);
+    if (!satu.ok) expect(satu.code).toBe("DISABLED");
+
+    const massal = await sendBatchInvitationViaWaba(db, { invitationId: invitation.id, senderUserId: ownerId });
+    expect(massal.ok).toBe(false);
+    expect(massal.totalSent).toBe(0);
+
+    expect(sendSpy).not.toHaveBeenCalled();
+    expect((await getUserWabaStatus(db, ownerId)).quota).toBe(5);
+  });
+
   it("mengurangi 1 kuota, menambah wabaSentCount, dan mencatat wabaMessage saat berhasil dikirim", async () => {
     const { invitation, ownerId } = await seedInvitationWithCover(db);
     await updateUserWabaQuota(db, adminUser, ownerId, {

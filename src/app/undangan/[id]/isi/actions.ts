@@ -22,6 +22,7 @@ import {
 } from "@/lib/invitations/editor";
 import {
   parseCheckinForm,
+  parseWabaForm,
   parseSampulForm,
   parseSusunanForm,
   parseTampilanForm,
@@ -95,6 +96,15 @@ export async function simpanTampilanAction(invitationId: string, formData: FormD
   const parsed = parseTampilanForm(formData);
   if (!parsed.ok) return { ok: false, errors: parsed.errors };
   if (!(await saveContentText(db, invitation.id, parsed.input))) return NOT_FOUND;
+  return SAVED;
+}
+
+export async function simpanWabaAction(invitationId: string, formData: FormData): Promise<SaveResult> {
+  const { invitation } = await requireInvitationById(invitationId);
+  const parsed = parseWabaForm(formData);
+  if (!parsed.ok) return { ok: false, errors: parsed.errors };
+  if (!(await saveContentText(db, invitation.id, parsed.input))) return NOT_FOUND;
+  revalidatePath(`/undangan/${invitation.id}/kirim`);
   return SAVED;
 }
 
@@ -199,6 +209,7 @@ export async function tarikTerbitAction(invitationId: string): Promise<SaveResul
 
 export async function hapusUndanganAction(invitationId: string) {
   const { user, invitation } = await requireInvitationById(invitationId);
+  if (invitation.ownerId !== user.id) redirect(`/undangan/${invitation.id}/isi`);
   const acting = await getActing();
   const deleted = await deleteInvitation(db, invitation.id, user.id);
   revalidatePath("/undangan", "layout");

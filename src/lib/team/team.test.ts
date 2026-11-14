@@ -27,7 +27,9 @@ import {
   removeMember,
   revokeInvite,
   saveMemberContact,
+  updateMember,
 } from "./service";
+import { checkinScope } from "./access";
 
 let db: TestDb;
 
@@ -251,5 +253,73 @@ describe("akses menurut peran", () => {
     // Tamu pemilik tetap melihat kontak utama bawaan acara
     const pageOwner = await findGuestPage(db, ownerGuest.token);
     expect(pageOwner?.invitation.content.kontak.nama).toBe("Panitia");
+  });
+});
+
+describe("pemilik tambahan dan hak check-in anggota", () => {
+  it("undangan membawa peran dan hak check-in yang berlaku saat diterima", async () => {
+    const { invitation, ownerId } = await seedInvitation(db);
+    const bersama = await akun(`bersama-${ownerId}`);
+    const hasil = await createInvite(db, { invitationId: invitation.id, email: `bersama-${ownerId}@example.com`, invitedBy: ownerId, role: "pemilik" });
+    if (!hasil.ok) throw new Error("gagal");
+    expect((await previewInvite(db, hasil.token)).invite).toMatchObject({ role: "pemilik" });
+    expect(await acceptInvite(db, hasil.token, { id: bersama })).toEqual({ ok: true, invitationId: invitation.id });
+    expect(await getInvitationAccess(db, bersama, invitation.id)).toMatchObject({ role: "pemilik", scope: null, creator: false, checkinAccess: "semua" });
+    expect(await getInvitationAccess(db, ownerId, invitation.id)).toMatchObject({ role: "pemilik", scope: null, creator: true });
+    expect((await listInvitationsForMember(db, bersama)).map((row) => ({ id: row.id, peran: row.peran }))).toEqual([{ id: invitation.id, peran: "pemilik" }]);
+  });
+
+  it("anggota biasa bawaannya hanya check-in tamu miliknya dan pemilik bisa mengubah peran serta hak", async () => {
+    const ctx = await setup();
+    expect(await getInvitationAccess(db, ctx.salesA, ctx.invitation.id)).toMatchObject({ role: "anggota", scope: ctx.salesA, creator: false, checkinAccess: "milik" });
+    expect(await updateMember(db, ctx.invitation.id, ctx.salesA, { checkinAccess: "semua" })).toBe(true);
+    expect(await getInvitationAccess(db, ctx.salesA, ctx.invitation.id)).toMatchObject({ role: "anggota", checkinAccess: "semua" });
+    expect(await updateMember(db, ctx.invitation.id, ctx.salesA, { checkinAccess: "tidak" })).toBe(true);
+    expect(await getInvitationAccess(db, ctx.salesA, ctx.invitation.id)).toMatchObject({ checkinAccess: "tidak" });
+    expect(await updateMember(db, ctx.invitation.id, ctx.salesA, { role: "pemilik" })).toBe(true);
+    expect(await getInvitationAccess(db, ctx.salesA, ctx.invitation.id)).toMatchObject({ role: "pemilik", scope: null, checkinAccess: "semua" });
+    expect(await updateMember(db, ctx.invitation.id, ctx.salesA, { role: "anggota" })).toBe(true);
+    expect(await getInvitationAccess(db, ctx.salesA, ctx.invitation.id)).toMatchObject({ role: "anggota", scope: ctx.salesA, checkinAccess: "tidak" });
+    expect(await updateMember(db, ctx.invitation.id, ctx.ownerId, { role: "anggota" })).toBe(false);
+    expect(await updateMember(db, ctx.invitation.id, "tidak-ada", { role: "pemilik" })).toBe(false);
+    expect(await updateMember(db, ctx.invitation.id, ctx.salesA, {})).toBe(false);
+  });
+
+  it("cakupan check-in mengikuti hak: milik dibatasi ke anggota, semua tanpa batas", async () => {
+    const ctx = await setup();
+    expect(checkinScope("milik", ctx.salesA)).toBe(ctx.salesA);
+    expect(checkinScope("semua", ctx.salesA)).toBeUndefined();
+    expect(checkinScope("semua", null)).toBeUndefined();
+    const punyaA = await tamu(ctx, "Tamu Sales A", ctx.salesA);
+    const punyaB = await tamu(ctx, "Tamu Sales B", ctx.salesB);
+    const [tokenA] = await db.select({ token: guestTable.token }).from(guestTable).where(eq(guestTable.id, punyaA.id));
+    const [tokenB] = await db.select({ token: guestTable.token }).from(guestTable).where(eq(guestTable.id, punyaB.id));
+    expect(await scanCheckin(db, ctx.invitation, checkinCode(tokenB.token), new Date(), checkinScope("milik", ctx.salesA))).toEqual({ result: "tidak-dikenal" });
+    expect((await scanCheckin(db, ctx.invitation, checkinCode(tokenA.token), new Date(), checkinScope("milik", ctx.salesA))).result).toBe("belum-konfirmasi");
+    expect((await scanCheckin(db, ctx.invitation, checkinCode(tokenB.token), new Date(), checkinScope("semua", ctx.salesA))).result).toBe("belum-konfirmasi");
+  });
+
+  it("pemilik tambahan yang keluar mengalihkan tamunya ke pembuat", async () => {
+    const { invitation, ownerId } = await seedInvitation(db);
+    const bersama = await akun(`keluar-${ownerId}`);
+    const hasil = await createInvite(db, { invitationId: invitation.id, email: `keluar-${ownerId}@example.com`, invitedBy: ownerId, role: "pemilik" });
+    if (!hasil.ok) throw new Error("gagal");
+    await acceptInvite(db, hasil.token, { id: bersama });
+    const events = await listEventDetails(db, invitation.id);
+    const dibuat = await createGuest(db, invitation.id, { name: "Tamu Pemilik Bersama", phone: "+628120009999", groupName: null, eventIds: [events[0].id], maxAttendees: 1 }, bersama);
+    expect(await removeMember(db, invitation.id, bersama)).toBe(true);
+    const [baris] = await db.select({ addedBy: guestTable.addedBy }).from(guestTable).where(eq(guestTable.id, dibuat.id));
+    expect(baris.addedBy).toBe(ownerId);
+    expect(await getInvitationAccess(db, bersama, invitation.id)).toBeNull();
+  });
+
+  it("dashboard memuat nama anggota yang mengundang, dan pembuat bila tamu ditambahkan pembuat", async () => {
+    const ctx = await setup();
+    await tamu(ctx, "Tamu dari Sales", ctx.salesA);
+    await tamu(ctx, "Tamu dari Pembuat", ctx.ownerId);
+    const data = await getDashboard(db, ctx.invitation.id, {});
+    const oleh = Object.fromEntries(data.guests.map((g) => [g.name, g.addedByName]));
+    expect(oleh["Tamu dari Sales"]).toBe(`Nama ${ctx.salesA}`);
+    expect(oleh["Tamu dari Pembuat"]).toMatch(/^Pemilik /);
   });
 });

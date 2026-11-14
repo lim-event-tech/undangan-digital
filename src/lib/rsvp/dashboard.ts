@@ -1,6 +1,7 @@
 import type { Visit } from "@/lib/events/days";
-import { and, asc, eq } from "drizzle-orm";
-import { guest, guestEvent, guestGroup, rsvp } from "@/db/schema";
+import { and, asc, eq, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
+import { guest, guestEvent, guestGroup, invitation, rsvp, user } from "@/db/schema";
 import type { AppDb } from "@/db/types";
 import { listEventDetails } from "@/lib/events/service";
 import {
@@ -41,6 +42,8 @@ export type DashboardGuest = {
   sentAt: Date | null;
   openedAt: Date | null;
   remindedAt: Date | null;
+  addedByName: string;
+  checkedInAt: Date | null;
   invitedEventIds: string[];
   status: GuestStatus;
   answers: DashboardAnswer[];
@@ -96,6 +99,8 @@ export type RawGuest = {
   sentAt?: Date | null;
   openedAt?: Date | null;
   remindedAt?: Date | null;
+  addedByName?: string;
+  checkedInAt?: Date | null;
 };
 export type RawLink = { guestId: string; eventId: string };
 export type RawResponse = {
@@ -211,6 +216,8 @@ export function buildDashboard(
       sentAt: g.sentAt ?? null,
       openedAt: g.openedAt ?? null,
       remindedAt: g.remindedAt ?? null,
+      addedByName: g.addedByName ?? "",
+      checkedInAt: g.checkedInAt ?? null,
       invitedEventIds: invited,
       status,
       answers,
@@ -255,6 +262,8 @@ export async function getDashboard(
   addedBy?: string,
 ): Promise<DashboardData> {
   const scope = addedBy ? eq(guest.addedBy, addedBy) : undefined;
+  const adder = alias(user, "adder");
+  const creator = alias(user, "creator");
   const [events, guests, links, responses] = await Promise.all([
     listEventDetails(db, invitationId),
     db
@@ -267,9 +276,14 @@ export async function getDashboard(
         sentAt: guest.sentAt,
         openedAt: guest.firstOpenedAt,
         remindedAt: guest.lastRemindedAt,
+        addedByName: sql<string>`coalesce(${adder.name}, ${creator.name}, '')`,
+        checkedInAt: guest.checkedInAt,
       })
       .from(guest)
       .leftJoin(guestGroup, eq(guest.groupId, guestGroup.id))
+      .leftJoin(adder, eq(adder.id, guest.addedBy))
+      .innerJoin(invitation, eq(invitation.id, guest.invitationId))
+      .leftJoin(creator, eq(creator.id, invitation.ownerId))
       .where(and(eq(guest.invitationId, invitationId), scope))
       .orderBy(asc(guest.createdAt), asc(guest.name)),
     db

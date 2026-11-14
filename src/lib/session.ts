@@ -7,11 +7,8 @@ import { invitation as invitationTable, user as userTable } from "@/db/schema";
 import { getRoleLabel, getRolePermissions } from "@/lib/admin/role-service";
 import { can, type Permission } from "@/lib/admin/roles";
 import { auth } from "@/lib/auth";
-import {
-  getOwnedInvitation,
-  type Invitation,
-} from "@/lib/invitations/service";
-import { getInvitationAccess, type Role } from "@/lib/team/service";
+import { type Invitation } from "@/lib/invitations/service";
+import { getInvitationAccess, type CheckinAccess, type Role } from "@/lib/team/service";
 import { isUuid } from "@/lib/uuid";
 
 export const ACTING_COOKIE = "ud_kelola";
@@ -104,7 +101,8 @@ export const loadOwnedInvitation = cache(
       return acting.invitation;
     }
     if (session.user.id !== ownerId) return null;
-    return getOwnedInvitation(db, ownerId, invitationId);
+    const access = await getInvitationAccess(db, ownerId, invitationId);
+    return access?.role === "pemilik" ? access.invitation : null;
   },
 );
 
@@ -120,6 +118,8 @@ export type InvitationAccessContext = {
   invitation: Invitation;
   role: Role;
   scope: string | null;
+  creator: boolean;
+  checkinAccess: CheckinAccess;
 };
 
 export async function requireInvitationAccess(invitationId: unknown): Promise<InvitationAccessContext> {
@@ -128,11 +128,11 @@ export async function requireInvitationAccess(invitationId: unknown): Promise<In
   if (session?.user.adminRole) {
     const invitation = await loadOwnedInvitation(user.id, invitationId);
     if (!invitation) notFound();
-    return { user, invitation, role: "pemilik", scope: null };
+    return { user, invitation, role: "pemilik", scope: null, creator: true, checkinAccess: "semua" };
   }
   const access = await getInvitationAccess(db, user.id, invitationId);
   if (!access) notFound();
-  return { user, invitation: access.invitation, role: access.role, scope: access.scope };
+  return { user, invitation: access.invitation, role: access.role, scope: access.scope, creator: access.creator, checkinAccess: access.checkinAccess };
 }
 
 export async function requireInvitationOwner(invitationId: unknown) {

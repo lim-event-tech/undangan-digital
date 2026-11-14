@@ -3,14 +3,7 @@
 import jsQR from "jsqr";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { pesanGalat, tombolGelap, tombolTerang } from "@/components/ui";
-import {
-  batalkanAction,
-  cariAction,
-  masukkanAction,
-  pindaiAction,
-  type GuestInfo,
-  type UsherResult,
-} from "./actions";
+import type { GuestInfo, PemindaiAksi, UsherResult } from "@/lib/checkin/usher";
 
 const SCAN_INTERVAL_MS = 220;
 const SAME_CODE_PAUSE_MS = 3500;
@@ -70,7 +63,7 @@ function KartuHasil({
   );
 }
 
-export function Pemindai({ slug, kunci }: { slug: string; kunci: string }) {
+export function Pemindai({ aksi }: { aksi: PemindaiAksi }) {
   const video = useRef<HTMLVideoElement>(null);
   const kanvas = useRef<HTMLCanvasElement>(null);
   const aliran = useRef<MediaStream | null>(null);
@@ -90,14 +83,14 @@ export function Pemindai({ slug, kunci }: { slug: string; kunci: string }) {
       if (sibuk.current) return;
       sibuk.current = true;
       try {
-        setHasil(await pindaiAction(slug, kunci, kode));
+        setHasil(await aksi.pindai(kode));
       } catch {
         setHasil({ status: "ditolak", pesan: "Koneksi bermasalah. Coba lagi." });
       } finally {
         sibuk.current = false;
       }
     },
-    [slug, kunci],
+    [aksi],
   );
 
   const matikanKamera = useCallback(() => {
@@ -161,7 +154,7 @@ export function Pemindai({ slug, kunci }: { slug: string; kunci: string }) {
 
   function muatDaftar(kata: string) {
     mulai(async () => {
-      const hasilCari = await cariAction(slug, kunci, kata);
+      const hasilCari = await aksi.cari(kata);
       if (hasilCari.status === "ok") {
         setDaftar(hasilCari.guests);
         setGalatCari(null);
@@ -172,12 +165,12 @@ export function Pemindai({ slug, kunci }: { slug: string; kunci: string }) {
   }
 
   async function masukkan(guest: GuestInfo) {
-    setHasil(await masukkanAction(slug, kunci, guest.id));
+    setHasil(await aksi.masukkan(guest.id));
     if (daftar) muatDaftar(cari);
   }
 
   async function batalkan(guest: GuestInfo) {
-    await batalkanAction(slug, kunci, guest.id);
+    await aksi.batalkan(guest.id);
     setHasil(null);
     muatDaftar(cari);
   }

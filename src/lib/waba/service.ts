@@ -215,7 +215,7 @@ export async function resolveInvitationHeaderImageUrl(
 
 export type SendWabaInviteResult =
   | { ok: true; messageId: string; remainingQuota: number }
-  | { ok: false; error: string; code?: "NO_CREDIT" | "NOT_ALLOWED" | "NOT_CONFIGURED" | "GATEWAY_ERROR" };
+  | { ok: false; error: string; code?: "NO_CREDIT" | "NOT_ALLOWED" | "NOT_CONFIGURED" | "GATEWAY_ERROR" | "DISABLED" };
 
 export async function sendGuestInvitationViaWaba(
   db: AppDb,
@@ -283,6 +283,13 @@ export async function sendGuestInvitationViaWaba(
   if (!guest.phone) return { ok: false, error: "Nomor telepon tamu belum diisi." };
 
   const content = readContent(invRow.invitation.content);
+  if (!content.wabaAktif) {
+    return {
+      ok: false,
+      code: "DISABLED",
+      error: "WhatsApp resmi (WABA) dinonaktifkan untuk undangan ini.",
+    };
+  }
   const templateName =
     params.templateOverride ||
     content.wabaTemplate ||
@@ -558,6 +565,9 @@ export async function sendBatchInvitationViaWaba(
   }
 
   const content = readContent(invRow.invitation.content);
+  if (!content.wabaAktif) {
+    return { ok: false, totalSent: 0, totalFailed: 0, remainingQuota: 0, error: "WhatsApp resmi (WABA) dinonaktifkan untuk undangan ini." };
+  }
   const config = await getWabaConfig(db);
   const templateName =
     params.templateOverride ||

@@ -4,7 +4,8 @@ import { useInvitationAction } from "@/components/invitation-context";
 import { useActionState, useState } from "react";
 import { Ikon } from "@/components/ikon";
 import { kolom, labelKolom, pesanGalat, tombolBahaya, tombolGelap, tombolTerang } from "@/components/ui";
-import { cabutUndanganAction, keluarkanAnggotaAction, undangAnggotaAction, type UndangState } from "./actions";
+import { CHECKIN_ACCESS_OPTIONS, ROLE_OPTIONS, type CheckinAccess, type Role } from "@/lib/team/access";
+import { cabutUndanganAction, keluarkanAnggotaAction, ubahAnggotaAction, undangAnggotaAction, type UndangState } from "./actions";
 
 function SalinTautan({ link }: { link: string }) {
   const [status, setStatus] = useState<"diam" | "tersalin" | "gagal">("diam");
@@ -34,6 +35,21 @@ export function FormUndang({ penuh }: { penuh: boolean }) {
         Email anggota baru
         <input name="email" type="email" required disabled={penuh} placeholder="nama@gmail.com" autoComplete="off" className={`${kolom} sm:max-w-md`} />
       </label>
+      <div className="grid gap-3 sm:max-w-md sm:grid-cols-2">
+        <label className={labelKolom}>
+          Peran
+          <select name="peran" defaultValue="anggota" disabled={penuh} className={kolom}>
+            {ROLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </label>
+        <label className={labelKolom}>
+          Hak check-in
+          <select name="checkin" defaultValue="milik" disabled={penuh} className={kolom}>
+            {CHECKIN_ACCESS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </label>
+      </div>
+      <p className="m-0 text-xs leading-relaxed text-redup">Pemilik setara dengan pembuat undangan: bisa mengisi undangan, mengatur tim, melihat dan mengekspor semua data. Hanya pembuat yang bisa menghapus undangan.</p>
       <div className="flex flex-wrap items-center gap-3">
         <button type="submit" disabled={penuh || memproses} className={tombolGelap}>{memproses ? "Mengirim…" : "Kirim undangan"}</button>
         {penuh ? <span className="text-sm text-redup">Anggota tim sudah mencapai batas.</span> : null}
@@ -79,6 +95,28 @@ export function TombolKeluarkan({ userId, nama }: { userId: string; nama: string
     >
       <input type="hidden" name="id" value={userId} />
       <button type="submit" aria-label={`Keluarkan ${nama}`} className={tombolBahaya}>Keluarkan</button>
+    </form>
+  );
+}
+
+export function FormAturAnggota({ userId, nama, peran, checkin }: { userId: string; nama: string; peran: Role; checkin: CheckinAccess }) {
+  const ubah = useInvitationAction(ubahAnggotaAction);
+  return (
+    <form action={ubah} className="flex flex-wrap items-end gap-2">
+      <input type="hidden" name="id" value={userId} />
+      <label className="flex flex-col gap-1 text-xs text-redup">
+        Peran
+        <select name="peran" defaultValue={peran} aria-label={`Peran ${nama}`} className={`${kolom} min-h-10 py-1.5 text-sm`}>
+          {ROLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+      </label>
+      <label className="flex flex-col gap-1 text-xs text-redup">
+        Hak check-in
+        <select name="checkin" defaultValue={checkin} aria-label={`Hak check-in ${nama}`} className={`${kolom} min-h-10 py-1.5 text-sm`}>
+          {CHECKIN_ACCESS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+      </label>
+      <button type="submit" className={`${tombolTerang} min-h-10 px-3.5`}>Simpan</button>
     </form>
   );
 }

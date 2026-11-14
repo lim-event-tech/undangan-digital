@@ -177,6 +177,7 @@ describe("readContent", () => {
       pesanWa: "",
       pesanPengingat: "",
       checkin: { aktif: true },
+      wabaAktif: true,
       waPoster: { kirim: false, sumber: "sama" },
       sampul: { sembunyikanTeks: false },
       tampilan: { hiasan: true, warna: null, font: "bawaan" },
