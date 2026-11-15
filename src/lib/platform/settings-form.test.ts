@@ -22,6 +22,7 @@ describe("parseSettingsForm", () => {
         pengumumanSampai: "2026-12-01",
         slugCadangan: "Bantuan, template\nbantuan; _next",
         pesanWaBawaan: "Yth. {nama}, buka {link}",
+        batasAnggotaTim: "35",
       }),
     );
     expect(parsed).toEqual({
@@ -32,6 +33,7 @@ describe("parseSettingsForm", () => {
         pemeliharaan: { aktif: true, pesan: "Sedang diperbarui" },
         slugCadangan: ["bantuan", "template", "_next"],
         pesanWaBawaan: "Yth. {nama}, buka {link}",
+        batasAnggotaTim: 35,
       },
     });
   });

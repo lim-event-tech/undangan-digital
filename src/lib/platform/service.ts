@@ -3,7 +3,7 @@ import { platformSetting } from "@/db/schema";
 import type { AppDb } from "@/db/types";
 import { readSettings, type PlatformSettings } from "./settings";
 
-const KEYS = ["daftarTerbuka", "pengumuman", "pemeliharaan", "slugCadangan", "pesanWaBawaan"] as const;
+const KEYS = ["daftarTerbuka", "pengumuman", "pemeliharaan", "slugCadangan", "pesanWaBawaan", "batasAnggotaTim"] as const;
 
 export async function getSettings(db: AppDb): Promise<PlatformSettings> {
   const rows = await db

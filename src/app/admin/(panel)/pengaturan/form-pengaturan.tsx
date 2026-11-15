@@ -87,6 +87,31 @@ export function FormPengaturan({ pengaturan }: { pengaturan: PlatformSettings })
       </Bagian>
 
       <Bagian
+        id="anggota-tim"
+        judul="Batas anggota tim undangan"
+        keterangan={`Jumlah maksimal anggota tim (termasuk undangan yang masih menunggu diterima) per undangan. Bawaan sistem: 20.`}
+      >
+        <label className={`${labelKolom} sm:max-w-xs`}>
+          Maksimal anggota tim per undangan
+          <input
+            name="batasAnggotaTim"
+            type="number"
+            inputMode="numeric"
+            min={SETTING_LIMITS.batasAnggotaTimMin}
+            max={SETTING_LIMITS.batasAnggotaTimMax}
+            required
+            defaultValue={pengaturan.batasAnggotaTim}
+            aria-invalid={galat.batasAnggotaTim ? true : undefined}
+            className={kolom}
+          />
+          <span className="text-xs font-normal text-redup">
+            Rentang {SETTING_LIMITS.batasAnggotaTimMin} sampai {SETTING_LIMITS.batasAnggotaTimMax} anggota.
+          </span>
+          <Galat pesan={galat.batasAnggotaTim} />
+        </label>
+      </Bagian>
+
+      <Bagian
         id="pengumuman"
         judul="Pengumuman ke pengguna"
         keterangan="Pita di atas dashboard semua pengguna. Kosongkan teks untuk menyembunyikannya."

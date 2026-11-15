@@ -14,6 +14,8 @@ export const SETTING_LIMITS = {
   pesanWa: 1000,
   slugCadangan: 40,
   jumlahSlugCadangan: 100,
+  batasAnggotaTimMin: 1,
+  batasAnggotaTimMax: 500,
 } as const;
 
 export type PlatformSettings = {
@@ -22,6 +24,7 @@ export type PlatformSettings = {
   pemeliharaan: { aktif: boolean; pesan: string };
   slugCadangan: string[];
   pesanWaBawaan: string;
+  batasAnggotaTim: number;
 };
 
 export const DEFAULT_SETTINGS: PlatformSettings = {
@@ -30,6 +33,7 @@ export const DEFAULT_SETTINGS: PlatformSettings = {
   pemeliharaan: { aktif: false, pesan: "Kami sedang melakukan pemeliharaan. Silakan kembali beberapa saat lagi." },
   slugCadangan: [],
   pesanWaBawaan: "",
+  batasAnggotaTim: 20,
 };
 
 function record(value: unknown): Record<string, unknown> {
@@ -80,6 +84,13 @@ export function readSettings(raw: Record<string, unknown>): PlatformSettings {
       ),
     ].slice(0, SETTING_LIMITS.jumlahSlugCadangan),
     pesanWaBawaan: text(raw.pesanWaBawaan, SETTING_LIMITS.pesanWa, ""),
+    batasAnggotaTim:
+      typeof raw.batasAnggotaTim === "number" &&
+      Number.isInteger(raw.batasAnggotaTim) &&
+      raw.batasAnggotaTim >= SETTING_LIMITS.batasAnggotaTimMin &&
+      raw.batasAnggotaTim <= SETTING_LIMITS.batasAnggotaTimMax
+        ? raw.batasAnggotaTim
+        : DEFAULT_SETTINGS.batasAnggotaTim,
   };
 }
 
