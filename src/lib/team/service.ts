@@ -3,6 +3,7 @@ import { and, asc, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import { guest, invitation, invitationInvite, invitationMember, user } from "@/db/schema";
 import type { AppDb } from "@/db/types";
 import { isEmailAddress } from "@/lib/mail/config";
+import { getSettings } from "@/lib/platform/service";
 import { getOwnedInvitation, type Invitation, type OwnedInvitationSummary } from "@/lib/invitations/service";
 import { isUuid } from "@/lib/uuid";
 import { effectiveCheckinAccess, parseCheckinAccess, parseMemberRole, type CheckinAccess, type Role } from "./access";
@@ -139,6 +140,7 @@ export async function createInvite(
 ): Promise<CreateInviteResult> {
   const email = input.email.trim().toLowerCase();
   if (!isEmailAddress(email)) return { ok: false, error: "email-tidak-valid" };
+  const maxMembers = (await getSettings(db)).batasAnggotaTim;
   return db.transaction(async (tx) => {
     const [owner] = await tx
       .select({ email: user.email })
@@ -155,7 +157,7 @@ export async function createInvite(
       .where(eq(invitationMember.invitationId, input.invitationId));
     if (members.some((row) => row.email.toLowerCase() === email)) return { ok: false, error: "sudah-anggota" } as const;
     const pending = await listPendingInvites(tx, input.invitationId, now);
-    if (members.length + pending.filter((row) => row.email !== email).length >= MAX_MEMBERS) return { ok: false, error: "penuh" } as const;
+    if (members.length + pending.filter((row) => row.email !== email).length >= maxMembers) return { ok: false, error: "penuh" } as const;
     await tx
       .update(invitationInvite)
       .set({ revokedAt: now })
@@ -364,7 +366,7 @@ export async function getTeamImportContext(
   db: AppDb,
   invitationId: string,
 ): Promise<TeamImportContext> {
-  const [[owner], members, pending] = await Promise.all([
+  const [[owner], members, pending, settings] = await Promise.all([
     db
       .select({ email: user.email })
       .from(invitation)
@@ -372,12 +374,13 @@ export async function getTeamImportContext(
       .where(eq(invitation.id, invitationId)),
     listMembers(db, invitationId),
     listPendingInvites(db, invitationId),
+    getSettings(db),
   ]);
   if (!owner) throw new Error("Undangan tidak ditemukan.");
   return {
     ownerEmail: owner.email,
     memberEmails: members.map((m) => m.email),
     pendingEmails: pending.map((p) => p.email),
-    maxMembers: MAX_MEMBERS,
+    maxMembers: settings.batasAnggotaTim,
   };
 }

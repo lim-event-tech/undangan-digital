@@ -4,20 +4,22 @@ import { judulHalaman, kartu, tombolTerang } from "@/components/ui";
 import { db } from "@/db";
 import { formatStamp } from "@/lib/datetime";
 import { isMailReady } from "@/lib/mail/send";
+import { getSettings } from "@/lib/platform/service";
 import { eq } from "drizzle-orm";
 import { user as userTable } from "@/db/schema";
 import { requireInvitationById } from "@/lib/session";
-import { MAX_MEMBERS, listMembers, listPendingInvites } from "@/lib/team/service";
+import { listMembers, listPendingInvites } from "@/lib/team/service";
 import { FormAturAnggota, FormUndang, TombolCabut, TombolKeluarkan } from "./form-tim";
 
 export const metadata: Metadata = { title: "Tim" };
 
 export default async function TimPage({ params }: PageProps<"/undangan/[id]/tim">) {
   const { invitation } = await requireInvitationById((await params).id);
-  const [anggota, tertunda, surel, [pembuat]] = await Promise.all([
+  const [anggota, tertunda, surel, settings, [pembuat]] = await Promise.all([
     listMembers(db, invitation.id),
     listPendingInvites(db, invitation.id),
     isMailReady(db),
+    getSettings(db),
     db.select({ name: userTable.name, email: userTable.email }).from(userTable).where(eq(userTable.id, invitation.ownerId)),
   ]);
 
@@ -42,7 +44,7 @@ export default async function TimPage({ params }: PageProps<"/undangan/[id]/tim"
             Pengiriman surel belum diaktifkan admin. Undangan tetap dibuat, dan tautannya bisa Anda salin lalu kirim sendiri.
           </p>
         ) : null}
-        <FormUndang penuh={anggota.length + tertunda.length >= MAX_MEMBERS} />
+        <FormUndang penuh={anggota.length + tertunda.length >= settings.batasAnggotaTim} />
       </section>
 
       <section aria-labelledby="judul-anggota" className={`${kartu} flex flex-col gap-3 p-5 sm:p-6`}>

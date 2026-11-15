@@ -3,6 +3,7 @@ import type { FieldErrors } from "@/lib/save-result";
 import { checkMessageTemplate } from "@/lib/whatsapp";
 import {
   ANNOUNCEMENT_KINDS,
+  DEFAULT_SETTINGS,
   SETTING_LIMITS,
   normalizeReservedSlug,
   type AnnouncementKind,
@@ -57,6 +58,21 @@ export function parseSettingsForm(
   const pesanWa = checkMessageTemplate(raw(formData, "pesanWaBawaan"));
   if (!pesanWa.ok) errors.pesanWaBawaan = pesanWa.error;
 
+  const batasRaw = raw(formData, "batasAnggotaTim").trim();
+  const batasAnggotaTim =
+    batasRaw === ""
+      ? DEFAULT_SETTINGS.batasAnggotaTim
+      : /^\d{1,3}$/.test(batasRaw)
+        ? Number(batasRaw)
+        : NaN;
+  if (
+    !Number.isInteger(batasAnggotaTim) ||
+    batasAnggotaTim < SETTING_LIMITS.batasAnggotaTimMin ||
+    batasAnggotaTim > SETTING_LIMITS.batasAnggotaTimMax
+  ) {
+    errors.batasAnggotaTim = `Isi angka ${SETTING_LIMITS.batasAnggotaTimMin} sampai ${SETTING_LIMITS.batasAnggotaTimMax}`;
+  }
+
   if (Object.keys(errors).length > 0 || !pesanWa.ok) return { ok: false, errors };
   return {
     ok: true,
@@ -66,6 +82,7 @@ export function parseSettingsForm(
       pemeliharaan: { aktif: formData.get("pemeliharaanAktif") !== null, pesan: pesanPemeliharaan },
       slugCadangan: slugs,
       pesanWaBawaan: pesanWa.template,
+      batasAnggotaTim,
     },
   };
 }
@@ -90,5 +107,8 @@ export function describeSettingChanges(before: PlatformSettings, after: Platform
     changes.push(`Slug dicadangkan ${before.slugCadangan.length} menjadi ${after.slugCadangan.length} kata`);
   }
   if (before.pesanWaBawaan !== after.pesanWaBawaan) changes.push("Pesan WhatsApp bawaan diubah");
+  if (before.batasAnggotaTim !== after.batasAnggotaTim) {
+    changes.push(`Batas anggota tim ${before.batasAnggotaTim} menjadi ${after.batasAnggotaTim}`);
+  }
   return changes;
 }
